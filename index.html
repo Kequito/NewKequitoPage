@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestión Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ─── Reset & Variables ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --nav-bg:       #0f1f3d;
+      --nav-bg2:      #162447;
+      --nav-accent:   #1e6bff;
+      --nav-hover:    #1a3466;
+      --nav-text:     #c8d6f0;
+      --nav-muted:    #5a7aa8;
+      --nav-width:    230px;
+
+      --main-bg:      #f0f4fb;
+      --card-bg:      #ffffff;
+      --border:       #dde4f0;
+      --text-dark:    #0f1f3d;
+      --text-mid:     #4a5a7a;
+      --text-light:   #8a9bbf;
+
+      --blue:         #1e6bff;
+      --blue-soft:    #e8f0ff;
+      --green:        #0fb87a;
+      --green-soft:   #e6faf3;
+      --red:          #f04040;
+      --red-soft:     #fff0f0;
+      --amber:        #f5a623;
+      --amber-soft:   #fff8ec;
+
+      --radius:       12px;
+      --radius-sm:    8px;
+      --shadow:       0 2px 16px rgba(15,31,61,0.08);
+      --shadow-md:    0 4px 24px rgba(15,31,61,0.12);
+    }
+
+    body {
+      font-family: 'Lexend', sans-serif;
+      background: var(--main-bg);
+      color: var(--text-dark);
+      display: flex;
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ══════════════════════════════
+       SIDEBAR
+    ══════════════════════════════ */
+    .sidebar {
+      width: var(--nav-width);
+      background: var(--nav-bg);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      z-index: 100;
+      transition: width .25s ease;
+      overflow: hidden;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--nav-accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 20px; height: 20px; fill: #fff; }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-text span:first-child {
+      font-size: 13px; font-weight: 700;
+      color: #fff; letter-spacing: .5px;
+    }
+    .logo-text span:last-child {
+      font-size: 10px; color: var(--nav-muted);
+      letter-spacing: 1.5px; text-transform: uppercase;
+    }
+
+    .sidebar-section-label {
+      font-size: 10px; font-weight: 600;
+      color: var(--nav-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 18px 20px 6px;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 10px 20px;
+      color: var(--nav-text);
+      cursor: pointer;
+      border-radius: 0;
+      transition: background .18s, color .18s;
+      position: relative;
+      font-size: 13px; font-weight: 400;
+      white-space: nowrap;
+      border-left: 3px solid transparent;
+      margin: 1px 0;
+    }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; opacity: .7; transition: opacity .18s; }
+    .nav-item:hover { background: var(--nav-hover); color: #fff; }
+    .nav-item:hover svg { opacity: 1; }
+    .nav-item.active {
+      background: var(--nav-hover);
+      color: #fff;
+      border-left-color: var(--nav-accent);
+      font-weight: 600;
+    }
+    .nav-item.active svg { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--nav-accent);
+      color: #fff;
+      font-size: 10px; font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding: 14px 0;
+    }
+    .user-chip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: var(--nav-accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .user-info { display: flex; flex-direction: column; }
+    .user-info span:first-child { font-size: 12px; font-weight: 600; color: #fff; }
+    .user-info span:last-child  { font-size: 10px; color: var(--nav-muted); }
+
+    /* ══════════════════════════════
+       MAIN AREA
+    ══════════════════════════════ */
+    .main {
+      margin-left: var(--nav-width);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      height: 58px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-left { display: flex; flex-direction: column; }
+    .topbar-left h1 { font-size: 16px; font-weight: 700; color: var(--text-dark); }
+    .topbar-left span { font-size: 11px; color: var(--text-light); }
+
+    .topbar-right { display: flex; align-items: center; gap: 14px; }
+    .topbar-search {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--main-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 7px 12px;
+      font-family: inherit; font-size: 12px; color: var(--text-mid);
+      width: 200px;
+    }
+    .topbar-search input {
+      border: none; background: transparent;
+      font-family: inherit; font-size: 12px; color: var(--text-dark);
+      outline: none; width: 100%;
+    }
+    .topbar-search svg { width: 14px; height: 14px; color: var(--text-light); flex-shrink: 0; }
+
+    .icon-btn {
+      width: 34px; height: 34px;
+      background: var(--main-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative; transition: background .18s;
+    }
+    .icon-btn:hover { background: var(--border); }
+    .icon-btn svg { width: 16px; height: 16px; color: var(--text-mid); }
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 7px; height: 7px;
+      background: var(--red); border-radius: 50%;
+      border: 2px solid var(--card-bg);
+    }
+
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--green-soft);
+      color: var(--green);
+      font-size: 11px; font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 99px;
+      letter-spacing: .4px;
+    }
+    .pulse {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform: scale(1); }
+      50% { opacity:.5; transform: scale(.7); }
+    }
+
+    /* ─── Content ─── */
+    .content { padding: 26px 28px; flex: 1; }
+
+    /* ─── KPI Cards ─── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 10px;
+      transition: box-shadow .2s;
+    }
+    .kpi-card:hover { box-shadow: var(--shadow-md); }
+    .kpi-header { display: flex; align-items: center; justify-content: space-between; }
+    .kpi-label { font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: .8px; }
+    .kpi-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kpi-icon svg { width: 16px; height: 16px; }
+    .kpi-value { font-size: 26px; font-weight: 700; color: var(--text-dark); line-height: 1; }
+    .kpi-footer { display: flex; align-items: center; gap: 6px; }
+    .kpi-delta {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 7px; border-radius: 99px;
+    }
+    .delta-up   { background: var(--green-soft); color: var(--green); }
+    .delta-down { background: var(--red-soft);   color: var(--red); }
+    .kpi-sub { font-size: 11px; color: var(--text-light); }
+
+    /* ─── Two-col layout ─── */
+    .row { display: grid; gap: 16px; margin-bottom: 22px; }
+    .row-2 { grid-template-columns: 2fr 1fr; }
+    .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    /* ─── Panel / Card ─── */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title { font-size: 13px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+    .panel-title svg { width: 16px; height: 16px; color: var(--blue); }
+    .panel-actions { display: flex; gap: 8px; align-items: center; }
+    .panel-body { padding: 20px; }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: var(--radius-sm);
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: none; transition: all .18s;
+    }
+    .btn svg { width: 13px; height: 13px; }
+    .btn-primary { background: var(--blue); color: #fff; }
+    .btn-primary:hover { background: #155de0; }
+    .btn-ghost {
+      background: var(--main-bg); color: var(--text-mid);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    /* ─── Badge / Status ─── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 99px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-green  { background: var(--green-soft);  color: var(--green); }
+    .badge-red    { background: var(--red-soft);    color: var(--red); }
+    .badge-blue   { background: var(--blue-soft);   color: var(--blue); }
+    .badge-amber  { background: var(--amber-soft);  color: var(--amber); }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* ─── Table ─── */
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      text-align: left;
+      padding: 10px 14px;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-light);
+      text-transform: uppercase; letter-spacing: .8px;
+      background: var(--main-bg);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer; user-select: none;
+      white-space: nowrap;
+    }
+    thead th:hover { color: var(--blue); }
+    thead th .sort-icon { display: inline-block; margin-left: 4px; opacity: .4; font-size: 10px; }
+    thead th.sorted .sort-icon { opacity: 1; color: var(--blue); }
+    tbody tr { transition: background .15s; }
+    tbody tr:nth-child(even) { background: #fafbfd; }
+    tbody tr:hover { background: var(--blue-soft); }
+    tbody td { padding: 11px 14px; font-size: 12px; color: var(--text-dark); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* ─── Progress bar ─── */
+    .prog-bar {
+      height: 6px; background: var(--border); border-radius: 99px; overflow: hidden;
+    }
+    .prog-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
+
+    /* ─── Chart container ─── */
+    .chart-wrap { position: relative; }
+
+    /* ─── Stat mini rows ─── */
+    .stat-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-row-label { font-size: 12px; color: var(--text-mid); display: flex; align-items: center; gap: 8px; }
+    .stat-color-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .stat-row-val { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+
+    /* ─── Filter bar ─── */
+    .filter-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px;
+      background: var(--main-bg);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .filter-bar label { font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: .8px; }
+    .filter-select, .filter-input {
+      padding: 6px 10px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--card-bg);
+      font-family: inherit; font-size: 12px; color: var(--text-dark);
+      outline: none; transition: border .18s;
+    }
+    .filter-select:focus, .filter-input:focus { border-color: var(--blue); }
+    .filter-input { width: 180px; }
+
+    /* ─── Submenu ─── */
+    .sub-menu {
+      max-height: 0; overflow: hidden;
+      transition: max-height .25s ease;
+      background: rgba(0,0,0,.15);
+    }
+    .sub-menu.open { max-height: 200px; }
+    .nav-sub {
+      padding-left: 38px !important;
+      font-size: 12px !important;
+      border-left: 3px solid transparent;
+    }
+    .nav-sub.active { border-left-color: var(--nav-accent); }
+    .nav-parent .chevron.rotated { transform: rotate(180deg); }
+
+    /* ─── Animations ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .kpi-card  { animation: fadeUp .35s ease both; }
+    .kpi-card:nth-child(1) { animation-delay: .05s; }
+    .kpi-card:nth-child(2) { animation-delay: .10s; }
+    .kpi-card:nth-child(3) { animation-delay: .15s; }
+    .kpi-card:nth-child(4) { animation-delay: .20s; }
+    .panel { animation: fadeUp .4s ease .2s both; }
+
+    /* ─── Views (páginas) ─── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ─── GoodDay header info bar ─── */
+    .gd-infobar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      background: linear-gradient(90deg, #0f1f3d 0%, #1a3466 100%);
+      border-radius: var(--radius) var(--radius) 0 0;
+      flex-wrap: wrap;
+    }
+    .gd-infobar-title {
+      font-size: 13px; font-weight: 700; color: #fff;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .gd-infobar-title svg { width: 16px; height: 16px; }
+    .gd-stat-chip {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
+      color: #c8d6f0;
+      font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 99px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .gd-stat-chip span { color: #fff; }
+    .gd-refresh-btn {
+      margin-left: auto;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(30,107,255,.5);
+      border: 1px solid rgba(30,107,255,.8);
+      color: #fff; font-family: inherit; font-size: 11px; font-weight: 600;
+      padding: 5px 12px; border-radius: 99px; cursor: pointer;
+      transition: background .18s;
+    }
+    .gd-refresh-btn:hover { background: rgba(30,107,255,.8); }
+    .gd-refresh-btn svg { width: 13px; height: 13px; }
+    .spin { animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── GoodDay filter bar ─── */
+    .gd-filters {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px;
+      background: var(--main-bg);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .gd-filters label {
+      font-size: 10px; font-weight: 700;
+      color: var(--text-light); text-transform: uppercase; letter-spacing: .8px;
+    }
+
+    /* ─── GoodDay table ─── */
+    .gd-tbl-wrap { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+    .gd-tbl-wrap thead th {
+      position: sticky; top: 0; z-index: 2;
+    }
+
+    /* ─── GoodDay empty / loading state ─── */
+    .gd-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 60px 20px; gap: 14px; color: var(--text-light);
+    }
+    .gd-state svg { width: 40px; height: 40px; opacity: .3; }
+    .gd-state p { font-size: 13px; font-weight: 500; }
+    .gd-state small { font-size: 11px; }
+
+    /* ─── last updated chip ─── */
+    #gd-last-update { font-size: 10px; color: var(--text-light); }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1100px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .row-2 { grid-template-columns: 1fr; }
+      .row-3 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 720px) {
+      :root { --nav-width: 0px; }
+      .sidebar { display: none; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; }
+      .row-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <!-- Headset icon -->
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12v4c0 1.1.9 2 2 2h1c1.1 0 2-.9 2-2v-3c0-1.1-.9-2-2-2H4.07C4.52 7.05 7.92 4 12 4s7.48 3.05 7.93 7H19c-1.1 0-2 .9-2 2v3c0 1.1.9 2 2 2h1c1.1 0 2-.9 2-2v-4c0-5.52-4.48-10-10-10z"/></svg>
+    </div>
+    <div class="logo-text">
+      <span>Gestión Center</span>
+      <span>Supervisor Panel</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section-label">Principal</div>
+
+  <div class="nav-item active" onclick="setNav(this, 'dashboard')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+    Dashboard
+  </div>
+
+  <!-- Distribución con submenú -->
+  <div class="nav-item nav-parent" onclick="toggleSub(this, 'sub-dist')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+    Distribución
+    <svg class="chevron" viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;margin-left:auto;transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+  </div>
+  <div class="sub-menu" id="sub-dist">
+    <div class="nav-item nav-sub" onclick="setNav(this, 'goodday')">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+      GoodDay
+    </div>
+  </div>
+
+  <div class="nav-item" onclick="setNav(this, 'reportes')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+    Reportes
+  </div>
+  <div class="nav-item" onclick="setNav(this, 'estadisticas')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+    Estadísticas
+  </div>
+
+  <div class="sidebar-section-label">Sistema</div>
+
+  <div class="nav-item" onclick="setNav(this, 'configuracion')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+    Configuración
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="user-avatar">SR</div>
+      <div class="user-info">
+        <span>Supervisor Ruiz</span>
+        <span>En línea</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1>Dashboard Operativo</h1>
+      <span id="live-time">Lunes, 09 de Marzo 2026</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Buscar agente, campaña..."/>
+      </div>
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </div>
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div class="live-badge">
+        <span class="pulse"></span> EN VIVO
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <div class="content">
+
+  <!-- ══ VIEW: DASHBOARD ══ -->
+  <div class="view active" id="view-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Agentes Activos</span>
+          <div class="kpi-icon" style="background:var(--blue-soft)">
+            <svg viewBox="0 0 24 24" fill="var(--blue)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">247</div>
+        <div class="kpi-footer">
+          <span class="kpi-delta delta-up">▲ 12%</span>
+          <span class="kpi-sub">vs. hora anterior</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Llamadas / Hora</span>
+          <div class="kpi-icon" style="background:var(--green-soft)">
+            <svg viewBox="0 0 24 24" fill="var(--green)"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">1,842</div>
+        <div class="kpi-footer">
+          <span class="kpi-delta delta-up">▲ 8%</span>
+          <span class="kpi-sub">meta: 2,000</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">TMO Promedio</span>
+          <div class="kpi-icon" style="background:var(--amber-soft)">
+            <svg viewBox="0 0 24 24" fill="var(--amber)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">4:32</div>
+        <div class="kpi-footer">
+          <span class="kpi-delta delta-down">▼ 3%</span>
+          <span class="kpi-sub">meta: &lt;5:00 min</span>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span class="kpi-label">Nivel de Servicio</span>
+          <div class="kpi-icon" style="background:var(--green-soft)">
+            <svg viewBox="0 0 24 24" fill="var(--green)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-value">87.4%</div>
+        <div class="kpi-footer">
+          <span class="kpi-delta delta-up">▲ 2.1%</span>
+          <span class="kpi-sub">meta: 85%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row row-2">
+      <!-- Line chart -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+            Llamadas por Hora — Hoy
+          </span>
+          <div class="panel-actions">
+            <button class="btn btn-ghost btn-sm">Exportar</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="chart-wrap" style="height:220px">
+            <canvas id="lineChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Donut / Campaign split -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
+            Cobertura de Campañas
+          </span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-wrap" style="height:140px; display:flex; align-items:center; justify-content:center;">
+            <canvas id="donutChart"></canvas>
+          </div>
+          <div style="margin-top:14px">
+            <div class="stat-row">
+              <span class="stat-row-label"><span class="stat-color-dot" style="background:#1e6bff"></span>Campaña Retención</span>
+              <span class="stat-row-val">42%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row-label"><span class="stat-color-dot" style="background:#0fb87a"></span>Campaña Ventas</span>
+              <span class="stat-row-val">31%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row-label"><span class="stat-color-dot" style="background:#f5a623"></span>Soporte Técnico</span>
+              <span class="stat-row-val">17%</span>
+            </div>
+            <div class="stat-row">
+              <span class="stat-row-label"><span class="stat-color-dot" style="background:#e040fb"></span>Cobranza</span>
+              <span class="stat-row-val">10%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agents Table -->
+    <div class="panel" style="margin-bottom:22px">
+      <div class="panel-head">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          Agentes — Turno Actual
+        </span>
+        <div class="panel-actions">
+          <button class="btn btn-ghost btn-sm">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16v-2H4v2zm0-5h16v-2H4v2zm0-7v2h16V6H4z"/></svg>
+            Filtrar
+          </button>
+          <button class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Exportar
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <label>Campaña:</label>
+        <select class="filter-select" onchange="filterTable()">
+          <option value="">Todas</option>
+          <option>Retención</option>
+          <option>Ventas</option>
+          <option>Soporte</option>
+          <option>Cobranza</option>
+        </select>
+        <label>Estado:</label>
+        <select class="filter-select" id="filterStatus" onchange="filterTable()">
+          <option value="">Todos</option>
+          <option>En llamada</option>
+          <option>Disponible</option>
+          <option>Break</option>
+          <option>Offline</option>
+        </select>
+        <input class="filter-input" type="text" placeholder="🔍 Buscar agente..." oninput="filterTable()" id="searchInput"/>
+      </div>
+
+      <div class="tbl-wrap">
+        <table id="agentTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Agente <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(1)">Campaña <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(2)">Estado <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(3)">Llamadas <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(4)">TMO <span class="sort-icon">↕</span></th>
+              <th onclick="sortTable(5)">Nivel Srv. <span class="sort-icon">↕</span></th>
+              <th>Cumplimiento</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bars Row -->
+    <div class="row row-3">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Llamadas por País</span>
+        </div>
+        <div class="panel-body">
+          <canvas id="barChart" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Resumen de Turnos</span>
+        </div>
+        <div class="panel-body">
+          <div class="stat-row">
+            <span class="stat-row-label">Turno Mañana</span>
+            <div style="flex:1;padding:0 14px">
+              <div class="prog-bar"><div class="prog-fill" style="width:78%;background:var(--blue)"></div></div>
+            </div>
+            <span class="stat-row-val">78%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Turno Tarde</span>
+            <div style="flex:1;padding:0 14px">
+              <div class="prog-bar"><div class="prog-fill" style="width:91%;background:var(--green)"></div></div>
+            </div>
+            <span class="stat-row-val">91%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Turno Noche</span>
+            <div style="flex:1;padding:0 14px">
+              <div class="prog-bar"><div class="prog-fill" style="width:54%;background:var(--amber)"></div></div>
+            </div>
+            <span class="stat-row-val">54%</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Mixto</span>
+            <div style="flex:1;padding:0 14px">
+              <div class="prog-bar"><div class="prog-fill" style="width:65%;background:#e040fb)"></div></div>
+            </div>
+            <span class="stat-row-val">65%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Alertas Activas</span>
+          <span class="badge badge-red">3 nuevas</span>
+        </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+          <div style="padding:10px 12px;border-radius:var(--radius-sm);background:var(--red-soft);border-left:3px solid var(--red)">
+            <div style="font-size:12px;font-weight:700;color:var(--red)">Cola de espera alta</div>
+            <div style="font-size:11px;color:var(--text-mid);margin-top:2px">Campaña Ventas — 18 llamadas en espera</div>
+          </div>
+          <div style="padding:10px 12px;border-radius:var(--radius-sm);background:var(--amber-soft);border-left:3px solid var(--amber)">
+            <div style="font-size:12px;font-weight:700;color:var(--amber)">TMO elevado</div>
+            <div style="font-size:11px;color:var(--text-mid);margin-top:2px">Agente M. González — TMO: 9:12 min</div>
+          </div>
+          <div style="padding:10px 12px;border-radius:var(--radius-sm);background:var(--blue-soft);border-left:3px solid var(--blue)">
+            <div style="font-size:12px;font-weight:700;color:var(--blue)">Reporte listo</div>
+            <div style="font-size:11px;color:var(--text-mid);margin-top:2px">Cierre de turno mañana generado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /view-dashboard -->
+
+  <!-- ══ VIEW: GOODDAY ══ -->
+  <div class="view" id="view-goodday">
+
+    <!-- Info bar -->
+    <div class="panel" style="margin-bottom:22px; border-radius:var(--radius); overflow:hidden;">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+          GoodDay — Distribución de Agentes
+        </div>
+        <div class="gd-stat-chip">Registros: <span id="gd-count">—</span></div>
+        <div class="gd-stat-chip">Campañas: <span id="gd-campaigns">—</span></div>
+        <div class="gd-stat-chip">Empresas: <span id="gd-companies">—</span></div>
+        <span id="gd-last-update"></span>
+        <button class="gd-refresh-btn" onclick="loadGoodDay()">
+          <svg id="gd-spin-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Actualizar
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="gd-filters">
+        <label>Team Leader:</label>
+        <select class="filter-select" id="gd-f-tl" onchange="applyGDFilters()">
+          <option value="">Todos</option>
+        </select>
+
+        <label>Campaña:</label>
+        <select class="filter-select" id="gd-f-camp" onchange="applyGDFilters()">
+          <option value="">Todas</option>
+        </select>
+
+        <label>Empresa:</label>
+        <select class="filter-select" id="gd-f-emp" onchange="applyGDFilters()">
+          <option value="">Todas</option>
+        </select>
+
+        <label>Horario:</label>
+        <select class="filter-select" id="gd-f-hor" onchange="applyGDFilters()">
+          <option value="">Todos</option>
+        </select>
+
+        <label>Descanso:</label>
+        <select class="filter-select" id="gd-f-desc" onchange="applyGDFilters()">
+          <option value="">Todos</option>
+        </select>
+
+        <input class="filter-input" type="text" id="gd-search"
+          placeholder="🔍 Buscar asesor..." oninput="applyGDFilters()" style="margin-left:auto"/>
+
+        <button class="btn btn-ghost btn-sm" onclick="clearGDFilters()">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          Limpiar
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="gd-tbl-wrap" id="gd-table-wrap">
+        <div class="gd-state" id="gd-loading">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          <p>Cargando datos desde Google Sheets…</p>
+          <small>Conectando con la hoja DATA-DIST-PAGE</small>
+        </div>
+        <table id="gd-table" style="display:none">
+          <thead>
+            <tr>
+              <th onclick="sortGD(0)">Team Leader <span class="sort-icon">↕</span></th>
+              <th onclick="sortGD(1)">Asesor <span class="sort-icon">↕</span></th>
+              <th onclick="sortGD(2)">PEROP1AM <span class="sort-icon">↕</span></th>
+              <th onclick="sortGD(3)">Campaña <span class="sort-icon">↕</span></th>
+              <th onclick="sortGD(4)">Descanso <span class="sort-icon">↕</span></th>
+              <th onclick="sortGD(5)">Horario <span class="sort-icon">↕</span></th>
+              <th onclick="sortGD(6)">Empresa <span class="sort-icon">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="gd-tbody"></tbody>
+        </table>
+        <div class="gd-state" id="gd-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.96.5 13.5.5c-1.27 0-2.4.51-3.24 1.33L9 3.04 7.74 1.83C6.9 1.01 5.77.5 4.5.5 2.04.5 0 2.54 0 4.66c0 .46.11.9.18 1.34H0v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-3.68c1.1 0 2 .9 2 2 0 .36-.1.69-.26 1h-3.48c-.16-.31-.26-.64-.26-1 0-1.1.9-2 2-2z"/></svg>
+          <p>Sin resultados</p>
+          <small>Intenta ajustar los filtros</small>
+        </div>
+      </div>
+
+      <!-- Footer count -->
+      <div style="padding:10px 20px; background:var(--main-bg); border-top:1px solid var(--border); font-size:11px; color:var(--text-light); display:flex; justify-content:space-between; align-items:center;">
+        <span>Mostrando <strong id="gd-showing">0</strong> de <strong id="gd-total">0</strong> registros</span>
+        <span>Fuente: Google Sheets — DATA-DIST-PAGE</span>
+      </div>
+    </div>
+
+  </div><!-- /view-goodday -->
+
+  <!-- ══ VIEW: REPORTES ══ -->
+  <div class="view" id="view-reportes">
+    <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      <p>Sección Reportes</p><small>Próximamente</small>
+    </div>
+  </div>
+
+  <!-- ══ VIEW: ESTADÍSTICAS ══ -->
+  <div class="view" id="view-estadisticas">
+    <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+      <p>Sección Estadísticas</p><small>Próximamente</small>
+    </div>
+  </div>
+
+  <!-- ══ VIEW: CONFIGURACIÓN ══ -->
+  <div class="view" id="view-configuracion">
+    <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      <p>Configuración del Sistema</p><small>Próximamente</small>
+    </div>
+  </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+  /* ══════════════════════════════
+     NAVIGATION & ROUTING
+  ══════════════════════════════ */
+  const viewMap = {
+    'dashboard':     'view-dashboard',
+    'goodday':       'view-goodday',
+    'reportes':      'view-reportes',
+    'estadisticas':  'view-estadisticas',
+    'configuracion': 'view-configuracion',
+  };
+  const titleMap = {
+    'dashboard':     ['Dashboard Operativo', 'Resumen general del turno'],
+    'goodday':       ['GoodDay — Distribución', 'Datos en vivo desde Google Sheets'],
+    'reportes':      ['Reportes', 'Generación y consulta de reportes'],
+    'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
+    'configuracion': ['Configuración', 'Ajustes del sistema'],
+  };
+
+  function setNav(el, page) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    // switch view
+    Object.values(viewMap).forEach(v => {
+      const el = document.getElementById(v);
+      if (el) el.classList.remove('active');
+    });
+    const targetView = viewMap[page] || 'view-dashboard';
+    const viewEl = document.getElementById(targetView);
+    if (viewEl) viewEl.classList.add('active');
+    // update topbar title
+    const titles = titleMap[page] || titleMap['dashboard'];
+    document.querySelector('.topbar-left h1').textContent = titles[0];
+    // auto-load GoodDay on first visit
+    if (page === 'goodday' && !gdLoaded) loadGoodDay();
+  }
+
+  /* ── Toggle submenu ── */
+  function toggleSub(el, subId) {
+    const sub = document.getElementById(subId);
+    const chevron = el.querySelector('.chevron');
+    const isOpen = sub.classList.contains('open');
+    document.querySelectorAll('.sub-menu').forEach(s => s.classList.remove('open'));
+    document.querySelectorAll('.chevron').forEach(c => c.classList.remove('rotated'));
+    if (!isOpen) {
+      sub.classList.add('open');
+      chevron.classList.add('rotated');
+    }
+  }
+
+  /* ══════════════════════════════
+     GOODDAY — GOOGLE SHEETS SYNC
+  ══════════════════════════════ */
+  const GD_SHEET_ID = '2PACX-1vTxh4ELa21F5Oz1UzyeouphxUmPnicUwzB4dOhdPh8ihIRpUf3ZM3m18ByHNQXrDScbeJB6TdEFyB1-';
+  const GD_GID      = '1557446107';
+  const GD_CSV_RAW  = `https://docs.google.com/spreadsheets/d/e/${GD_SHEET_ID}/pub?gid=${GD_GID}&single=true&output=csv`;
+  // Proxy CORS — allorigins devuelve { contents: "...csv..." }
+  const GD_CSV_URL  = `https://api.allorigins.win/get?url=${encodeURIComponent(GD_CSV_RAW)}`;
+
+  let gdRawData    = [];  // all rows after header
+  let gdFiltered   = [];  // after filters
+  let gdLoaded     = false;
+  let gdSortDir    = {};
+
+  /* Parse CSV robustly (handles quoted commas) */
+  function parseCSV(text) {
+    const rows = [];
+    const lines = text.split(/\r?\n/);
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const cols = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { inQ = !inQ; }
+        else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+        else cur += c;
+      }
+      cols.push(cur.trim());
+      rows.push(cols);
+    }
+    return rows;
+  }
+
+  async function loadGoodDay() {
+    const spinIcon = document.getElementById('gd-spin-icon');
+    spinIcon.classList.add('spin');
+    document.getElementById('gd-loading').style.display = 'flex';
+    document.getElementById('gd-table').style.display   = 'none';
+    document.getElementById('gd-empty').style.display   = 'none';
+
+    try {
+      // Intento 1: allorigins proxy
+      let csvText = null;
+      try {
+        const res = await fetch(GD_CSV_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        csvText = json.contents;
+      } catch(e1) {
+        // Intento 2: corsproxy.io como fallback
+        const fallback = `https://corsproxy.io/?${encodeURIComponent(GD_CSV_RAW)}`;
+        const res2 = await fetch(fallback);
+        if (!res2.ok) throw new Error(`Fallback HTTP ${res2.status}`);
+        csvText = await res2.text();
+      }
+      if (!csvText) throw new Error('Respuesta vacía');
+      const rows = parseCSV(csvText);
+
+      // row[0] = headers (A1:G1), rows 1+ = data
+      // Filter to columns A–G (index 0–6) and skip empty rows
+      gdRawData = rows.slice(1)
+        .map(r => r.slice(0, 7))
+        .filter(r => r.some(c => c !== ''));
+
+      gdLoaded = true;
+      populateGDFilters();
+      applyGDFilters();
+
+      // Update last-updated
+      const now = new Date();
+      document.getElementById('gd-last-update').textContent =
+        `Actualizado: ${now.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+
+    } catch (err) {
+      document.getElementById('gd-loading').innerHTML = `
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <p>No se pudo cargar la hoja</p>
+        <small>Verifica que el Sheet esté publicado públicamente</small>`;
+      document.getElementById('gd-loading').style.display = 'flex';
+    } finally {
+      spinIcon.classList.remove('spin');
+    }
+  }
+
+  function populateGDFilters() {
+    const unique = (col) => [...new Set(gdRawData.map(r => r[col]).filter(Boolean))].sort();
+    const fillSelect = (id, values) => {
+      const sel = document.getElementById(id);
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Todos</option>' +
+        values.map(v => `<option value="${v}">${v}</option>`).join('');
+      if (prev) sel.value = prev;
+    };
+    // cols: 0=TL, 1=Asesor, 2=PEROP1AM, 3=Campaña, 4=Descanso, 5=Horario, 6=Empresa
+    fillSelect('gd-f-tl',   unique(0));
+    fillSelect('gd-f-camp', unique(3));
+    fillSelect('gd-f-emp',  unique(6));
+    fillSelect('gd-f-hor',  unique(5));
+    fillSelect('gd-f-desc', unique(4));
+
+    // KPI chips
+    document.getElementById('gd-campaigns').textContent = unique(3).length;
+    document.getElementById('gd-companies').textContent = unique(6).length;
+  }
+
+  function applyGDFilters() {
+    const tl    = document.getElementById('gd-f-tl').value;
+    const camp  = document.getElementById('gd-f-camp').value;
+    const emp   = document.getElementById('gd-f-emp').value;
+    const hor   = document.getElementById('gd-f-hor').value;
+    const desc  = document.getElementById('gd-f-desc').value;
+    const search = document.getElementById('gd-search').value.toLowerCase();
+
+    gdFiltered = gdRawData.filter(r => {
+      if (tl   && r[0] !== tl)   return false;
+      if (camp && r[3] !== camp) return false;
+      if (emp  && r[6] !== emp)  return false;
+      if (hor  && r[5] !== hor)  return false;
+      if (desc && r[4] !== desc) return false;
+      if (search && !r[1].toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    renderGDTable();
+  }
+
+  function clearGDFilters() {
+    ['gd-f-tl','gd-f-camp','gd-f-emp','gd-f-hor','gd-f-desc'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('gd-search').value = '';
+    applyGDFilters();
+  }
+
+  /* Row color by PEROP1AM value */
+  function gdPeropBadge(val) {
+    const v = val ? val.toString().trim() : '';
+    if (!v || v === '—') return `<span style="color:var(--text-light)">—</span>`;
+    const n = parseFloat(v.replace('%',''));
+    if (!isNaN(n)) {
+      const cls = n >= 85 ? 'badge-green' : n >= 65 ? 'badge-amber' : 'badge-red';
+      return `<span class="badge ${cls}">${v}</span>`;
+    }
+    return `<span>${v}</span>`;
+  }
+
+  function renderGDTable() {
+    const tbody  = document.getElementById('gd-tbody');
+    const table  = document.getElementById('gd-table');
+    const empty  = document.getElementById('gd-empty');
+    const loading = document.getElementById('gd-loading');
+
+    loading.style.display = 'none';
+    document.getElementById('gd-count').textContent   = gdRawData.length;
+    document.getElementById('gd-showing').textContent = gdFiltered.length;
+    document.getElementById('gd-total').textContent   = gdRawData.length;
+
+    if (gdFiltered.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = gdFiltered.map((r, i) => `
+      <tr>
+        <td><strong>${r[0] || '—'}</strong></td>
+        <td>${r[1] || '—'}</td>
+        <td>${gdPeropBadge(r[2])}</td>
+        <td><span class="badge badge-blue">${r[3] || '—'}</span></td>
+        <td>${r[4] || '—'}</td>
+        <td><span style="font-size:11px;background:var(--main-bg);padding:2px 7px;border-radius:4px;border:1px solid var(--border)">${r[5] || '—'}</span></td>
+        <td>${r[6] || '—'}</td>
+      </tr>`).join('');
+  }
+
+  /* Sort GoodDay table */
+  function sortGD(col) {
+    gdSortDir[col] = !gdSortDir[col];
+    gdFiltered.sort((a, b) => {
+      const va = a[col] || '';
+      const vb = b[col] || '';
+      const na = parseFloat(va), nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb)) return gdSortDir[col] ? na - nb : nb - na;
+      return gdSortDir[col] ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+    // update sort icons
+    document.querySelectorAll('#gd-table thead th').forEach((th, i) => {
+      th.classList.toggle('sorted', i === col);
+      const icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = i === col ? (gdSortDir[col] ? '↑' : '↓') : '↕';
+    });
+    renderGDTable();
+  }
+
+  /* Auto-refresh GoodDay every 60s when the view is active */
+  setInterval(() => {
+    const gdView = document.getElementById('view-goodday');
+    if (gdView && gdView.classList.contains('active') && gdLoaded) loadGoodDay();
+  }, 60000);
+
+  /* ── Live clock ── */
+  function updateTime() {
+    const now = new Date();
+    const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+    const date = now.toLocaleDateString('es-ES', opts);
+    const time = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById('live-time').textContent = `${date} — ${time}`;
+  }
+  updateTime();
+  setInterval(updateTime, 1000);
+
+  /* ── Agent Table Data ── */
+  const agents = [
+    { name:'Ana Ramírez',    campaign:'Retención',  status:'En llamada', calls:34, tmo:'4:12', ns:'91%', comp:91 },
+    { name:'Carlos Vega',    campaign:'Ventas',     status:'Disponible', calls:28, tmo:'5:43', ns:'78%', comp:78 },
+    { name:'María González', campaign:'Soporte',    status:'Break',      calls:21, tmo:'9:12', ns:'62%', comp:62 },
+    { name:'Luis Mora',      campaign:'Retención',  status:'En llamada', calls:39, tmo:'3:58', ns:'95%', comp:95 },
+    { name:'Patricia Salas', campaign:'Ventas',     status:'En llamada', calls:31, tmo:'4:30', ns:'88%', comp:88 },
+    { name:'Diego Torres',   campaign:'Cobranza',   status:'Disponible', calls:25, tmo:'6:10', ns:'74%', comp:74 },
+    { name:'Camila Ríos',    campaign:'Soporte',    status:'En llamada', calls:37, tmo:'4:05', ns:'93%', comp:93 },
+    { name:'Roberto Núñez',  campaign:'Ventas',     status:'Offline',    calls:12, tmo:'7:22', ns:'55%', comp:55 },
+  ];
+
+  const statusClass = { 'En llamada':'badge-blue', 'Disponible':'badge-green', 'Break':'badge-amber', 'Offline':'badge-red' };
+
+  function compColor(v) {
+    if (v >= 85) return 'var(--green)';
+    if (v >= 65) return 'var(--amber)';
+    return 'var(--red)';
+  }
+
+  function renderTable(data) {
+    const body = document.getElementById('tableBody');
+    body.innerHTML = data.map(a => `
+      <tr>
+        <td><strong>${a.name}</strong></td>
+        <td>${a.campaign}</td>
+        <td><span class="badge ${statusClass[a.status]}"><span class="badge-dot"></span>${a.status}</span></td>
+        <td>${a.calls}</td>
+        <td>${a.tmo}</td>
+        <td>${a.ns}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="prog-bar" style="width:80px">
+              <div class="prog-fill" style="width:${a.comp}%;background:${compColor(a.comp)}"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:${compColor(a.comp)}">${a.comp}%</span>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+  renderTable(agents);
+
+  /* ── Filter ── */
+  function filterTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('filterStatus').value;
+    const filtered = agents.filter(a =>
+      a.name.toLowerCase().includes(search) &&
+      (status === '' || a.status === status)
+    );
+    renderTable(filtered);
+  }
+
+  /* ── Sort ── */
+  let sortDir = {};
+  function sortTable(col) {
+    const keys = ['name','campaign','status','calls','tmo','ns'];
+    const key = keys[col];
+    sortDir[col] = !sortDir[col];
+    agents.sort((a,b) => {
+      const va = isNaN(a[key]) ? a[key] : +a[key];
+      const vb = isNaN(b[key]) ? b[key] : +b[key];
+      return sortDir[col] ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+    document.querySelectorAll('thead th').forEach((th, i) => {
+      th.classList.toggle('sorted', i === col);
+      const icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = i === col ? (sortDir[col] ? '↑' : '↓') : '↕';
+    });
+    renderTable(agents);
+  }
+
+  /* ── Charts ── */
+  const chartDefaults = {
+    font: { family: "'Lexend', sans-serif", size: 11 },
+  };
+
+  // Line Chart
+  new Chart(document.getElementById('lineChart'), {
+    type: 'line',
+    data: {
+      labels: ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'],
+      datasets: [
+        {
+          label: 'Llamadas',
+          data: [120, 185, 280, 340, 410, 390, 450, 430, 380, 320, 290, 260],
+          borderColor: '#1e6bff',
+          backgroundColor: 'rgba(30,107,255,0.08)',
+          fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5,
+        },
+        {
+          label: 'Meta',
+          data: [200,200,200,350,350,350,400,400,400,300,300,300],
+          borderColor: '#0fb87a', borderDash: [5,5],
+          backgroundColor: 'transparent', pointRadius: 0, tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { ...chartDefaults.font, boxWidth: 12 } } },
+      scales: {
+        x: { grid: { color: '#edf0f7' }, ticks: { ...chartDefaults.font } },
+        y: { grid: { color: '#edf0f7' }, ticks: { ...chartDefaults.font } }
+      }
+    }
+  });
+
+  // Donut Chart
+  new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Retención','Ventas','Soporte','Cobranza'],
+      datasets: [{ data: [42,31,17,10], backgroundColor: ['#1e6bff','#0fb87a','#f5a623','#e040fb'], borderWidth: 0 }]
+    },
+    options: {
+      responsive: false, cutout: '70%',
+      plugins: { legend: { display: false } },
+      width: 140, height: 140
+    }
+  });
+
+  // Bar Chart
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Colombia','México','Perú','Chile','Ecuador','Argentina'],
+      datasets: [{
+        label: 'Llamadas',
+        data: [520, 410, 330, 280, 190, 155],
+        backgroundColor: ['#1e6bff','#0fb87a','#f5a623','#e040fb','#1e6bff','#0fb87a'],
+        borderRadius: 6, borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display:false }, ticks: { ...chartDefaults.font } },
+        y: { grid: { color: '#edf0f7' }, ticks: { ...chartDefaults.font } }
+      }
+    }
+  });
+</script>
+</body>
+</html>
