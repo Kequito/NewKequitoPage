@@ -1204,11 +1204,7 @@
     renderGDTable();
   }
 
-  /* Auto-refresh GoodDay every 60s when the view is active */
-  setInterval(() => {
-    const gdView = document.getElementById('view-goodday');
-    if (gdView && gdView.classList.contains('active') && gdLoaded) loadGoodDay();
-  }, 60000);
+  /* GoodDay carga al entrar por 1ra vez, o al recargar la página — sin auto-refresh */
 
   /* ── Live clock ── */
   function updateTime() {
