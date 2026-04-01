@@ -899,17 +899,7 @@
           <small>Conectando con la hoja DATA-DIST-PAGE</small>
         </div>
         <table id="gd-table" style="display:none">
-          <thead>
-            <tr>
-              <th onclick="sortGD(0)">Team Leader <span class="sort-icon">↕</span></th>
-              <th onclick="sortGD(1)">Asesor <span class="sort-icon">↕</span></th>
-              <th onclick="sortGD(2)">PEROP1AM <span class="sort-icon">↕</span></th>
-              <th onclick="sortGD(3)">Campaña <span class="sort-icon">↕</span></th>
-              <th onclick="sortGD(4)">Descanso <span class="sort-icon">↕</span></th>
-              <th onclick="sortGD(5)">Horario <span class="sort-icon">↕</span></th>
-              <th onclick="sortGD(6)">Empresa <span class="sort-icon">↕</span></th>
-            </tr>
-          </thead>
+          <thead><tr id="gd-thead-row"></tr></thead>
           <tbody id="gd-tbody"></tbody>
         </table>
         <div class="gd-state" id="gd-empty" style="display:none">
@@ -1015,6 +1005,7 @@
   // Proxy CORS — allorigins devuelve { contents: "...csv..." }
   const GD_CSV_URL  = `https://api.allorigins.win/get?url=${encodeURIComponent(GD_CSV_RAW)}`;
 
+  let gdHeaders    = [];  // row 0 from Sheet (A1:G1)
   let gdRawData    = [];  // all rows after header
   let gdFiltered   = [];  // after filters
   let gdLoaded     = false;
@@ -1064,6 +1055,25 @@
       }
       if (!csvText) throw new Error('Respuesta vacía');
       const rows = parseCSV(csvText);
+
+      // Fila 0 = encabezados del Sheet (A1:G1)
+      gdHeaders = rows[0].slice(0, 7);
+
+      // Inyectar encabezados en la tabla dinámicamente
+      document.getElementById('gd-thead-row').innerHTML = gdHeaders
+        .map((h, i) => `<th onclick="sortGD(${i})">${h} <span class="sort-icon">↕</span></th>`)
+        .join('');
+
+      // Actualizar etiquetas de filtros con los nombres reales del Sheet
+      // cols: 0=TL, 1=Asesor, 2=PEROP1AM, 3=Campaña, 4=Descanso, 5=Horario, 6=Empresa
+      const filterMap = { 'gd-f-tl': 0, 'gd-f-camp': 3, 'gd-f-emp': 6, 'gd-f-hor': 5, 'gd-f-desc': 4 };
+      Object.entries(filterMap).forEach(([id, col]) => {
+        const sel = document.getElementById(id);
+        if (sel && gdHeaders[col]) {
+          const label = sel.previousElementSibling;
+          if (label && label.tagName === 'LABEL') label.textContent = gdHeaders[col] + ':';
+        }
+      });
 
       // row[0] = headers (A1:G1), rows 1+ = data
       // Filter to columns A–G (index 0–6) and skip empty rows
