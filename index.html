@@ -413,6 +413,75 @@
     .kpi-card:nth-child(4) { animation-delay: .20s; }
     .panel { animation: fadeUp .4s ease .2s both; }
 
+    /* ══════════════════════════════
+       LOGIN SCREEN
+    ══════════════════════════════ */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 999;
+      background: linear-gradient(135deg, #0a1628 0%, #0f1f3d 50%, #162447 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    #login-screen.hidden { display: none; }
+    .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; animation: fadeUp .5s ease both; }
+    .login-brand-icon { width: 48px; height: 48px; background: var(--nav-accent); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+    .login-brand-icon svg { width: 26px; height: 26px; fill: #fff; }
+    .login-brand-text { display: flex; flex-direction: column; }
+    .login-brand-text span:first-child { font-size: 22px; font-weight: 700; color: #fff; }
+    .login-brand-text span:last-child  { font-size: 11px; color: var(--nav-muted); letter-spacing: 2px; text-transform: uppercase; }
+    .login-step { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 820px; padding: 0 20px; }
+    .login-step.active { display: flex; animation: fadeUp .35s ease both; }
+    .login-step-title { font-size: 15px; font-weight: 600; color: #c8d6f0; margin-bottom: 24px; letter-spacing: .3px; display: flex; align-items: center; gap: 10px; }
+    .login-step-title span { background: var(--nav-accent); color: #fff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .cargo-grid { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .cargo-card { width: 180px; background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.1); border-radius: 16px; padding: 28px 20px; display: flex; flex-direction: column; align-items: center; gap: 14px; cursor: pointer; transition: all .2s ease; color: #c8d6f0; }
+    .cargo-card:hover { background: rgba(30,107,255,.2); border-color: var(--nav-accent); transform: translateY(-4px); color: #fff; }
+    .cargo-card.selected { background: rgba(30,107,255,.3); border-color: var(--nav-accent); color: #fff; }
+    .cargo-card svg { width: 48px; height: 48px; opacity: .8; }
+    .cargo-card:hover svg, .cargo-card.selected svg { opacity: 1; }
+    .cargo-card-label { font-size: 14px; font-weight: 700; letter-spacing: .3px; }
+    .cargo-card-sub   { font-size: 11px; color: var(--nav-muted); text-align: center; }
+    .user-grid { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; max-height: 420px; overflow-y: auto; padding: 4px; }
+    .user-card { width: 130px; background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.08); border-radius: 14px; padding: 18px 12px 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: all .2s ease; color: #c8d6f0; text-align: center; }
+    .user-card:hover { background: rgba(30,107,255,.2); border-color: var(--nav-accent); transform: translateY(-3px); color: #fff; }
+    .user-card.selected { background: rgba(30,107,255,.3); border-color: var(--nav-accent); color: #fff; }
+    .user-silhouette { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .user-silhouette.male   { background: rgba(30,107,255,.25); }
+    .user-silhouette.female { background: rgba(240,100,180,.25); }
+    .user-silhouette svg { width: 32px; height: 32px; }
+    .user-card-name  { font-size: 12px; font-weight: 700; line-height: 1.3; }
+    .user-card-perop { font-size: 10px; color: var(--nav-muted); letter-spacing: .5px; }
+    .login-pass-box { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 28px 32px; display: flex; flex-direction: column; align-items: center; gap: 16px; width: 320px; }
+    .login-pass-box .user-silhouette { width: 64px; height: 64px; }
+    .login-pass-box .user-silhouette svg { width: 38px; height: 38px; }
+    .login-pass-user  { font-size: 15px; font-weight: 700; color: #fff; }
+    .login-pass-perop { font-size: 11px; color: var(--nav-muted); }
+    .login-pass-input { width: 100%; padding: 10px 14px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.15); border-radius: var(--radius-sm); color: #fff; font-family: inherit; font-size: 14px; outline: none; text-align: center; letter-spacing: 3px; transition: border .18s; }
+    .login-pass-input:focus { border-color: var(--nav-accent); }
+    .login-pass-input::placeholder { letter-spacing: 1px; color: rgba(255,255,255,.3); font-size: 12px; }
+    .login-pass-error { font-size: 11px; color: var(--red); min-height: 16px; text-align: center; }
+    .login-btn { padding: 10px 28px; border-radius: 99px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: all .18s; display: flex; align-items: center; gap: 8px; }
+    .login-btn-primary { background: var(--nav-accent); color: #fff; }
+    .login-btn-primary:hover { background: #155de0; transform: translateY(-1px); }
+    .login-btn-primary:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .login-btn-ghost { background: transparent; color: var(--nav-muted); border: 1px solid rgba(255,255,255,.1); }
+    .login-btn-ghost:hover { color: #fff; border-color: rgba(255,255,255,.3); }
+    .login-nav { display: flex; gap: 10px; margin-top: 28px; }
+    .login-loading { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--nav-muted); font-size: 13px; animation: fadeUp .3s ease both; }
+    .login-spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,.1); border-top-color: var(--nav-accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    .login-steps-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 30px; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); transition: all .2s; }
+    .step-dot.active { background: var(--nav-accent); width: 24px; border-radius: 4px; }
+    .step-dot.done   { background: var(--green); }
+    .topbar-user-info { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 6px; background: var(--main-bg); border: 1px solid var(--border); border-radius: 99px; cursor: pointer; transition: background .18s; }
+    .topbar-user-info:hover { background: var(--border); }
+    .topbar-user-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .topbar-user-avatar.male   { background: var(--blue-soft); }
+    .topbar-user-avatar.female { background: #fce8f7; }
+    .topbar-user-avatar svg { width: 16px; height: 16px; }
+    .topbar-user-name  { font-size: 12px; font-weight: 600; color: var(--text-dark); }
+    .topbar-user-cargo { font-size: 10px; color: var(--text-light); }
+
     /* ─── Views (páginas) ─── */
     .view { display: none; }
     .view.active { display: block; }
@@ -500,6 +569,84 @@
 </head>
 <body>
 
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-brand">
+    <div class="login-brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12v4c0 1.1.9 2 2 2h1c1.1 0 2-.9 2-2v-3c0-1.1-.9-2-2-2H4.07C4.52 7.05 7.92 4 12 4s7.48 3.05 7.93 7H19c-1.1 0-2 .9-2 2v3c0 1.1.9 2 2 2h1c1.1 0 2-.9 2-2v-4c0-5.52-4.48-10-10-10z"/></svg>
+    </div>
+    <div class="login-brand-text">
+      <span>Gestión Center</span>
+      <span>Supervisor Panel</span>
+    </div>
+  </div>
+
+  <!-- Step indicator -->
+  <div class="login-steps-indicator">
+    <div class="step-dot active" id="sdot-0"></div>
+    <div class="step-dot" id="sdot-1"></div>
+    <div class="step-dot" id="sdot-2"></div>
+  </div>
+
+  <!-- STEP 0: Cargando usuarios -->
+  <div class="login-step active" id="lstep-loading">
+    <div class="login-loading">
+      <div class="login-spinner"></div>
+      <p>Cargando usuarios…</p>
+    </div>
+  </div>
+
+  <!-- STEP 1: Seleccionar cargo -->
+  <div class="login-step" id="lstep-cargo">
+    <div class="login-step-title"><span>1</span> ¿Cuál es tu cargo?</div>
+    <div class="cargo-grid">
+      <div class="cargo-card" onclick="selectCargo('Team Leader')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        <div class="cargo-card-label">Team Leader</div>
+        <div class="cargo-card-sub">Acceso directo con tu nombre</div>
+      </div>
+      <div class="cargo-card" onclick="selectCargo('Supervisor')">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        <div class="cargo-card-label">Supervisor</div>
+        <div class="cargo-card-sub">Requiere contraseña de acceso</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Seleccionar usuario -->
+  <div class="login-step" id="lstep-usuario">
+    <div class="login-step-title"><span>2</span> ¿Quién eres?</div>
+    <div class="user-grid" id="login-user-grid"></div>
+    <div class="login-nav">
+      <button class="login-btn login-btn-ghost" onclick="goLoginStep('cargo')">← Volver</button>
+      <button class="login-btn login-btn-primary" id="btn-continuar" onclick="continueFromUser()" disabled>
+        Continuar →
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Contraseña (solo Supervisor) -->
+  <div class="login-step" id="lstep-password">
+    <div class="login-step-title"><span>3</span> Ingresa tu contraseña</div>
+    <div class="login-pass-box">
+      <div class="user-silhouette" id="pass-silhouette"></div>
+      <div class="login-pass-user"  id="pass-nombre"></div>
+      <div class="login-pass-perop" id="pass-perop"></div>
+      <input class="login-pass-input" type="password" id="pass-input"
+        placeholder="Contraseña"
+        onkeydown="if(event.key==='Enter') submitPassword()"/>
+      <div class="login-pass-error" id="pass-error"></div>
+      <button class="login-btn login-btn-primary" onclick="submitPassword()">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        Ingresar
+      </button>
+    </div>
+    <div class="login-nav">
+      <button class="login-btn login-btn-ghost" onclick="goLoginStep('usuario')">← Volver</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════ SIDEBAR ══════════════ -->
 <aside class="sidebar">
   <div class="sidebar-logo">
@@ -578,8 +725,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="notif-dot"></span>
       </div>
-      <div class="icon-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <div class="topbar-user-info" onclick="logoutUser()" title="Cerrar sesión">
+        <div class="topbar-user-avatar" id="topbar-avatar">
+          <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <span class="topbar-user-name"  id="topbar-username">—</span>
+          <span class="topbar-user-cargo" id="topbar-usercargo">—</span>
+        </div>
       </div>
       <div class="live-badge">
         <span class="pulse"></span> EN VIVO
@@ -1214,7 +1367,222 @@
     renderGDTable();
   }
 
-  /* GoodDay carga al entrar por 1ra vez, o al recargar la página — sin auto-refresh */
+  /* ══════════════════════════════
+     SESSION — LOGIN SYSTEM
+  ══════════════════════════════ */
+  const SESSION_KEY   = 'gc_session';
+  const SESS_SHEET_ID = '2PACX-1vTxh4ELa21F5Oz1UzyeouphxUmPnicUwzB4dOhdPh8ihIRpUf3ZM3m18ByHNQXrDScbeJB6TdEFyB1-';
+  const SESS_GID      = '421712863';
+  const SESS_CSV_RAW  = `https://docs.google.com/spreadsheets/d/e/${SESS_SHEET_ID}/pub?gid=${SESS_GID}&single=true&output=csv`;
+  const SESS_CSV_URL  = `https://api.allorigins.win/get?url=${encodeURIComponent(SESS_CSV_RAW)}`;
+
+  let sessionUsers    = [];   // parsed from DTSESSION
+  let loginCargo      = null; // 'Team Leader' | 'Supervisor'
+  let loginSelectedUser = null;
+
+  /* SVG siluetas */
+  const SVG_MALE = `<svg viewBox="0 0 24 24" fill="currentColor" style="color:#1e6bff">
+    <circle cx="12" cy="7" r="4"/>
+    <path d="M12 13c-4 0-8 1.8-8 4v1h16v-1c0-2.2-4-4-8-4z"/>
+  </svg>`;
+  const SVG_FEMALE = `<svg viewBox="0 0 24 24" fill="currentColor" style="color:#e864c8">
+    <circle cx="12" cy="6" r="3.5"/>
+    <path d="M12 11c-3.5 0-6 1.6-6 3.5V16h3v4h6v-4h3v-1.5c0-1.9-2.5-3.5-6-3.5z"/>
+  </svg>`;
+
+  function silhouetteHTML(genero, extraClass='') {
+    const g = (genero||'').toUpperCase().trim();
+    const cls = g === 'F' ? 'female' : 'male';
+    const svg = g === 'F' ? SVG_FEMALE : SVG_MALE;
+    return `<div class="user-silhouette ${cls} ${extraClass}">${svg}</div>`;
+  }
+
+  /* ── Load users from DTSESSION ── */
+  async function loadSessionUsers() {
+    try {
+      let csvText = null;
+      try {
+        const res  = await fetch(SESS_CSV_URL);
+        const json = await res.json();
+        csvText = json.contents;
+      } catch {
+        const res2 = await fetch(`https://corsproxy.io/?${encodeURIComponent(SESS_CSV_RAW)}`);
+        csvText = await res2.text();
+      }
+      const rows = parseCSV(csvText);
+      // cols: 0=NOMBRE, 1=PEROP1AM, 2=CARGO, 3=CONTRASEÑA, 4=GENERO
+      sessionUsers = rows.slice(1)
+        .map(r => r.slice(0, 5))
+        .filter(r => r[0] && r[0].trim() !== '');
+    } catch(e) {
+      console.error('Error cargando usuarios:', e);
+    }
+    // After loading, check existing session
+    checkExistingSession();
+  }
+
+  /* ── Check sessionStorage for existing session ── */
+  function checkExistingSession() {
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    if (stored) {
+      try {
+        const user = JSON.parse(stored);
+        enterDashboard(user);
+        return;
+      } catch {}
+    }
+    // No session → show login
+    goLoginStep('cargo');
+  }
+
+  /* ── Step navigation ── */
+  function goLoginStep(step) {
+    document.querySelectorAll('.login-step').forEach(s => s.classList.remove('active'));
+    // dots
+    const stepOrder = ['cargo','usuario','password'];
+    const idx = stepOrder.indexOf(step);
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+      d.classList.remove('active','done');
+      if (i < idx) d.classList.add('done');
+      else if (i === idx) d.classList.add('active');
+    });
+
+    if (step === 'cargo') {
+      document.getElementById('lstep-cargo').classList.add('active');
+    } else if (step === 'usuario') {
+      renderUserGrid();
+      document.getElementById('lstep-usuario').classList.add('active');
+    } else if (step === 'password') {
+      renderPasswordStep();
+      document.getElementById('lstep-password').classList.add('active');
+      setTimeout(() => document.getElementById('pass-input').focus(), 100);
+    }
+  }
+
+  /* ── Step 1: Select cargo ── */
+  function selectCargo(cargo) {
+    loginCargo = cargo;
+    loginSelectedUser = null;
+    goLoginStep('usuario');
+  }
+
+  /* ── Step 2: Render user cards filtered by cargo ── */
+  function renderUserGrid() {
+    const filtered = sessionUsers.filter(u =>
+      (u[2]||'').trim().toLowerCase() === loginCargo.toLowerCase()
+    );
+    const grid = document.getElementById('login-user-grid');
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div style="color:var(--nav-muted);font-size:13px;padding:20px">
+        No hay usuarios registrados para este cargo.</div>`;
+    } else {
+      grid.innerHTML = filtered.map((u, i) => {
+        const genero = (u[4]||'').toUpperCase().trim();
+        const cls    = genero === 'F' ? 'female' : 'male';
+        const svg    = genero === 'F' ? SVG_FEMALE : SVG_MALE;
+        return `<div class="user-card" onclick="selectUser(${sessionUsers.indexOf(u)}, this)">
+          <div class="user-silhouette ${cls}">${svg}</div>
+          <div class="user-card-name">${u[0]}</div>
+          <div class="user-card-perop">${u[1]||''}</div>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('btn-continuar').disabled = true;
+    loginSelectedUser = null;
+  }
+
+  /* ── Select a user card ── */
+  function selectUser(idx, el) {
+    document.querySelectorAll('.user-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    loginSelectedUser = sessionUsers[idx];
+    document.getElementById('btn-continuar').disabled = false;
+  }
+
+  /* ── Continue from user step ── */
+  function continueFromUser() {
+    if (!loginSelectedUser) return;
+    if (loginCargo === 'Supervisor') {
+      goLoginStep('password');
+    } else {
+      // Team Leader → login directly
+      enterDashboard(loginSelectedUser);
+    }
+  }
+
+  /* ── Step 3: Password ── */
+  function renderPasswordStep() {
+    const u = loginSelectedUser;
+    const genero = (u[4]||'').toUpperCase().trim();
+    const cls = genero === 'F' ? 'female' : 'male';
+    const svg = genero === 'F' ? SVG_FEMALE : SVG_MALE;
+    document.getElementById('pass-silhouette').className = `user-silhouette ${cls}`;
+    document.getElementById('pass-silhouette').innerHTML = svg;
+    document.getElementById('pass-nombre').textContent = u[0];
+    document.getElementById('pass-perop').textContent  = u[1] || '';
+    document.getElementById('pass-input').value = '';
+    document.getElementById('pass-error').textContent  = '';
+  }
+
+  function submitPassword() {
+    const input = document.getElementById('pass-input').value.trim();
+    const correctPass = (loginSelectedUser[3]||'').trim();
+    if (input === correctPass) {
+      enterDashboard(loginSelectedUser);
+    } else {
+      const err = document.getElementById('pass-error');
+      err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+      const inp = document.getElementById('pass-input');
+      inp.style.borderColor = 'var(--red)';
+      inp.value = '';
+      setTimeout(() => {
+        err.textContent = '';
+        inp.style.borderColor = '';
+      }, 2500);
+    }
+  }
+
+  /* ── Enter dashboard ── */
+  function enterDashboard(user) {
+    // Save to sessionStorage (persists until tab/browser closes)
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+
+    // Update topbar
+    const genero = (user[4]||'').toUpperCase().trim();
+    const avatarCls = genero === 'F' ? 'female' : 'male';
+    const avatarSVG = genero === 'F'
+      ? `<svg viewBox="0 0 24 24" fill="#e864c8"><circle cx="12" cy="6" r="3.5"/><path d="M12 11c-3.5 0-6 1.6-6 3.5V16h3v4h6v-4h3v-1.5c0-1.9-2.5-3.5-6-3.5z"/></svg>`
+      : `<svg viewBox="0 0 24 24" fill="#1e6bff"><circle cx="12" cy="7" r="4"/><path d="M12 13c-4 0-8 1.8-8 4v1h16v-1c0-2.2-4-4-8-4z"/></svg>`;
+
+    const avatar = document.getElementById('topbar-avatar');
+    avatar.className = `topbar-user-avatar ${avatarCls}`;
+    avatar.innerHTML = avatarSVG;
+    document.getElementById('topbar-username').textContent  = user[0];
+    document.getElementById('topbar-usercargo').textContent = user[2] || '';
+
+    // Also update sidebar bottom user chip
+    document.querySelector('.user-avatar').textContent =
+      user[0].split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    document.querySelector('.user-info span:first-child').textContent = user[0];
+    document.querySelector('.user-info span:last-child').textContent  = user[2] || 'En línea';
+
+    // Hide login screen
+    document.getElementById('login-screen').classList.add('hidden');
+  }
+
+  /* ── Logout ── */
+  function logoutUser() {
+    if (!confirm('¿Cerrar sesión?')) return;
+    sessionStorage.removeItem(SESSION_KEY);
+    loginCargo = null;
+    loginSelectedUser = null;
+    document.getElementById('login-screen').classList.remove('hidden');
+    goLoginStep('cargo');
+  }
+
+  /* ── Boot: load users on page load ── */
+  loadSessionUsers();
+
 
   /* ── Live clock ── */
   function updateTime() {
