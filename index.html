@@ -1150,39 +1150,29 @@
   }
 
   /* ══════════════════════════════
-     GOODDAY — GOOGLE SHEETS SYNC
+     SUPABASE CONFIG
   ══════════════════════════════ */
-  const GD_SHEET_ID = '2PACX-1vTxh4ELa21F5Oz1UzyeouphxUmPnicUwzB4dOhdPh8ihIRpUf3ZM3m18ByHNQXrDScbeJB6TdEFyB1-';
-  const GD_GID      = '1557446107';
-  const GD_CSV_RAW  = `https://docs.google.com/spreadsheets/d/e/${GD_SHEET_ID}/pub?gid=${GD_GID}&single=true&output=csv`;
-  // Proxy CORS — allorigins devuelve { contents: "...csv..." }
-  const GD_CSV_URL  = `https://api.allorigins.win/get?url=${encodeURIComponent(GD_CSV_RAW)}`;
+  const SB_URL  = 'https://nxxwwkseelvxrwqjqmip.supabase.co';
+  const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54eHd3a3NlZWx2eHJ3cWpxbWlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyMTE3MDIsImV4cCI6MjA5MDc4NzcwMn0.q69eyOHcADsr6-hMAesw4xBBRtdoTD1AkJ3VThB-iDM';
+  const SB_HEADERS = { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` };
 
-  let gdHeaders    = [];  // row 0 from Sheet (A1:G1)
-  let gdRawData    = [];  // all rows after header
-  let gdFiltered   = [];  // after filters
-  let gdLoaded     = false;
-  let gdSortDir    = {};
-
-  /* Parse CSV robustly (handles quoted commas) */
-  function parseCSV(text) {
-    const rows = [];
-    const lines = text.split(/\r?\n/);
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      const cols = [];
-      let cur = '', inQ = false;
-      for (let i = 0; i < line.length; i++) {
-        const c = line[i];
-        if (c === '"') { inQ = !inQ; }
-        else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
-        else cur += c;
-      }
-      cols.push(cur.trim());
-      rows.push(cols);
-    }
-    return rows;
+  async function sbFetch(table, params = '') {
+    const res = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(`Supabase error ${res.status}`);
+    return res.json();
   }
+
+  /* ══════════════════════════════
+     GOODDAY — SUPABASE
+  ══════════════════════════════ */
+  // Columnas en dt_dis (en el orden que aparecen en la tabla)
+  const GD_COLS = ['TEAMLEADER','ASESORES','PEROPIAM','PAIS','DESCANSO','HORARIO','EMPRESA'];
+  const GD_COL_LABELS = { 'TEAMLEADER':'Team Leader', 'ASESORES':'Asesor', 'PEROPIAM':'PEROPIAM', 'PAIS':'País', 'DESCANSO':'Descanso', 'HORARIO':'Horario', 'EMPRESA':'Empresa' };
+
+  let gdRawData  = [];
+  let gdFiltered = [];
+  let gdLoaded   = false;
+  let gdSortDir  = {};
 
   async function loadGoodDay() {
     const spinIcon = document.getElementById('gd-spin-icon');
@@ -1192,53 +1182,38 @@
     document.getElementById('gd-empty').style.display   = 'none';
 
     try {
-      // Intento 1: allorigins proxy
-      let csvText = null;
-      try {
-        const res = await fetch(GD_CSV_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        csvText = json.contents;
-      } catch(e1) {
-        // Intento 2: corsproxy.io como fallback
-        const fallback = `https://corsproxy.io/?${encodeURIComponent(GD_CSV_RAW)}`;
-        const res2 = await fetch(fallback);
-        if (!res2.ok) throw new Error(`Fallback HTTP ${res2.status}`);
-        csvText = await res2.text();
-      }
-      if (!csvText) throw new Error('Respuesta vacía');
-      const rows = parseCSV(csvText);
+      const cols = GD_COLS.join(',');
+      const data = await sbFetch('dt_dis', `select=${cols}&order=TEAMLEADER.asc`);
 
-      // Fila 0 = encabezados del Sheet (A1:G1)
-      gdHeaders = rows[0].slice(0, 7);
+      // Convertir objetos a arrays ordenados por GD_COLS
+      gdRawData = data.map(row => GD_COLS.map(c => row[c] || ''));
 
-      // Inyectar encabezados en la tabla dinámicamente
-      document.getElementById('gd-thead-row').innerHTML = gdHeaders
-        .map((h, i) => `<th onclick="sortGD(${i})">${h} <span class="sort-icon">↕</span></th>`)
+      // Inyectar encabezados en la tabla
+      document.getElementById('gd-thead-row').innerHTML = GD_COLS
+        .map((c, i) => `<th onclick="sortGD(${i})">${GD_COL_LABELS[c] || c} <span class="sort-icon">↕</span></th>`)
         .join('');
 
-      // Actualizar etiquetas de filtros con los nombres reales del Sheet
-      // cols: 0=TL, 1=Asesor, 2=PEROP1AM, 3=Campaña, 4=Descanso, 5=Horario, 6=Empresa
-      const filterMap = { 'gd-f-tl': 0, 'gd-f-camp': 3, 'gd-f-emp': 6, 'gd-f-hor': 5, 'gd-f-desc': 4 };
-      Object.entries(filterMap).forEach(([id, col]) => {
+      // Actualizar etiquetas de filtros
+      const filterLabelMap = {
+        'gd-f-tl':   'TEAMLEADER',
+        'gd-f-camp': 'PAIS',
+        'gd-f-emp':  'EMPRESA',
+        'gd-f-hor':  'HORARIO',
+        'gd-f-desc': 'DESCANSO'
+      };
+      Object.entries(filterLabelMap).forEach(([id, col]) => {
         const sel = document.getElementById(id);
-        if (sel && gdHeaders[col]) {
+        if (sel) {
           const label = sel.previousElementSibling;
-          if (label && label.tagName === 'LABEL') label.textContent = gdHeaders[col] + ':';
+          if (label && label.tagName === 'LABEL')
+            label.textContent = (GD_COL_LABELS[col] || col) + ':';
         }
       });
-
-      // row[0] = headers (A1:G1), rows 1+ = data
-      // Filter to columns A–G (index 0–6) and skip empty rows
-      gdRawData = rows.slice(1)
-        .map(r => r.slice(0, 7))
-        .filter(r => r.some(c => c !== ''));
 
       gdLoaded = true;
       populateGDFilters();
       applyGDFilters();
 
-      // Update last-updated
       const now = new Date();
       document.getElementById('gd-last-update').textContent =
         `Actualizado: ${now.toLocaleTimeString('es-ES', {hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
@@ -1246,8 +1221,8 @@
     } catch (err) {
       document.getElementById('gd-loading').innerHTML = `
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-        <p>No se pudo cargar la hoja</p>
-        <small>Verifica que el Sheet esté publicado públicamente</small>`;
+        <p>No se pudo cargar los datos</p>
+        <small>${err.message}</small>`;
       document.getElementById('gd-loading').style.display = 'flex';
     } finally {
       spinIcon.classList.remove('spin');
@@ -1255,6 +1230,7 @@
   }
 
   function populateGDFilters() {
+    // col indices: 0=TEAMLEADER, 1=ASESORES, 2=PEROPIAM, 3=PAIS, 4=DESCANSO, 5=HORARIO, 6=EMPRESA
     const unique = (col) => [...new Set(gdRawData.map(r => r[col]).filter(Boolean))].sort();
     const fillSelect = (id, values) => {
       const sel = document.getElementById(id);
@@ -1263,14 +1239,12 @@
         values.map(v => `<option value="${v}">${v}</option>`).join('');
       if (prev) sel.value = prev;
     };
-    // cols: 0=TL, 1=Asesor, 2=PEROP1AM, 3=Campaña, 4=Descanso, 5=Horario, 6=Empresa
-    fillSelect('gd-f-tl',   unique(0));
-    fillSelect('gd-f-camp', unique(3));
-    fillSelect('gd-f-emp',  unique(6));
-    fillSelect('gd-f-hor',  unique(5));
-    fillSelect('gd-f-desc', unique(4));
+    fillSelect('gd-f-tl',   unique(0)); // TEAMLEADER
+    fillSelect('gd-f-camp', unique(3)); // PAIS
+    fillSelect('gd-f-emp',  unique(6)); // EMPRESA
+    fillSelect('gd-f-hor',  unique(5)); // HORARIO
+    fillSelect('gd-f-desc', unique(4)); // DESCANSO
 
-    // KPI chips
     document.getElementById('gd-campaigns').textContent = unique(3).length;
     document.getElementById('gd-companies').textContent = unique(6).length;
   }
@@ -1370,11 +1344,7 @@
   /* ══════════════════════════════
      SESSION — LOGIN SYSTEM
   ══════════════════════════════ */
-  const SESSION_KEY   = 'gc_session';
-  const SESS_SHEET_ID = '2PACX-1vTxh4ELa21F5Oz1UzyeouphxUmPnicUwzB4dOhdPh8ihIRpUf3ZM3m18ByHNQXrDScbeJB6TdEFyB1-';
-  const SESS_GID      = '421712863';
-  const SESS_CSV_RAW  = `https://docs.google.com/spreadsheets/d/e/${SESS_SHEET_ID}/pub?gid=${SESS_GID}&single=true&output=csv`;
-  const SESS_CSV_URL  = `https://api.allorigins.win/get?url=${encodeURIComponent(SESS_CSV_RAW)}`;
+  const SESSION_KEY     = 'gc_session';
 
   let sessionUsers    = [];   // parsed from DTSESSION
   let loginCargo      = null; // 'Team Leader' | 'Supervisor'
@@ -1397,27 +1367,21 @@
     return `<div class="user-silhouette ${cls} ${extraClass}">${svg}</div>`;
   }
 
-  /* ── Load users from DTSESSION ── */
+  /* ── Load users from dt_session (Supabase) ── */
   async function loadSessionUsers() {
     try {
-      let csvText = null;
-      try {
-        const res  = await fetch(SESS_CSV_URL);
-        const json = await res.json();
-        csvText = json.contents;
-      } catch {
-        const res2 = await fetch(`https://corsproxy.io/?${encodeURIComponent(SESS_CSV_RAW)}`);
-        csvText = await res2.text();
-      }
-      const rows = parseCSV(csvText);
-      // cols: 0=NOMBRE, 1=PEROP1AM, 2=CARGO, 3=CONTRASEÑA, 4=GENERO
-      sessionUsers = rows.slice(1)
-        .map(r => r.slice(0, 5))
-        .filter(r => r[0] && r[0].trim() !== '');
+      const data = await sbFetch('dt_session', 'select=NOMBRE,PEROP1AM,CARGO,CLAVE,GENERO&order=NOMBRE.asc');
+      // Normalizar a array [NOMBRE, PEROP1AM, CARGO, CLAVE, GENERO]
+      sessionUsers = data.map(r => [
+        r.NOMBRE  || '',
+        r.PEROP1AM || '',
+        r.CARGO   || '',
+        r.CLAVE   || '',
+        r.GENERO  || ''
+      ]).filter(r => r[0].trim() !== '');
     } catch(e) {
       console.error('Error cargando usuarios:', e);
     }
-    // After loading, check existing session
     checkExistingSession();
   }
 
