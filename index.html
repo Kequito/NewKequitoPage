@@ -1474,7 +1474,7 @@
     const clearBtn = document.getElementById('gd-clear-btn');
     if (clearBtn) clearBtn.style.display = anyActive ? 'flex' : 'none';
     // Search wrap highlight
-    const sw = document.querySelector('.gd-search-wrap');
+    const sw = document.querySelector('#view-goodday .gd-search-wrap');
     if (sw) sw.classList.toggle('active', search.length > 0);
 
     renderGDTable();
@@ -2025,8 +2025,8 @@
     document.getElementById('ops-empty').style.display   = 'none';
 
     try {
-      const opsData = await sbFetch('dt_ops',
-        'select=Operator,Country,Total,Approve,Approve (%25),Reject,Reject (%25),Trash,Trash (%25),Avg Price ($)&order=Operator.asc');
+      // select=* to avoid encoding issues with column names containing spaces/special chars
+      const opsData = await sbFetch('dt_ops', 'select=*&order=Operator.asc');
       const disData = await sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO');
 
       opsDisData = {};
@@ -2085,6 +2085,8 @@
 
     document.getElementById('ops-pill-tl').classList.toggle('active', !!tl);
     document.getElementById('ops-pill-hor').classList.toggle('active', !!hor);
+    const opsSearchWrap = document.querySelector('#view-ops .gd-search-wrap');
+    if (opsSearchWrap) opsSearchWrap.classList.toggle('active', !!search);
     const anyActive = tl || hor || search;
     document.getElementById('ops-clear-btn').style.display = anyActive ? 'flex' : 'none';
     document.getElementById('ops-showing').textContent = opsFiltered.length;
@@ -2169,10 +2171,17 @@
         if (!r) {
           for (let i=0;i<M;i++) row += `<td class="metric-cell ${i===0?sc:''} ops-empty-cell">—</td>`;
         } else {
-          const ap  = r['Approve (%)']  || '—';
-          const rj  = r['Reject (%)']   || '—';
-          const tr  = r['Trash (%)']    || '—';
-          const avg = r['Avg Price ($)'] || '0';
+          // Detect the actual column keys from first row (handles spaces/special chars)
+          const sampleRow = opsRawData[0] || {};
+          const approveKey  = Object.keys(sampleRow).find(k => k.toLowerCase().includes('approve') && k.includes('%')) || 'Approve (%)';
+          const rejectKey   = Object.keys(sampleRow).find(k => k.toLowerCase().includes('reject')  && k.includes('%')) || 'Reject (%)';
+          const trashKey    = Object.keys(sampleRow).find(k => k.toLowerCase().includes('trash')   && k.includes('%')) || 'Trash (%)';
+          const avgKey      = Object.keys(sampleRow).find(k => k.toLowerCase().includes('avg'))    || 'Avg Price ($)';
+
+          const ap  = r[approveKey] || '—';
+          const rj  = r[rejectKey]  || '—';
+          const tr  = r[trashKey]   || '—';
+          const avg = r[avgKey]     || '0';
           const metrics = [
             { v: r.Total||'—',  c:'' },
             { v: r.Approve||'—',c:'' },
