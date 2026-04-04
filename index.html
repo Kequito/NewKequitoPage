@@ -1139,14 +1139,7 @@
         </div>
       </div>
 
-      <!-- Footer count -->
-      <div style="padding:10px 20px; background:var(--main-bg); border-top:1px solid var(--border); font-size:11px; color:var(--text-light); display:flex; justify-content:space-between; align-items:center;">
-        <span>Mostrando <strong id="gd-showing">0</strong> de <strong id="gd-total">0</strong> registros</span>
-        <span style="display:flex;align-items:center;gap:5px">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;color:var(--green)"><circle cx="12" cy="12" r="10"/><path fill="white" d="M9 12l2 2 4-4"/></svg>
-          Conectado a Supabase
-        </span>
-      </div>
+
     </div>
 
   </div><!-- /view-goodday -->
@@ -1451,12 +1444,9 @@
   };
 
   function gdCountryBadge(val) {
-    const v = (val || '').toUpperCase().trim();
-    const flag = COUNTRY_FLAGS[v] || '🌎';
+    const v = (val || '').trim();
     if (!v || v === '—') return `<span style="color:var(--text-light)">—</span>`;
-    return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 8px;background:var(--blue-soft);color:var(--blue);border-radius:99px">
-      <span style="font-size:14px">${flag}</span>${val}
-    </span>`;
+    return `<span style="display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:3px 10px;background:var(--blue-soft);color:var(--blue);border-radius:99px">${v}</span>`;
   }
 
   function gdDayBadge(val) {
