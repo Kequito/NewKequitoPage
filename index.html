@@ -1601,9 +1601,12 @@
     const loading = document.getElementById('gd-loading');
 
     loading.style.display = 'none';
-    document.getElementById('gd-count').textContent    = gdRawData.length;
-    document.getElementById('gd-showing').textContent  = gdFiltered.length;
-    document.getElementById('gd-total').textContent    = gdRawData.length;
+    document.getElementById('gd-count').textContent = gdRawData.length;
+    // gd-showing / gd-total were in the footer (removed) — guard with null check
+    const showEl = document.getElementById('gd-showing');
+    const totEl  = document.getElementById('gd-total');
+    if (showEl) showEl.textContent = gdFiltered.length;
+    if (totEl)  totEl.textContent  = gdRawData.length;
 
     if (gdFiltered.length === 0) {
       table.style.display = 'none';
