@@ -618,6 +618,52 @@
     /* ─── last updated chip ─── */
     #gd-last-update { font-size: 10px; color: var(--text-light); }
 
+    /* ─── OPs Performance table ─── */
+    .ops-tbl-wrap { overflow-x: auto; max-height: 560px; overflow-y: auto; }
+    .ops-tbl-wrap thead th {
+      position: sticky; top: 0; z-index: 2;
+      background: var(--main-bg);
+      white-space: nowrap;
+    }
+    .ops-tbl-wrap thead th.country-group {
+      background: var(--nav-bg);
+      color: #fff;
+      text-align: center;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .5px;
+      border-left: 2px solid rgba(255,255,255,.1);
+    }
+    .ops-tbl-wrap thead tr.sub-header th {
+      background: var(--nav-bg2);
+      color: var(--nav-muted);
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .6px;
+      border-left: 1px solid rgba(255,255,255,.06);
+      text-align: center;
+      padding: 6px 8px;
+    }
+    .ops-tbl-wrap tbody td.metric-cell {
+      text-align: center;
+      font-size: 11px;
+      border-left: 1px solid var(--border);
+      padding: 8px 7px;
+    }
+    .ops-tbl-wrap tbody td.country-start {
+      border-left: 2px solid var(--border);
+    }
+    .ops-identity-cell { min-width: 220px; }
+    .ops-perop { font-size: 11px; font-weight: 700; color: var(--text-dark); }
+    .ops-name  { font-size: 11px; color: var(--text-mid); margin-top: 1px; }
+    .ops-meta  { font-size: 10px; color: var(--text-light); margin-top: 1px; display:flex; gap:6px; flex-wrap:wrap; }
+    .ops-meta span { background: var(--main-bg); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border); }
+    .ops-approve-good { color: var(--green); font-weight: 700; }
+    .ops-approve-mid  { color: var(--amber); font-weight: 700; }
+    .ops-approve-bad  { color: var(--red);   font-weight: 700; }
+    .ops-price-good   { color: var(--green); font-weight: 700; }
+    .ops-price-mid    { color: var(--amber); font-weight: 700; }
+    .ops-price-bad    { color: var(--text-light); }
+    .ops-empty-cell   { color: var(--border); font-size: 12px; text-align:center; }
+
     /* ─── Responsive ─── */
     @media (max-width: 1100px) {
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -742,6 +788,10 @@
     <div class="nav-item nav-sub" onclick="setNav(this, 'goodday')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
       GoodDay
+    </div>
+    <div class="nav-item nav-sub" onclick="setNav(this, 'ops')">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+      OPs Performance
     </div>
   </div>
 
@@ -1144,6 +1194,72 @@
 
   </div><!-- /view-goodday -->
 
+  <!-- ══ VIEW: OPS PERFORMANCE ══ -->
+  <div class="view" id="view-ops">
+    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+
+      <!-- Header bar -->
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+          OPs Performance — Rendimiento por País
+        </div>
+        <div class="gd-stat-chip">Operadores: <span id="ops-count">—</span></div>
+        <div class="gd-stat-chip">Países: <span id="ops-countries">—</span></div>
+        <span id="ops-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
+        <button class="gd-refresh-btn" onclick="loadOps()">
+          <svg id="ops-spin-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Actualizar
+        </button>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="gd-filters" style="gap:8px">
+        <div class="gd-filter-pill" id="ops-pill-tl">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span class="pill-label">Team Leader</span>
+          <select id="ops-f-tl" onchange="applyOpsFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="clearOpsPill('ops-f-tl','ops-pill-tl')">✕</span>
+        </div>
+        <div class="gd-filter-pill" id="ops-pill-hor">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
+          <span class="pill-label">Horario</span>
+          <select id="ops-f-hor" onchange="applyOpsFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="clearOpsPill('ops-f-hor','ops-pill-hor')">✕</span>
+        </div>
+        <div class="gd-search-wrap" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="ops-search" placeholder="Buscar PEROP1AM o asesor..." oninput="applyOpsFilters()"/>
+        </div>
+        <button class="gd-clear-all" id="ops-clear-btn" onclick="clearOpsFilters()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          Limpiar todo
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="ops-tbl-wrap">
+        <div class="gd-state" id="ops-loading">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          <p>Cargando datos desde Supabase…</p>
+        </div>
+        <div class="gd-state" id="ops-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <p>Sin resultados</p><small>Intenta ajustar los filtros</small>
+        </div>
+        <table id="ops-table" style="display:none">
+          <thead id="ops-thead"></thead>
+          <tbody id="ops-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Count bar -->
+      <div style="padding:8px 20px;background:var(--main-bg);border-top:1px solid var(--border);font-size:11px;color:var(--text-light)">
+        Mostrando <strong id="ops-showing">0</strong> de <strong id="ops-total">0</strong> operadores
+      </div>
+    </div>
+  </div><!-- /view-ops -->
+
   <!-- ══ VIEW: REPORTES ══ -->
   <div class="view" id="view-reportes">
     <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
@@ -1179,13 +1295,15 @@
   const viewMap = {
     'dashboard':     'view-dashboard',
     'goodday':       'view-goodday',
+    'ops':           'view-ops',
     'reportes':      'view-reportes',
     'estadisticas':  'view-estadisticas',
     'configuracion': 'view-configuracion',
   };
   const titleMap = {
     'dashboard':     ['Dashboard Operativo', 'Resumen general del turno'],
-    'goodday':       ['GoodDay — Distribución', 'Datos en vivo desde Google Sheets'],
+    'goodday':       ['GoodDay — Distribución', 'Datos en vivo desde Supabase'],
+    'ops':           ['OPs Performance', 'Rendimiento de operadores por país'],
     'reportes':      ['Reportes', 'Generación y consulta de reportes'],
     'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
     'configuracion': ['Configuración', 'Ajustes del sistema'],
@@ -1207,6 +1325,8 @@
     document.querySelector('.topbar-left h1').textContent = titles[0];
     // auto-load GoodDay on first visit
     if (page === 'goodday' && !gdLoaded) loadGoodDay();
+    // auto-load OPs on first visit
+    if (page === 'ops' && !opsLoaded) loadOps();
   }
 
   /* ── Toggle submenu ── */
@@ -1887,6 +2007,190 @@
       }
     }
   });
+
+  /* ══════════════════════════════
+     OPS PERFORMANCE
+  ══════════════════════════════ */
+  let opsRawData   = [];
+  let opsDisData   = {};
+  let opsFiltered  = [];
+  let opsCountries = [];
+  let opsLoaded    = false;
+
+  async function loadOps() {
+    const spinIcon = document.getElementById('ops-spin-icon');
+    spinIcon.classList.add('spin');
+    document.getElementById('ops-loading').style.display = 'flex';
+    document.getElementById('ops-table').style.display   = 'none';
+    document.getElementById('ops-empty').style.display   = 'none';
+
+    try {
+      const opsData = await sbFetch('dt_ops',
+        'select=Operator,Country,Total,Approve,Approve (%25),Reject,Reject (%25),Trash,Trash (%25),Avg Price ($)&order=Operator.asc');
+      const disData = await sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO');
+
+      opsDisData = {};
+      disData.forEach(r => { if (r.PEROP1AM) opsDisData[r.PEROP1AM.trim()] = r; });
+      opsRawData   = opsData;
+      opsCountries = [...new Set(opsData.map(r => (r.Country||'').trim()).filter(Boolean))].sort();
+
+      const tls  = [...new Set(Object.values(opsDisData).map(r=>r.TEAMLEADER).filter(Boolean))].sort();
+      const hors = [...new Set(Object.values(opsDisData).map(r=>r.HORARIO).filter(Boolean))].sort();
+      const fillSel = (id, vals) => {
+        const sel = document.getElementById(id);
+        const prev = sel.value;
+        sel.innerHTML = '<option value="">Todos</option>' + vals.map(v=>`<option>${v}</option>`).join('');
+        if (prev) sel.value = prev;
+      };
+      fillSel('ops-f-tl', tls);
+      fillSel('ops-f-hor', hors);
+
+      const uniqueOps = [...new Set(opsData.map(r=>r.Operator))];
+      document.getElementById('ops-count').textContent     = uniqueOps.length;
+      document.getElementById('ops-countries').textContent = opsCountries.length;
+
+      opsLoaded = true;
+      applyOpsFilters();
+
+      const now = new Date();
+      document.getElementById('ops-last-update').textContent =
+        `Actualizado: ${now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+
+    } catch(err) {
+      document.getElementById('ops-loading').innerHTML = `
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <p>No se pudo cargar los datos</p><small>${err.message}</small>`;
+      document.getElementById('ops-loading').style.display = 'flex';
+    } finally {
+      spinIcon.classList.remove('spin');
+    }
+  }
+
+  function applyOpsFilters() {
+    const tl     = document.getElementById('ops-f-tl').value;
+    const hor    = document.getElementById('ops-f-hor').value;
+    const search = document.getElementById('ops-search').value.toLowerCase();
+
+    const allOps = [...new Set(opsRawData.map(r=>r.Operator))];
+    opsFiltered = allOps.filter(op => {
+      const dis = opsDisData[op.trim()] || {};
+      if (tl  && dis.TEAMLEADER !== tl)  return false;
+      if (hor && dis.HORARIO    !== hor) return false;
+      if (search) {
+        const name = (dis.ASESORES||'').toLowerCase();
+        if (!op.toLowerCase().includes(search) && !name.includes(search)) return false;
+      }
+      return true;
+    });
+
+    document.getElementById('ops-pill-tl').classList.toggle('active', !!tl);
+    document.getElementById('ops-pill-hor').classList.toggle('active', !!hor);
+    const anyActive = tl || hor || search;
+    document.getElementById('ops-clear-btn').style.display = anyActive ? 'flex' : 'none';
+    document.getElementById('ops-showing').textContent = opsFiltered.length;
+    document.getElementById('ops-total').textContent   = [...new Set(opsRawData.map(r=>r.Operator))].length;
+    renderOpsTable();
+  }
+
+  function clearOpsFilters() {
+    document.getElementById('ops-f-tl').value  = '';
+    document.getElementById('ops-f-hor').value = '';
+    document.getElementById('ops-search').value = '';
+    applyOpsFilters();
+  }
+  function clearOpsPill(selId) {
+    document.getElementById(selId).value = '';
+    applyOpsFilters();
+  }
+
+  function approveClass(pct) {
+    const n = parseFloat(pct);
+    if (isNaN(n)) return '';
+    return n >= 35 ? 'ops-approve-good' : n >= 25 ? 'ops-approve-mid' : 'ops-approve-bad';
+  }
+  function priceClass(price) {
+    const n = parseFloat(price);
+    if (isNaN(n) || n === 0) return 'ops-price-bad';
+    return n >= 75 ? 'ops-price-good' : n >= 50 ? 'ops-price-mid' : 'ops-price-bad';
+  }
+
+  function renderOpsTable() {
+    const table   = document.getElementById('ops-table');
+    const tbody   = document.getElementById('ops-tbody');
+    const thead   = document.getElementById('ops-thead');
+    const empty   = document.getElementById('ops-empty');
+    const loading = document.getElementById('ops-loading');
+    loading.style.display = 'none';
+
+    if (opsFiltered.length === 0) {
+      table.style.display = 'none'; empty.style.display = 'flex'; return;
+    }
+    empty.style.display = 'none'; table.style.display = 'table';
+
+    // Index: op -> country -> row
+    const idx = {};
+    opsRawData.forEach(r => {
+      const op = r.Operator, co = (r.Country||'').trim();
+      if (!idx[op]) idx[op] = {};
+      idx[op][co] = r;
+    });
+
+    // THEAD row1: identity + country groups
+    const M = 8;
+    let h1 = `<tr><th rowspan="2" style="position:sticky;left:0;z-index:3;background:var(--main-bg);text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border)">Operador</th>`;
+    opsCountries.forEach(co => {
+      const flag = (COUNTRY_FLAGS||{})[co.toUpperCase()] || '🌎';
+      h1 += `<th colspan="${M}" class="country-group">${flag} ${co}</th>`;
+    });
+    h1 += '</tr>';
+
+    const mLabels = ['Total','Appr.','Appr.%','Rej.','Rej.%','Trash','Trash%','$/avg'];
+    let h2 = '<tr class="sub-header">';
+    opsCountries.forEach(() => mLabels.forEach(m => { h2 += `<th>${m}</th>`; }));
+    h2 += '</tr>';
+    thead.innerHTML = h1 + h2;
+
+    // TBODY
+    tbody.innerHTML = opsFiltered.map(op => {
+      const dis  = opsDisData[op.trim()] || {};
+      const name = dis.ASESORES   || '—';
+      const tl   = dis.TEAMLEADER || '—';
+      const hor  = dis.HORARIO    || '—';
+
+      let row = `<tr><td class="ops-identity-cell" style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:10px 14px;border-bottom:1px solid var(--border)">
+        <div class="ops-perop">${op}</div>
+        <div class="ops-name">${name}</div>
+        <div class="ops-meta"><span>${tl}</span><span>${hor}</span></div>
+      </td>`;
+
+      opsCountries.forEach((co, ci) => {
+        const r  = (idx[op]||{})[co];
+        const sc = ci === 0 ? '' : 'country-start';
+        if (!r) {
+          for (let i=0;i<M;i++) row += `<td class="metric-cell ${i===0?sc:''} ops-empty-cell">—</td>`;
+        } else {
+          const ap  = r['Approve (%)']  || '—';
+          const rj  = r['Reject (%)']   || '—';
+          const tr  = r['Trash (%)']    || '—';
+          const avg = r['Avg Price ($)'] || '0';
+          const metrics = [
+            { v: r.Total||'—',  c:'' },
+            { v: r.Approve||'—',c:'' },
+            { v: ap,            c: approveClass(ap) },
+            { v: r.Reject||'—', c:'' },
+            { v: rj,            c:'' },
+            { v: r.Trash||'—',  c:'' },
+            { v: tr,            c:'' },
+            { v: parseFloat(avg)>0?`$${avg}`:'—', c: priceClass(avg) },
+          ];
+          metrics.forEach((m,mi) => {
+            row += `<td class="metric-cell ${mi===0?sc:''} ${m.c}">${m.v}</td>`;
+          });
+        }
+      });
+      return row + '</tr>';
+    }).join('');
+  }
 </script>
 </body>
 </html>
