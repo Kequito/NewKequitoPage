@@ -368,23 +368,88 @@
     .stat-color-dot { width: 8px; height: 8px; border-radius: 50%; }
     .stat-row-val { font-size: 13px; font-weight: 700; color: var(--text-dark); }
 
-    /* ─── Filter bar ─── */
-    .filter-bar {
-      display: flex; align-items: center; gap: 10px;
+    /* ─── GoodDay filter pills ─── */
+    .gd-filters {
+      display: flex; align-items: center; gap: 8px;
       padding: 12px 20px;
       background: var(--main-bg);
       border-bottom: 1px solid var(--border);
       flex-wrap: wrap;
     }
-    .filter-bar label { font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: .8px; }
-    .filter-select, .filter-input {
-      padding: 6px 10px; border-radius: var(--radius-sm);
-      border: 1px solid var(--border); background: var(--card-bg);
-      font-family: inherit; font-size: 12px; color: var(--text-dark);
-      outline: none; transition: border .18s;
+
+    /* Pill base */
+    .gd-filter-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 10px 6px 10px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: all .18s;
+      position: relative;
+      font-size: 12px; font-weight: 500; color: var(--text-mid);
+      white-space: nowrap;
     }
-    .filter-select:focus, .filter-input:focus { border-color: var(--blue); }
-    .filter-input { width: 180px; }
+    .gd-filter-pill svg { width: 13px; height: 13px; flex-shrink: 0; opacity: .6; }
+    .pill-label { pointer-events: none; }
+    .gd-filter-pill select {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer; font-size: 12px;
+    }
+    .pill-clear {
+      display: none; font-size: 10px; font-weight: 700;
+      color: currentColor; opacity: .7;
+      pointer-events: none; margin-left: 2px;
+    }
+
+    /* Active pill */
+    .gd-filter-pill.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(30,107,255,.3);
+    }
+    .gd-filter-pill.active svg { opacity: 1; }
+    .gd-filter-pill.active .pill-clear {
+      display: inline; pointer-events: auto; position: relative; z-index: 2;
+    }
+    .gd-filter-pill:hover:not(.active) {
+      border-color: var(--blue); color: var(--blue);
+    }
+    .gd-filter-pill:hover:not(.active) svg { opacity: 1; }
+
+    /* Search wrap */
+    .gd-search-wrap {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 12px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      transition: border .18s, box-shadow .18s;
+    }
+    .gd-search-wrap svg { width: 13px; height: 13px; color: var(--text-light); flex-shrink: 0; }
+    .gd-search-wrap input {
+      border: none; background: transparent;
+      font-family: inherit; font-size: 12px; color: var(--text-dark);
+      outline: none; width: 160px;
+    }
+    .gd-search-wrap.active,
+    .gd-search-wrap:focus-within {
+      border-color: var(--blue);
+      box-shadow: 0 2px 8px rgba(30,107,255,.15);
+    }
+
+    /* Clear-all button */
+    .gd-clear-all {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 99px;
+      background: var(--red-soft); color: var(--red);
+      border: 1.5px solid rgba(240,64,64,.2);
+      font-family: inherit; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: all .18s;
+    }
+    .gd-clear-all svg { width: 11px; height: 11px; }
+    .gd-clear-all:hover { background: var(--red); color: #fff; }
 
     /* ─── Submenu ─── */
     .sub-menu {
@@ -1010,37 +1075,49 @@
 
       <!-- Filters -->
       <div class="gd-filters">
-        <label>Team Leader:</label>
-        <select class="filter-select" id="gd-f-tl" onchange="applyGDFilters()">
-          <option value="">Todos</option>
-        </select>
+        <div class="gd-filter-pill" id="pill-tl">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span class="pill-label" id="pill-tl-label">Team Leader</span>
+          <select id="gd-f-tl" onchange="applyGDFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="clearPill('gd-f-tl')">✕</span>
+        </div>
 
-        <label>Campaña:</label>
-        <select class="filter-select" id="gd-f-camp" onchange="applyGDFilters()">
-          <option value="">Todas</option>
-        </select>
+        <div class="gd-filter-pill" id="pill-camp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <span class="pill-label" id="pill-camp-label">País</span>
+          <select id="gd-f-camp" onchange="applyGDFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="clearPill('gd-f-camp')">✕</span>
+        </div>
 
-        <label>Empresa:</label>
-        <select class="filter-select" id="gd-f-emp" onchange="applyGDFilters()">
-          <option value="">Todas</option>
-        </select>
+        <div class="gd-filter-pill" id="pill-emp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+          <span class="pill-label" id="pill-emp-label">Empresa</span>
+          <select id="gd-f-emp" onchange="applyGDFilters()"><option value="">Todas</option></select>
+          <span class="pill-clear" onclick="clearPill('gd-f-emp')">✕</span>
+        </div>
 
-        <label>Horario:</label>
-        <select class="filter-select" id="gd-f-hor" onchange="applyGDFilters()">
-          <option value="">Todos</option>
-        </select>
+        <div class="gd-filter-pill" id="pill-hor">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
+          <span class="pill-label" id="pill-hor-label">Horario</span>
+          <select id="gd-f-hor" onchange="applyGDFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="clearPill('gd-f-hor')">✕</span>
+        </div>
 
-        <label>Descanso:</label>
-        <select class="filter-select" id="gd-f-desc" onchange="applyGDFilters()">
-          <option value="">Todos</option>
-        </select>
+        <div class="gd-filter-pill" id="pill-desc">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+          <span class="pill-label" id="pill-desc-label">Descanso</span>
+          <select id="gd-f-desc" onchange="applyGDFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="clearPill('gd-f-desc')">✕</span>
+        </div>
 
-        <input class="filter-input" type="text" id="gd-search"
-          placeholder="🔍 Buscar asesor..." oninput="applyGDFilters()" style="margin-left:auto"/>
+        <div class="gd-search-wrap" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="gd-search" placeholder="Buscar asesor..." oninput="applyGDFilters()"/>
+        </div>
 
-        <button class="btn btn-ghost btn-sm" onclick="clearGDFilters()">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          Limpiar
+        <button class="gd-clear-all" onclick="clearGDFilters()" id="gd-clear-btn" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          Limpiar todo
         </button>
       </div>
 
@@ -1048,8 +1125,8 @@
       <div class="gd-tbl-wrap" id="gd-table-wrap">
         <div class="gd-state" id="gd-loading">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          <p>Cargando datos desde Google Sheets…</p>
-          <small>Conectando con la hoja DATA-DIST-PAGE</small>
+          <p>Cargando datos desde Supabase…</p>
+          <small>Conectando con la base de datos</small>
         </div>
         <table id="gd-table" style="display:none">
           <thead><tr id="gd-thead-row"></tr></thead>
@@ -1065,7 +1142,10 @@
       <!-- Footer count -->
       <div style="padding:10px 20px; background:var(--main-bg); border-top:1px solid var(--border); font-size:11px; color:var(--text-light); display:flex; justify-content:space-between; align-items:center;">
         <span>Mostrando <strong id="gd-showing">0</strong> de <strong id="gd-total">0</strong> registros</span>
-        <span>Fuente: Google Sheets — DATA-DIST-PAGE</span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;color:var(--green)"><circle cx="12" cy="12" r="10"/><path fill="white" d="M9 12l2 2 4-4"/></svg>
+          Conectado a Supabase
+        </span>
       </div>
     </div>
 
@@ -1250,11 +1330,11 @@
   }
 
   function applyGDFilters() {
-    const tl    = document.getElementById('gd-f-tl').value;
-    const camp  = document.getElementById('gd-f-camp').value;
-    const emp   = document.getElementById('gd-f-emp').value;
-    const hor   = document.getElementById('gd-f-hor').value;
-    const desc  = document.getElementById('gd-f-desc').value;
+    const tl     = document.getElementById('gd-f-tl').value;
+    const camp   = document.getElementById('gd-f-camp').value;
+    const emp    = document.getElementById('gd-f-emp').value;
+    const hor    = document.getElementById('gd-f-hor').value;
+    const desc   = document.getElementById('gd-f-desc').value;
     const search = document.getElementById('gd-search').value.toLowerCase();
 
     gdFiltered = gdRawData.filter(r => {
@@ -1267,6 +1347,23 @@
       return true;
     });
 
+    // Update pill active states
+    const pillMap = { 'pill-tl': tl, 'pill-camp': camp, 'pill-emp': emp, 'pill-hor': hor, 'pill-desc': desc };
+    let anyActive = search.length > 0;
+    Object.entries(pillMap).forEach(([pillId, val]) => {
+      const pill = document.getElementById(pillId);
+      if (pill) {
+        pill.classList.toggle('active', !!val);
+        if (val) anyActive = true;
+      }
+    });
+    // Show/hide clear-all button
+    const clearBtn = document.getElementById('gd-clear-btn');
+    if (clearBtn) clearBtn.style.display = anyActive ? 'flex' : 'none';
+    // Search wrap highlight
+    const sw = document.querySelector('.gd-search-wrap');
+    if (sw) sw.classList.toggle('active', search.length > 0);
+
     renderGDTable();
   }
 
@@ -1275,6 +1372,11 @@
       document.getElementById(id).value = '';
     });
     document.getElementById('gd-search').value = '';
+    applyGDFilters();
+  }
+
+  function clearPill(selectId) {
+    document.getElementById(selectId).value = '';
     applyGDFilters();
   }
 
@@ -1290,16 +1392,108 @@
     return `<span>${v}</span>`;
   }
 
+  /* ── Visual helpers ── */
+  const COUNTRY_FLAGS = {
+    'ECUADOR':      '🇪🇨',
+    'PERU':         '🇵🇪',
+    'PERÚ':         '🇵🇪',
+    'COLOMBIA':     '🇨🇴',
+    'CHILE':        '🇨🇱',
+    'ARGENTINA':    '🇦🇷',
+    'MEXICO':       '🇲🇽',
+    'MÉXICO':       '🇲🇽',
+    'BOLIVIA':      '🇧🇴',
+    'VENEZUELA':    '🇻🇪',
+    'URUGUAY':      '🇺🇾',
+    'PARAGUAY':     '🇵🇾',
+    'COSTA RICA':   '🇨🇷',
+    'PANAMA':       '🇵🇦',
+    'PANAMÁ':       '🇵🇦',
+    'GUATEMALA':    '🇬🇹',
+    'HONDURAS':     '🇭🇳',
+    'EL SALVADOR':  '🇸🇻',
+    'NICARAGUA':    '🇳🇮',
+    'ESPAÑA':       '🇪🇸',
+    'ESPANA':       '🇪🇸',
+    'SIN PROGRAMAR':'⚠️',
+  };
+
+  const DAY_COLORS = {
+    'LUNES':     { bg:'#e8f0ff', color:'#1e6bff' },
+    'MARTES':    { bg:'#fce8ff', color:'#c026d3' },
+    'MIÉRCOLES': { bg:'#fff8e8', color:'#d97706' },
+    'MIERCOLES': { bg:'#fff8e8', color:'#d97706' },
+    'JUEVES':    { bg:'#e8fff4', color:'#059669' },
+    'VIERNES':   { bg:'#fff0e8', color:'#ea580c' },
+    'SÁBADO':    { bg:'#f0e8ff', color:'#7c3aed' },
+    'SABADO':    { bg:'#f0e8ff', color:'#7c3aed' },
+    'DOMINGO':   { bg:'#ffe8e8', color:'#dc2626' },
+  };
+
+  const SCHEDULE_COLORS = {
+    '06:00-15:00': { bg:'#fef9c3', color:'#854d0e' },
+    '07:00-16:00': { bg:'#fef3c7', color:'#92400e' },
+    '08:00-17:00': { bg:'#e0f2fe', color:'#0369a1' },
+    '09:00-18:00': { bg:'#dcfce7', color:'#166534' },
+    '10:00-19:00': { bg:'#d1fae5', color:'#065f46' },
+    '11:00-20:00': { bg:'#ede9fe', color:'#5b21b6' },
+    '12:00-21:00': { bg:'#fce7f3', color:'#9d174d' },
+    '13:00-22:00': { bg:'#fee2e2', color:'#991b1b' },
+    '14:00-23:00': { bg:'#fef2f2', color:'#7f1d1d' },
+    '22:00-07:00': { bg:'#1e293b', color:'#94a3b8' },
+  };
+
+  const EMPRESA_COLORS = {
+    'CALLYPSO':  { bg:'#fee2e2', color:'#991b1b', dot:'#dc2626' },
+    'PRIMA':     { bg:'#dbeafe', color:'#1e40af', dot:'#2563eb' },
+    'INTEGRAL':  { bg:'#dcfce7', color:'#166534', dot:'#16a34a' },
+    'SIN DATA':  { bg:'#1e293b', color:'#94a3b8', dot:'#475569' },
+  };
+
+  function gdCountryBadge(val) {
+    const v = (val || '').toUpperCase().trim();
+    const flag = COUNTRY_FLAGS[v] || '🌎';
+    if (!v || v === '—') return `<span style="color:var(--text-light)">—</span>`;
+    return `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 8px;background:var(--blue-soft);color:var(--blue);border-radius:99px">
+      <span style="font-size:14px">${flag}</span>${val}
+    </span>`;
+  }
+
+  function gdDayBadge(val) {
+    const v = (val || '').toUpperCase().trim();
+    if (!v || v === '—' || v === 'EMPTY') return `<span style="color:var(--text-light)">—</span>`;
+    const c = DAY_COLORS[v] || { bg:'var(--main-bg)', color:'var(--text-mid)' };
+    return `<span style="display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${c.bg};color:${c.color}">${val}</span>`;
+  }
+
+  function gdScheduleBadge(val) {
+    const v = (val || '').trim();
+    if (!v || v === '—') return `<span style="color:var(--text-light)">—</span>`;
+    // Find matching key (partial match)
+    const key = Object.keys(SCHEDULE_COLORS).find(k => v.includes(k.split('-')[0])) || '';
+    const c = SCHEDULE_COLORS[key] || { bg:'var(--main-bg)', color:'var(--text-mid)' };
+    return `<span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;background:${c.bg};color:${c.color};font-variant-numeric:tabular-nums">${val}</span>`;
+  }
+
+  function gdEmpresaBadge(val) {
+    const v = (val || '').toUpperCase().trim();
+    if (!v || v === '—') return `<span style="color:var(--text-light)">—</span>`;
+    const c = EMPRESA_COLORS[v] || { bg:'var(--main-bg)', color:'var(--text-mid)', dot:'var(--text-light)' };
+    return `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;background:${c.bg};color:${c.color}">
+      <span style="width:6px;height:6px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>${val}
+    </span>`;
+  }
+
   function renderGDTable() {
-    const tbody  = document.getElementById('gd-tbody');
-    const table  = document.getElementById('gd-table');
-    const empty  = document.getElementById('gd-empty');
+    const tbody   = document.getElementById('gd-tbody');
+    const table   = document.getElementById('gd-table');
+    const empty   = document.getElementById('gd-empty');
     const loading = document.getElementById('gd-loading');
 
     loading.style.display = 'none';
-    document.getElementById('gd-count').textContent   = gdRawData.length;
-    document.getElementById('gd-showing').textContent = gdFiltered.length;
-    document.getElementById('gd-total').textContent   = gdRawData.length;
+    document.getElementById('gd-count').textContent    = gdRawData.length;
+    document.getElementById('gd-showing').textContent  = gdFiltered.length;
+    document.getElementById('gd-total').textContent    = gdRawData.length;
 
     if (gdFiltered.length === 0) {
       table.style.display = 'none';
@@ -1310,15 +1504,16 @@
     empty.style.display = 'none';
     table.style.display = 'table';
 
-    tbody.innerHTML = gdFiltered.map((r, i) => `
+    // cols: 0=TEAMLEADER, 1=ASESORES, 2=PEROP1AM, 3=PAIS, 4=DESCANSO, 5=HORARIO, 6=EMPRESA
+    tbody.innerHTML = gdFiltered.map(r => `
       <tr>
         <td><strong>${r[0] || '—'}</strong></td>
         <td>${r[1] || '—'}</td>
         <td>${gdPeropBadge(r[2])}</td>
-        <td><span class="badge badge-blue">${r[3] || '—'}</span></td>
-        <td>${r[4] || '—'}</td>
-        <td><span style="font-size:11px;background:var(--main-bg);padding:2px 7px;border-radius:4px;border:1px solid var(--border)">${r[5] || '—'}</span></td>
-        <td>${r[6] || '—'}</td>
+        <td>${gdCountryBadge(r[3])}</td>
+        <td>${gdDayBadge(r[4])}</td>
+        <td>${gdScheduleBadge(r[5])}</td>
+        <td>${gdEmpresaBadge(r[6])}</td>
       </tr>`).join('');
   }
 
