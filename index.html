@@ -1218,14 +1218,8 @@
         <div class="gd-filter-pill" id="ops-pill-tl">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
           <span class="pill-label">Team Leader</span>
-          <select id="ops-f-tl" onchange="applyOpsFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="clearOpsPill('ops-f-tl','ops-pill-tl')">✕</span>
-        </div>
-        <div class="gd-filter-pill" id="ops-pill-hor">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
-          <span class="pill-label">Horario</span>
-          <select id="ops-f-hor" onchange="applyOpsFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="clearOpsPill('ops-f-hor','ops-pill-hor')">✕</span>
+          <select id="ops-f-tl" onchange="applyOpsFilters()"><option value="">Seleccionar...</option></select>
+          <span class="pill-clear" onclick="clearOpsPill('ops-f-tl')">✕</span>
         </div>
         <div class="gd-search-wrap" style="margin-left:auto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -1233,15 +1227,20 @@
         </div>
         <button class="gd-clear-all" id="ops-clear-btn" onclick="clearOpsFilters()" style="display:none">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          Limpiar todo
+          Limpiar
         </button>
       </div>
 
       <!-- Table -->
       <div class="ops-tbl-wrap">
-        <div class="gd-state" id="ops-loading">
+        <div class="gd-state" id="ops-loading" style="display:none">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
           <p>Cargando datos desde Supabase…</p>
+        </div>
+        <div class="gd-state" id="ops-select-tl">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <p>Selecciona un Team Leader para ver los datos</p>
+          <small>Usa el filtro de arriba para comenzar</small>
         </div>
         <div class="gd-state" id="ops-empty" style="display:none">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
@@ -2011,6 +2010,7 @@
     }
   });
 
+
   /* ══════════════════════════════
      OPS PERFORMANCE
   ══════════════════════════════ */
@@ -2020,40 +2020,54 @@
   let opsCountries = [];
   let opsLoaded    = false;
 
+  const COUNTRY_CODES = {
+    'CHILE':'cl','COLOMBIA':'co','ECUADOR':'ec','PERU':'pe','PERÚ':'pe',
+    'MEXICO':'mx','MÉXICO':'mx','ARGENTINA':'ar','URUGUAY':'uy','BOLIVIA':'bo',
+    'PARAGUAY':'py','VENEZUELA':'ve','COSTA RICA':'cr','PANAMA':'pa','PANAMÁ':'pa',
+    'GUATEMALA':'gt','HONDURAS':'hn','NICARAGUA':'ni','EL SALVADOR':'sv',
+    'ESPAÑA':'es','ESPANA':'es',
+  };
+
+  function countryFlag(country) {
+    const code = COUNTRY_CODES[(country||'').toUpperCase().trim()];
+    if (!code) return '';
+    return `<img src="https://flagcdn.com/20x15/${code}.png" srcset="https://flagcdn.com/40x30/${code}.png 2x" width="20" height="15" alt="${country}" style="border-radius:2px;vertical-align:middle;margin-right:5px;box-shadow:0 1px 3px rgba(0,0,0,.2)">`;
+  }
+
   async function loadOps() {
     const spinIcon = document.getElementById('ops-spin-icon');
     spinIcon.classList.add('spin');
-    document.getElementById('ops-loading').style.display = 'flex';
-    document.getElementById('ops-table').style.display   = 'none';
-    document.getElementById('ops-empty').style.display   = 'none';
+    document.getElementById('ops-loading').style.display    = 'flex';
+    document.getElementById('ops-select-tl').style.display = 'none';
+    document.getElementById('ops-table').style.display     = 'none';
+    document.getElementById('ops-empty').style.display     = 'none';
 
     try {
-      // select=* to avoid encoding issues with column names containing spaces/special chars
       const opsData = await sbFetch('dt_ops', 'select=*&order=Operator.asc');
       const disData = await sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO');
 
       opsDisData = {};
       disData.forEach(r => { if (r.PEROP1AM) opsDisData[r.PEROP1AM.trim()] = r; });
       opsRawData   = opsData;
-      opsCountries = [...new Set(opsData.map(r => (r.Country||'').trim()).filter(Boolean))].sort();
+      opsCountries = [...new Set(opsData.map(r=>(r.Country||'').trim()).filter(Boolean))].sort();
 
-      const tls  = [...new Set(Object.values(opsDisData).map(r=>r.TEAMLEADER).filter(Boolean))].sort();
-      const hors = [...new Set(Object.values(opsDisData).map(r=>r.HORARIO).filter(Boolean))].sort();
-      const fillSel = (id, vals) => {
-        const sel = document.getElementById(id);
-        const prev = sel.value;
-        sel.innerHTML = '<option value="">Todos</option>' + vals.map(v=>`<option>${v}</option>`).join('');
-        if (prev) sel.value = prev;
-      };
-      fillSel('ops-f-tl', tls);
-      fillSel('ops-f-hor', hors);
+      const tls = [...new Set(Object.values(opsDisData).map(r=>r.TEAMLEADER).filter(Boolean))].sort();
+      const sel = document.getElementById('ops-f-tl');
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Seleccionar...</option>' + tls.map(v=>`<option>${v}</option>`).join('');
+      if (prev) sel.value = prev;
 
       const uniqueOps = [...new Set(opsData.map(r=>r.Operator))];
       document.getElementById('ops-count').textContent     = uniqueOps.length;
       document.getElementById('ops-countries').textContent = opsCountries.length;
-
       opsLoaded = true;
-      applyOpsFilters();
+
+      document.getElementById('ops-loading').style.display = 'none';
+      if (!sel.value) {
+        document.getElementById('ops-select-tl').style.display = 'flex';
+      } else {
+        applyOpsFilters();
+      }
 
       const now = new Date();
       document.getElementById('ops-last-update').textContent =
@@ -2071,14 +2085,23 @@
 
   function applyOpsFilters() {
     const tl     = document.getElementById('ops-f-tl').value;
-    const hor    = document.getElementById('ops-f-hor').value;
     const search = document.getElementById('ops-search').value.toLowerCase();
+
+    if (!tl) {
+      document.getElementById('ops-table').style.display     = 'none';
+      document.getElementById('ops-empty').style.display     = 'none';
+      document.getElementById('ops-loading').style.display   = 'none';
+      document.getElementById('ops-select-tl').style.display = 'flex';
+      document.getElementById('ops-pill-tl').classList.remove('active');
+      document.getElementById('ops-clear-btn').style.display = 'none';
+      document.getElementById('ops-showing').textContent = '0';
+      return;
+    }
 
     const allOps = [...new Set(opsRawData.map(r=>r.Operator))];
     opsFiltered = allOps.filter(op => {
       const dis = opsDisData[op.trim()] || {};
-      if (tl  && dis.TEAMLEADER !== tl)  return false;
-      if (hor && dis.HORARIO    !== hor) return false;
+      if (dis.TEAMLEADER !== tl) return false;
       if (search) {
         const name = (dis.ASESORES||'').toLowerCase();
         if (!op.toLowerCase().includes(search) && !name.includes(search)) return false;
@@ -2086,20 +2109,18 @@
       return true;
     });
 
-    document.getElementById('ops-pill-tl').classList.toggle('active', !!tl);
-    document.getElementById('ops-pill-hor').classList.toggle('active', !!hor);
-    const opsSearchWrap = document.querySelector('#view-ops .gd-search-wrap');
-    if (opsSearchWrap) opsSearchWrap.classList.toggle('active', !!search);
-    const anyActive = tl || hor || search;
-    document.getElementById('ops-clear-btn').style.display = anyActive ? 'flex' : 'none';
+    document.getElementById('ops-select-tl').style.display = 'none';
+    document.getElementById('ops-pill-tl').classList.add('active');
+    const sw = document.querySelector('#view-ops .gd-search-wrap');
+    if (sw) sw.classList.toggle('active', !!search);
+    document.getElementById('ops-clear-btn').style.display = (tl||search) ? 'flex' : 'none';
     document.getElementById('ops-showing').textContent = opsFiltered.length;
     document.getElementById('ops-total').textContent   = [...new Set(opsRawData.map(r=>r.Operator))].length;
     renderOpsTable();
   }
 
   function clearOpsFilters() {
-    document.getElementById('ops-f-tl').value  = '';
-    document.getElementById('ops-f-hor').value = '';
+    document.getElementById('ops-f-tl').value   = '';
     document.getElementById('ops-search').value = '';
     applyOpsFilters();
   }
@@ -2112,11 +2133,6 @@
     const n = parseFloat(pct);
     if (isNaN(n)) return '';
     return n >= 35 ? 'ops-approve-good' : n >= 25 ? 'ops-approve-mid' : 'ops-approve-bad';
-  }
-  function priceClass(price) {
-    const n = parseFloat(price);
-    if (isNaN(n) || n === 0) return 'ops-price-bad';
-    return n >= 75 ? 'ops-price-good' : n >= 50 ? 'ops-price-mid' : 'ops-price-bad';
   }
 
   function renderOpsTable() {
@@ -2132,7 +2148,6 @@
     }
     empty.style.display = 'none'; table.style.display = 'table';
 
-    // Index: op -> country -> row
     const idx = {};
     opsRawData.forEach(r => {
       const op = r.Operator, co = (r.Country||'').trim();
@@ -2140,32 +2155,29 @@
       idx[op][co] = r;
     });
 
-    // THEAD row1: identity + country groups
-    const M = 8;
-    let h1 = `<tr><th rowspan="2" style="position:sticky;left:0;z-index:3;background:var(--main-bg);text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border)">Operador</th>`;
-    opsCountries.forEach(co => {
-      const flag = (COUNTRY_FLAGS||{})[co.toUpperCase()] || '🌎';
-      h1 += `<th colspan="${M}" class="country-group">${flag} ${co}</th>`;
-    });
+    const sampleRow  = opsRawData[0] || {};
+    const approveKey = Object.keys(sampleRow).find(k=>k.toLowerCase().includes('approve')&&k.includes('%')) || 'Approve (%)';
+    const M = 3;
+    const mLabels = ['Total','Aprobados','Aprobados %'];
+
+    let h1 = `<tr><th rowspan="2" style="position:sticky;left:0;z-index:3;background:var(--nav-bg);color:#fff;text-align:left;padding:10px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;border-bottom:2px solid rgba(255,255,255,.1);min-width:260px;white-space:nowrap">Operador</th>`;
+    opsCountries.forEach(co => { h1 += `<th colspan="${M}" class="country-group">${countryFlag(co)}${co}</th>`; });
     h1 += '</tr>';
 
-    const mLabels = ['Total','Appr.','Appr.%','Rej.','Rej.%','Trash','Trash%','$/avg'];
     let h2 = '<tr class="sub-header">';
     opsCountries.forEach(() => mLabels.forEach(m => { h2 += `<th>${m}</th>`; }));
     h2 += '</tr>';
     thead.innerHTML = h1 + h2;
 
-    // TBODY
     tbody.innerHTML = opsFiltered.map(op => {
       const dis  = opsDisData[op.trim()] || {};
       const name = dis.ASESORES   || '—';
       const tl   = dis.TEAMLEADER || '—';
-      const hor  = dis.HORARIO    || '—';
 
-      let row = `<tr><td class="ops-identity-cell" style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:10px 14px;border-bottom:1px solid var(--border)">
+      let row = `<tr><td style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:10px 16px;border-bottom:1px solid var(--border);min-width:260px">
         <div class="ops-perop">${op}</div>
         <div class="ops-name">${name}</div>
-        <div class="ops-meta"><span>${tl}</span><span>${hor}</span></div>
+        <div class="ops-meta"><span>${tl}</span></div>
       </td>`;
 
       opsCountries.forEach((co, ci) => {
@@ -2174,30 +2186,9 @@
         if (!r) {
           for (let i=0;i<M;i++) row += `<td class="metric-cell ${i===0?sc:''} ops-empty-cell">—</td>`;
         } else {
-          // Detect the actual column keys from first row (handles spaces/special chars)
-          const sampleRow = opsRawData[0] || {};
-          const approveKey  = Object.keys(sampleRow).find(k => k.toLowerCase().includes('approve') && k.includes('%')) || 'Approve (%)';
-          const rejectKey   = Object.keys(sampleRow).find(k => k.toLowerCase().includes('reject')  && k.includes('%')) || 'Reject (%)';
-          const trashKey    = Object.keys(sampleRow).find(k => k.toLowerCase().includes('trash')   && k.includes('%')) || 'Trash (%)';
-          const avgKey      = Object.keys(sampleRow).find(k => k.toLowerCase().includes('avg'))    || 'Avg Price ($)';
-
-          const ap  = r[approveKey] || '—';
-          const rj  = r[rejectKey]  || '—';
-          const tr  = r[trashKey]   || '—';
-          const avg = r[avgKey]     || '0';
-          const metrics = [
-            { v: r.Total||'—',  c:'' },
-            { v: r.Approve||'—',c:'' },
-            { v: ap,            c: approveClass(ap) },
-            { v: r.Reject||'—', c:'' },
-            { v: rj,            c:'' },
-            { v: r.Trash||'—',  c:'' },
-            { v: tr,            c:'' },
-            { v: parseFloat(avg)>0?`$${avg}`:'—', c: priceClass(avg) },
-          ];
-          metrics.forEach((m,mi) => {
-            row += `<td class="metric-cell ${mi===0?sc:''} ${m.c}">${m.v}</td>`;
-          });
+          const ap = r[approveKey] || '—';
+          [{ v:r.Total||'—',c:'' },{ v:r.Approve||'—',c:'' },{ v:ap,c:approveClass(ap) }]
+            .forEach((m,mi) => { row += `<td class="metric-cell ${mi===0?sc:''} ${m.c}">${m.v}</td>`; });
         }
       });
       return row + '</tr>';
