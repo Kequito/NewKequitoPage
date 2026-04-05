@@ -1217,18 +1217,6 @@
           <select id="ops-f-tl" onchange="applyOpsFilters()"><option value="">Seleccionar...</option></select>
           <span class="pill-clear" onclick="clearOpsPill('ops-f-tl')">✕</span>
         </div>
-        <div class="gd-filter-pill" id="ops-pill-pais">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-          <span class="pill-label">País</span>
-          <select id="ops-f-pais" onchange="applyOpsFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="clearOpsPill('ops-f-pais')">✕</span>
-        </div>
-        <div class="gd-filter-pill" id="ops-pill-camp">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z"/></svg>
-          <span class="pill-label">Campaña</span>
-          <select id="ops-f-camp" onchange="applyOpsFilters()"><option value="">Todas</option></select>
-          <span class="pill-clear" onclick="clearOpsPill('ops-f-camp')">✕</span>
-        </div>
         <div class="gd-search-wrap" style="margin-left:auto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="text" id="ops-search" placeholder="Buscar PEROP1AM o asesor..." oninput="applyOpsFilters()"/>
@@ -2055,7 +2043,7 @@
       // Fetch all dt_ops rows and all dt_dis rows
       const [opsData, disData] = await Promise.all([
         sbFetch('dt_ops', 'select=*&order=Operator.asc'),
-        sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO,PAIS,CAMPANA')
+        sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO')
       ]);
 
       // Index dt_ops by Operator+Country for fast lookup
@@ -2066,38 +2054,26 @@
         opsIdx[op][co] = r;
       });
 
-      // Index dt_dis — multiple rows per PEROP1AM possible (different PAIS/CAMPANA)
-      // Use first occurrence for identity info, collect all PAIS & CAMPANA
+      // Index dt_dis by PEROP1AM
       opsDisData = {};
       disData.forEach(r => {
         const p = (r.PEROP1AM||'').trim();
         if (!p) return;
         if (!opsDisData[p]) {
-          opsDisData[p] = { ASESORES: r.ASESORES||'—', TEAMLEADER: r.TEAMLEADER||'—', HORARIO: r.HORARIO||'—', PAIS: r.PAIS||'', CAMPANA: r.CAMPANA||'' };
+          opsDisData[p] = { ASESORES: r.ASESORES||'—', TEAMLEADER: r.TEAMLEADER||'—', HORARIO: r.HORARIO||'—' };
         }
       });
 
       opsRawData   = opsData;
-      // Countries come from dt_ops
       opsCountries = [...new Set(opsData.map(r=>(r.Country||'').trim()).filter(Boolean))].sort();
 
-      // Build TL list from dt_dis
-      const tls   = [...new Set(disData.map(r=>r.TEAMLEADER).filter(Boolean))].sort();
-      const paises = opsCountries;
-      const camps  = [...new Set(disData.map(r=>r.CAMPANA).filter(Boolean))].sort();
+      // Fill TL filter only
+      const tls = [...new Set(disData.map(r=>r.TEAMLEADER).filter(Boolean))].sort();
+      const sel = document.getElementById('ops-f-tl');
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Seleccionar...</option>' + tls.map(v=>`<option>${v}</option>`).join('');
+      if (prev && tls.includes(prev)) sel.value = prev;
 
-      const fillSel = (id, vals, placeholder) => {
-        const sel = document.getElementById(id);
-        if (!sel) return;
-        const prev = sel.value;
-        sel.innerHTML = `<option value="">${placeholder}</option>` + vals.map(v=>`<option>${v}</option>`).join('');
-        if (prev && vals.includes(prev)) sel.value = prev;
-      };
-      fillSel('ops-f-tl',   tls,   'Seleccionar...');
-      fillSel('ops-f-pais', paises,'Todos');
-      fillSel('ops-f-camp', camps, 'Todas');
-
-      // Store opsIdx for use in render
       window._opsIdx = opsIdx;
 
       // Stats chips
@@ -2129,8 +2105,6 @@
 
   function applyOpsFilters() {
     const tl     = document.getElementById('ops-f-tl').value;
-    const pais   = document.getElementById('ops-f-pais').value;
-    const camp   = document.getElementById('ops-f-camp').value;
     const search = document.getElementById('ops-search').value.toLowerCase();
     const idx    = window._opsIdx || {};
 
@@ -2140,19 +2114,16 @@
       document.getElementById('ops-empty').style.display     = 'none';
       document.getElementById('ops-loading').style.display   = 'none';
       document.getElementById('ops-select-tl').style.display = 'flex';
-      ['ops-pill-tl','ops-pill-pais','ops-pill-camp'].forEach(id => {
-        document.getElementById(id)?.classList.remove('active');
-      });
+      document.getElementById('ops-pill-tl')?.classList.remove('active');
       document.getElementById('ops-clear-btn').style.display = 'none';
       document.getElementById('ops-showing').textContent = '0';
       return;
     }
 
-    // Source of truth: all OPs in dt_dis belonging to this TL
-    const allOpsInDis = Object.keys(opsDisData).filter(op => {
+    // All OPs in dt_dis for this TL
+    opsFiltered = Object.keys(opsDisData).filter(op => {
       const dis = opsDisData[op];
       if (dis.TEAMLEADER !== tl) return false;
-      if (camp && dis.CAMPANA !== camp) return false;
       if (search) {
         const name = (dis.ASESORES||'').toLowerCase();
         if (!op.toLowerCase().includes(search) && !name.includes(search)) return false;
@@ -2160,34 +2131,18 @@
       return true;
     });
 
-    // If país filter active: only show OPs that have at least 1 Total > 0 in that country
-    opsFiltered = allOpsInDis.filter(op => {
-      if (!pais) return true;
-      const r = (idx[op]||{})[pais];
-      if (!r) return false;
-      const total = parseInt(r.Total) || 0;
-      return total > 0;
-    });
-
-    // Pill active states
+    document.getElementById('ops-select-tl').style.display = 'none';
     document.getElementById('ops-pill-tl').classList.add('active');
-    document.getElementById('ops-pill-pais').classList.toggle('active', !!pais);
-    document.getElementById('ops-pill-camp').classList.toggle('active', !!camp);
     const sw = document.querySelector('#view-ops .gd-search-wrap');
     if (sw) sw.classList.toggle('active', !!search);
-    const anyExtra = pais || camp || search;
-    document.getElementById('ops-clear-btn').style.display = anyExtra ? 'flex' : 'none';
+    document.getElementById('ops-clear-btn').style.display = search ? 'flex' : 'none';
     document.getElementById('ops-showing').textContent = opsFiltered.length;
     document.getElementById('ops-total').textContent   = Object.keys(opsDisData).filter(op=>opsDisData[op].TEAMLEADER===tl).length;
-
-    // If país active, only show that country's column
-    renderOpsTable(pais || null);
+    renderOpsTable(null);
   }
 
   function clearOpsFilters() {
     document.getElementById('ops-f-tl').value   = '';
-    document.getElementById('ops-f-pais').value = '';
-    document.getElementById('ops-f-camp').value = '';
     document.getElementById('ops-search').value = '';
     applyOpsFilters();
   }
