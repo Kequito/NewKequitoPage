@@ -678,6 +678,18 @@
     }
     .rep-toggle-chip.off { opacity:.35; }
     #rep-date-input::-webkit-calendar-picker-indicator { filter: invert(0.75); cursor: pointer; }
+    .rep-delta { font-size:10px; font-weight:700; white-space:nowrap; }
+    .rep-delta-up   { color:#4ade80; }
+    .rep-delta-down { color:#f87171; }
+    .rep-delta-flat { color:var(--text-light); }
+    .rep-summary-banner {
+      display:flex; align-items:center; gap:10px;
+      padding:14px 18px; margin-bottom:22px;
+      background:linear-gradient(90deg, var(--nav-bg) 0%, var(--nav-bg2) 100%);
+      border-radius:var(--radius); border:1px solid var(--border);
+      color:#fff; font-size:13px; font-weight:500;
+    }
+    .rep-summary-banner svg { width:20px; height:20px; flex-shrink:0; color:var(--nav-accent); }
 
     /* ─── Responsive ─── */
     @media (max-width: 1100px) {
@@ -1304,6 +1316,12 @@
     <div class="gd-state" id="rep-empty-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
       <p>Aún no has generado un reporte</p><small>Pega los datos del Panel arriba y presiona "Generar reporte"</small>
+    </div>
+
+    <!-- Resumen en lenguaje natural -->
+    <div id="rep-summary" class="rep-summary-banner" style="display:none">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      <span id="rep-summary-text"></span>
     </div>
 
     <!-- Summary KPIs -->
@@ -2450,7 +2468,7 @@
     } catch { return false; }
   }
 
-  function repGenerate() {
+  async function repGenerate() {
     const raw = document.getElementById('rep-raw-input').value;
     const errBox = document.getElementById('rep-parse-error');
     errBox.style.display = 'none';
@@ -2463,17 +2481,25 @@
     repRows = parsed;
     document.getElementById('rep-empty-state').style.display = 'none';
     document.getElementById('rep-save-btn').style.display = repIsSupervisor() ? 'inline-flex' : 'none';
-    repRenderReport();
+
+    const [prevSnap, todaySnaps] = await Promise.all([
+      repFetchPrevSnapshot(),
+      repFetchSnapshotsForRange('today'),
+    ]);
+    repPrevSnapshot = prevSnap;
+
+    repRenderReport(todaySnaps);
     repTogglePaste();
   }
 
-  let repByCountry = [];
-  let repGlobal    = { total: 0, approved: 0, approvePct: 0 };
-  let repSortCol   = null;
-  let repSortDir   = {};
+  let repByCountry    = [];
+  let repGlobal        = { total: 0, approved: 0, approvePct: 0 };
+  let repPrevSnapshot  = null;
+  let repSortCol       = null;
+  let repSortDir       = {};
   const REP_SORT_KEYS = ['country','total','new','recall','noAnswer','approved','approvePct','reject','trash'];
 
-  function repRenderReport() {
+  function repRenderReport(todaySnapshots = []) {
     repByCountry = repAggregateByCountry(repRows);
     repGlobal = repGetGlobal(repRows);
     repSortCol = null;
@@ -2484,6 +2510,15 @@
       if (icon) icon.textContent = '↕';
     });
 
+    // Deltas vs. el último snapshot guardado (independiente del filtro de la gráfica)
+    const prevByCountry = repPrevSnapshot ? (repPrevSnapshot.by_country || []) : [];
+    repByCountry.forEach(c => {
+      const prev = prevByCountry.find(p => p.country === c.country);
+      c.deltaPct = prev ? c.approvePct - prev.approvePct : null;
+    });
+    repGlobal.deltaPct = repPrevSnapshot ? repGlobal.approvePct - repPrevSnapshot.global.approvePct : null;
+
+    repRenderSummary(todaySnapshots);
     repRenderKPIs();
     repRenderTableBody();
     repRenderTfoot();
@@ -2494,10 +2529,64 @@
       `Generado: ${now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}`;
   }
 
+  function repDeltaHTML(delta) {
+    if (delta === null || delta === undefined || isNaN(delta)) return '';
+    if (Math.abs(delta) < 0.3) return `<span class="rep-delta rep-delta-flat">→ estable</span>`;
+    const up = delta > 0;
+    return `<span class="rep-delta ${up ? 'rep-delta-up' : 'rep-delta-down'}">${up ? '▲' : '▼'} ${up ? '+' : ''}${delta.toFixed(1)}pts</span>`;
+  }
+
+  function repTimeAgo(iso) {
+    const diffMin = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+    if (diffMin < 1) return 'hace un momento';
+    if (diffMin < 60) return `hace ${diffMin} minuto${diffMin !== 1 ? 's' : ''}`;
+    const diffH = Math.round(diffMin / 60);
+    if (diffH < 24) return `hace ${diffH} hora${diffH !== 1 ? 's' : ''}`;
+    const diffD = Math.round(diffH / 24);
+    return `hace ${diffD} día${diffD !== 1 ? 's' : ''}`;
+  }
+
+  function repBuildSummary(todaySnapshots) {
+    if (!repPrevSnapshot) {
+      return 'Este es tu primer snapshot guardado — a partir de ahora vas a poder ver aquí tu evolución.';
+    }
+    const delta = repGlobal.deltaPct;
+    const ago = repTimeAgo(repPrevSnapshot.created_at);
+    const prevPct = repPrevSnapshot.global.approvePct;
+    let phrase;
+    if (Math.abs(delta) < 0.3) {
+      phrase = `Vas estable respecto a ${ago} (${repFmtPct(prevPct)} → ${repFmtPct(repGlobal.approvePct)}).`;
+    } else if (delta > 0) {
+      phrase = `Vas ${delta.toFixed(1)} puntos arriba que ${ago} (${repFmtPct(prevPct)} → ${repFmtPct(repGlobal.approvePct)}). 📈`;
+    } else {
+      phrase = `Vas ${Math.abs(delta).toFixed(1)} puntos abajo que ${ago} (${repFmtPct(prevPct)} → ${repFmtPct(repGlobal.approvePct)}). 📉`;
+    }
+
+    const todayPcts = (todaySnapshots || []).map(h => h.global.approvePct);
+    if (todayPcts.length > 0) {
+      const maxToday = Math.max(...todayPcts, repGlobal.approvePct);
+      const minToday = Math.min(...todayPcts, repGlobal.approvePct);
+      if (repGlobal.approvePct >= maxToday && maxToday > minToday) {
+        phrase += ' Es el mejor momento del día hasta ahora.';
+      } else if (repGlobal.approvePct <= minToday && maxToday > minToday) {
+        phrase += ' Es el punto más bajo del día — vale la pena revisar qué está pasando.';
+      }
+    }
+    return phrase;
+  }
+
+  function repRenderSummary(todaySnapshots) {
+    const box = document.getElementById('rep-summary');
+    const textEl = document.getElementById('rep-summary-text');
+    textEl.textContent = repBuildSummary(todaySnapshots);
+    box.style.display = 'flex';
+  }
+
   function repRenderKPIs() {
     const kpiWrap = document.getElementById('rep-kpis');
     const gCls = repApproveClass(repGlobal.approvePct);
     const gColor = gCls === 'rep-approve-good' ? 'var(--green)' : gCls === 'rep-approve-bad' ? 'var(--red)' : 'var(--text-dark)';
+    const deltaHtml = repDeltaHTML(repGlobal.deltaPct);
     kpiWrap.innerHTML = `
       <div class="kpi-card">
         <div class="kpi-header"><span class="kpi-label">Leads Totales</span></div>
@@ -2510,6 +2599,7 @@
       <div class="kpi-card">
         <div class="kpi-header"><span class="kpi-label">% Approve Global</span></div>
         <div class="kpi-value" style="color:${gColor}">${repFmtPct(repGlobal.approvePct)}</div>
+        ${deltaHtml ? `<div class="kpi-footer">${deltaHtml}<span class="kpi-sub">vs. snapshot anterior</span></div>` : ''}
       </div>`;
     kpiWrap.style.display = 'grid';
   }
@@ -2525,7 +2615,7 @@
         <td style="color:var(--text-light)">${c.recall}</td>
         <td style="color:var(--text-light)">${c.noAnswer}</td>
         <td>${c.approved}</td>
-        <td><span class="rep-approve-badge ${cls}">${repFmtPct(c.approvePct)}</span></td>
+        <td style="white-space:nowrap"><span class="rep-approve-badge ${cls}">${repFmtPct(c.approvePct)}</span> ${repDeltaHTML(c.deltaPct)}</td>
         <td style="color:var(--text-light)">${c.reject}</td>
         <td style="color:var(--text-light)">${c.trash}</td>
       </tr>`;
@@ -2659,20 +2749,55 @@
     repLoadHistory();
   }
 
-  async function repLoadHistory() {
+  /* Trae snapshots (created_at,by_country,global) para un rango de fecha dado */
+  async function repFetchSnapshotsForRange(filter) {
     try {
-      const bounds = repDateBoundsFor(repDateFilter);
+      const bounds = repDateBoundsFor(filter);
       let query = 'select=created_at,by_country,global&order=created_at.asc&limit=2000';
       if (bounds) {
         query += `&created_at=gte.${encodeURIComponent(bounds.start.toISOString())}`;
         query += `&created_at=lt.${encodeURIComponent(bounds.end.toISOString())}`;
       }
-      repHistory = await sbFetch('dt_reportes_ventas', query);
+      return await sbFetch('dt_reportes_ventas', query);
     } catch (err) {
-      console.error('Error cargando historial de reportes:', err);
-      repHistory = [];
+      console.error('Error cargando snapshots:', err);
+      return [];
     }
+  }
+
+  /* Trae el snapshot guardado más reciente (para calcular deltas al generar un reporte) */
+  async function repFetchPrevSnapshot() {
+    try {
+      const rows = await sbFetch('dt_reportes_ventas', 'select=created_at,by_country,global&order=created_at.desc&limit=1');
+      return (rows && rows.length > 0) ? rows[0] : null;
+    } catch (err) {
+      console.error('Error cargando snapshot anterior:', err);
+      return null;
+    }
+  }
+
+  let repYesterdayHistory = [];
+
+  async function repLoadHistory() {
+    const [hist, yHist] = await Promise.all([
+      repFetchSnapshotsForRange(repDateFilter),
+      repDateFilter === 'today' ? repFetchSnapshotsForRange('yesterday') : Promise.resolve([]),
+    ]);
+    repHistory = hist;
+    repYesterdayHistory = yHist;
     repRenderChart();
+  }
+
+  /* Busca en `snapshots` el más cercano a la misma hora del día que `targetDate` (tolerancia 90 min) */
+  function repNearestByTimeOfDay(targetDate, snapshots) {
+    const targetMinutes = targetDate.getHours() * 60 + targetDate.getMinutes();
+    let best = null, bestDiff = Infinity;
+    snapshots.forEach(s => {
+      const d = new Date(s.created_at);
+      const diff = Math.abs((d.getHours() * 60 + d.getMinutes()) - targetMinutes);
+      if (diff < bestDiff) { bestDiff = diff; best = s; }
+    });
+    return (best && bestDiff <= 90) ? best : null;
   }
 
   function repFmtTimestamp(iso) {
@@ -2711,13 +2836,15 @@
     wrapEl.style.display  = 'block';
 
     const allCountries = [...new Set(repHistory.flatMap(h => (h.by_country || []).map(c => c.country)))];
+    const showGhost = repDateFilter === 'today' && repYesterdayHistory.length > 0;
 
     if (repVisible.size === 0) {
-      repVisible = new Set(['Global', ...allCountries]);
+      repVisible = new Set(['Global', ...allCountries, ...(showGhost ? ['AyerRef'] : [])]);
     }
 
     togglesEl.innerHTML =
       `<div class="rep-toggle-chip ${repVisible.has('Global') ? '' : 'off'}" style="border-color:var(--text-light);color:var(--text-mid)" onclick="repToggleSeries('Global')">Global</div>` +
+      (showGhost ? `<div class="rep-toggle-chip ${repVisible.has('AyerRef') ? '' : 'off'}" style="border-color:#93a89d;color:#93a89d" onclick="repToggleSeries('AyerRef')">🕐 Ayer (misma hora)</div>` : '') +
       allCountries.map((c, i) => {
         const color = repColorFor(c, i);
         const off = repVisible.has(c) ? '' : 'off';
@@ -2733,6 +2860,18 @@
       borderColor: '#c3d1cb', borderDash: [6,3], backgroundColor: 'transparent',
       pointRadius: 2, tension: 0.3, hidden: !repVisible.has('Global'),
     });
+    if (showGhost) {
+      const ghostData = repHistory.map(h => {
+        const match = repNearestByTimeOfDay(new Date(h.created_at), repYesterdayHistory);
+        return match ? Number((match.global.approvePct || 0).toFixed(1)) : null;
+      });
+      datasets.push({
+        label: 'Ayer (misma hora)',
+        data: ghostData,
+        borderColor: 'rgba(147,168,157,.55)', borderDash: [2,4], backgroundColor: 'transparent',
+        pointRadius: 0, tension: 0.3, spanGaps: true, hidden: !repVisible.has('AyerRef'),
+      });
+    }
     allCountries.forEach((country, i) => {
       datasets.push({
         label: country,
