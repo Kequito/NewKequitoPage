@@ -6,6 +6,7 @@
   <title>Gestión Center</title>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     /* ─── Reset & Variables ─── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -826,6 +827,10 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
     Reportes
   </div>
+  <div class="nav-item" onclick="setNav(this, 'recalls')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+    Gestión de Recalls
+  </div>
   <div class="nav-item" onclick="setNav(this, 'estadisticas')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
     Estadísticas
@@ -1389,6 +1394,152 @@
 
   </div>
 
+  <!-- ══ VIEW: GESTIÓN DE RECALLS ══ -->
+  <div class="view" id="view-recalls">
+
+    <!-- Upload bar -->
+    <div class="panel" style="margin-bottom:22px">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 12h1.5v3.5h3V12H15l-3-3-3 3zm-4 6v-3H3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-3h-2v3H5zM5 4h14v3H5z"/></svg>
+          Gestión de Recalls — Reasignación de Órdenes
+        </div>
+        <div class="gd-stat-chip">Órdenes actuales: <span id="rec-count">—</span></div>
+        <div class="gd-stat-chip">Alertas pendientes: <span id="rec-alert-count">—</span></div>
+        <span id="rec-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
+        <div id="rec-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
+          <span id="rec-upload-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
+          <label class="btn btn-primary btn-sm" for="rec-file-input" style="cursor:pointer;margin:0">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Subir Excel
+          </label>
+          <input type="file" id="rec-file-input" accept=".xlsx,.xls" style="display:none" onchange="recOnFileSelected(event)"/>
+        </div>
+      </div>
+      <div id="rec-tl-note" class="gd-state" style="display:none;padding:16px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
+      </div>
+    </div>
+
+    <!-- Tabla principal (estado actual) -->
+    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+      <div class="gd-filters">
+        <div class="gd-filter-pill" id="rec-pill-country">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <span class="pill-label">Country</span>
+          <select id="rec-f-country" onchange="applyRecFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="recClearPill('rec-f-country', applyRecFilters)">✕</span>
+        </div>
+        <div class="gd-filter-pill" id="rec-pill-tl">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span class="pill-label">Team Leader</span>
+          <select id="rec-f-tl" onchange="applyRecFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="recClearPill('rec-f-tl', applyRecFilters)">✕</span>
+        </div>
+        <div class="gd-filter-pill" id="rec-pill-asesor">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span class="pill-label">Asesor</span>
+          <select id="rec-f-asesor" onchange="applyRecFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="recClearPill('rec-f-asesor', applyRecFilters)">✕</span>
+        </div>
+        <div class="gd-filter-pill" id="rec-pill-hor">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
+          <span class="pill-label">Horario</span>
+          <select id="rec-f-hor" onchange="applyRecFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="recClearPill('rec-f-hor', applyRecFilters)">✕</span>
+        </div>
+        <div class="gd-search-wrap" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="rec-search" placeholder="Buscar Order Id, comentario..." oninput="applyRecFilters()"/>
+        </div>
+        <button class="gd-clear-all" onclick="clearRecFilters()" id="rec-clear-btn" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          Limpiar todo
+        </button>
+      </div>
+      <div class="gd-tbl-wrap" id="rec-table-wrap">
+        <div class="gd-state" id="rec-loading">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          <p>Cargando datos desde Supabase…</p>
+        </div>
+        <table id="rec-table" style="display:none">
+          <thead><tr>
+            <th>Order Id</th><th>Country</th><th>Substatus</th><th>CC comment</th>
+            <th>Team Leader</th><th>Asesor</th><th>Last call operator</th><th>Horario</th>
+          </tr></thead>
+          <tbody id="rec-tbody"></tbody>
+        </table>
+        <div class="gd-state" id="rec-empty" style="display:none">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.96.5 13.5.5c-1.27 0-2.4.51-3.24 1.33L9 3.04 7.74 1.83C6.9 1.01 5.77.5 4.5.5 2.04.5 0 2.54 0 4.66c0 .46.11.9.18 1.34H0v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-3.68c1.1 0 2 .9 2 2 0 .36-.1.69-.26 1h-3.48c-.16-.31-.26-.64-.26-1 0-1.1.9-2 2-2z"/></svg>
+          <p>Sin datos cargados todavía</p>
+          <small>Espera a que un Supervisor suba el Excel del Panel</small>
+        </div>
+      </div>
+      <div style="padding:8px 20px;background:var(--main-bg);border-top:1px solid var(--border);font-size:11px;color:var(--text-light)">
+        Mostrando <strong id="rec-showing">0</strong> de <strong id="rec-total">0</strong> órdenes
+      </div>
+    </div>
+
+    <!-- Tabla de alertas (reasignaciones detectadas) -->
+    <div class="panel" style="margin-bottom:22px;overflow:hidden;border-color:rgba(239,68,68,.35)">
+      <div class="gd-infobar" style="background:linear-gradient(90deg, #2a1214 0%, #3a1518 100%)">
+        <div class="gd-infobar-title" style="color:#fca5a5">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          Alertas — Órdenes Reasignadas a Otro Operador
+        </div>
+        <div class="gd-stat-chip" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3)">
+          Pendientes: <span id="rec-alert-pending-count">—</span>
+        </div>
+        <div class="gd-filter-pill" id="rec-pill-status" style="margin-left:auto">
+          <span class="pill-label">Estado</span>
+          <select id="rec-f-status" onchange="applyRecAlertFilters()">
+            <option value="pending" selected>Pendientes</option>
+            <option value="reviewed">Revisadas</option>
+            <option value="">Todas</option>
+          </select>
+        </div>
+      </div>
+      <div class="gd-filters">
+        <div class="gd-filter-pill" id="rec-pill-acountry">
+          <span class="pill-label">Country</span>
+          <select id="rec-f-acountry" onchange="applyRecAlertFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="recClearPill('rec-f-acountry', applyRecAlertFilters)">✕</span>
+        </div>
+        <div class="gd-filter-pill" id="rec-pill-oldtl">
+          <span class="pill-label">TL anterior</span>
+          <select id="rec-f-oldtl" onchange="applyRecAlertFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="recClearPill('rec-f-oldtl', applyRecAlertFilters)">✕</span>
+        </div>
+        <div class="gd-filter-pill" id="rec-pill-newtl">
+          <span class="pill-label">TL nuevo</span>
+          <select id="rec-f-newtl" onchange="applyRecAlertFilters()"><option value="">Todos</option></select>
+          <span class="pill-clear" onclick="recClearPill('rec-f-newtl', applyRecAlertFilters)">✕</span>
+        </div>
+        <div class="gd-search-wrap" style="margin-left:auto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="rec-asearch" placeholder="Buscar Order Id..." oninput="applyRecAlertFilters()"/>
+        </div>
+      </div>
+      <div class="gd-tbl-wrap" id="rec-alert-table-wrap">
+        <table id="rec-alert-table" style="display:none">
+          <thead><tr>
+            <th>Order Id</th><th>Country</th><th>Operador: Antes → Ahora</th>
+            <th>Team Leader: Antes → Ahora</th><th>Asesor: Antes → Ahora</th>
+            <th>Detectado</th><th>Acción</th>
+          </tr></thead>
+          <tbody id="rec-alert-tbody"></tbody>
+        </table>
+        <div class="gd-state" id="rec-alert-empty">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          <p>No hay alertas de reasignación</p>
+          <small>Cuando una orden cambie de operador entre dos cargas de Excel, aparecerá aquí</small>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- ══ VIEW: ESTADÍSTICAS ══ -->
   <div class="view" id="view-estadisticas">
     <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
@@ -1418,6 +1569,7 @@
     'goodday':       'view-goodday',
     'ops':           'view-ops',
     'reportes':      'view-reportes',
+    'recalls':       'view-recalls',
     'estadisticas':  'view-estadisticas',
     'configuracion': 'view-configuracion',
   };
@@ -1426,6 +1578,7 @@
     'goodday':       ['GoodDay — Distribución', 'Datos en vivo desde Supabase'],
     'ops':           ['OPs Performance', 'Rendimiento de operadores por país'],
     'reportes':      ['Reportes', 'Generación y consulta de reportes'],
+    'recalls':       ['Gestión de Recalls', 'Seguimiento de reasignación de órdenes'],
     'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
     'configuracion': ['Configuración', 'Ajustes del sistema'],
   };
@@ -1450,6 +1603,8 @@
     if (page === 'ops' && !opsLoaded) loadOps();
     // auto-load Reportes history on first visit
     if (page === 'reportes' && !repLoaded) repInitView();
+    // auto-load Recalls on first visit
+    if (page === 'recalls' && !recLoaded) recInitView();
   }
 
   /* ── Toggle submenu ── */
@@ -2459,7 +2614,7 @@
 
   function repFmtPct(n) { return `${n.toFixed(1)}%`; }
 
-  function repIsSupervisor() {
+  function isSupervisor() {
     const stored = sessionStorage.getItem(SESSION_KEY);
     if (!stored) return false;
     try {
@@ -2480,7 +2635,7 @@
     }
     repRows = parsed;
     document.getElementById('rep-empty-state').style.display = 'none';
-    document.getElementById('rep-save-btn').style.display = repIsSupervisor() ? 'inline-flex' : 'none';
+    document.getElementById('rep-save-btn').style.display = isSupervisor() ? 'inline-flex' : 'none';
 
     const [prevSnap, todaySnaps] = await Promise.all([
       repFetchPrevSnapshot(),
@@ -2910,6 +3065,381 @@
   function repInitView() {
     repLoaded = true;
     repLoadHistory();
+  }
+
+  /* ══════════════════════════════
+     GESTIÓN DE RECALLS — Excel + comparación de operadores
+  ══════════════════════════════ */
+  const REC_FIELD_MAP = {
+    'order id':           'orderId',
+    'country':             'country',
+    'substatus':           'substatus',
+    'cc comment':          'ccComment',
+    'last call operator':  'lastCallOperator',
+  };
+
+  let recLoaded          = false;
+  let recCurrentRows     = [];
+  let recCurrentFiltered = [];
+  let recAlertRows       = [];
+  let recAlertFiltered   = [];
+
+  function recNormalizeHeader(s) { return (s || '').toString().trim().toLowerCase(); }
+
+  /* Lee el workbook y extrae solo las 5 columnas que nos interesan, emparejando por nombre de encabezado */
+  function recParseWorkbook(workbook) {
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (raw.length === 0) return [];
+
+    const keyMap = {};
+    Object.keys(raw[0]).forEach(k => { keyMap[recNormalizeHeader(k)] = k; });
+
+    return raw.map(row => {
+      const out = {};
+      Object.entries(REC_FIELD_MAP).forEach(([normHeader, field]) => {
+        const actualKey = keyMap[normHeader];
+        out[field] = actualKey !== undefined ? String(row[actualKey] ?? '').trim() : '';
+      });
+      return out;
+    }).filter(r => r.orderId);
+  }
+
+  /* Índice PEROP1AM -> {teamLeader, asesor, horario}, mismo origen que GoodDay/OPs Performance */
+  async function recFetchDisIndex() {
+    try {
+      const rows = await sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO');
+      const idx = {};
+      rows.forEach(r => {
+        const p = (r.PEROP1AM || '').trim();
+        if (p && !idx[p]) idx[p] = { asesor: r.ASESORES || '', teamLeader: r.TEAMLEADER || '', horario: r.HORARIO || '' };
+      });
+      return idx;
+    } catch (err) {
+      console.error('Error cargando dt_dis para Recalls:', err);
+      return {};
+    }
+  }
+
+  function recEnrich(rows, disIdx) {
+    return rows.map(r => {
+      const info = disIdx[r.lastCallOperator] || {};
+      return {
+        orderId: r.orderId,
+        country: r.country,
+        substatus: r.substatus,
+        ccComment: r.ccComment,
+        lastCallOperator: r.lastCallOperator,
+        teamLeader: info.teamLeader || '—',
+        asesor: info.asesor || '—',
+        horario: info.horario || '—',
+      };
+    });
+  }
+
+  /* Compara la carga nueva contra el estado anterior (dt_recalls) buscando cambios de operador por Order Id */
+  function recDetectChanges(oldRows, newRows) {
+    const oldIdx = {};
+    oldRows.forEach(r => { if (r.order_id) oldIdx[r.order_id] = r; });
+    const alerts = [];
+    newRows.forEach(n => {
+      const old = oldIdx[n.orderId];
+      if (old && old.last_call_operator && old.last_call_operator !== n.lastCallOperator) {
+        alerts.push({
+          order_id: n.orderId,
+          country: n.country,
+          old_operator: old.last_call_operator,
+          old_team_leader: old.team_leader,
+          old_asesor: old.asesor,
+          old_horario: old.horario,
+          old_substatus: old.substatus,
+          old_cc_comment: old.cc_comment,
+          new_operator: n.lastCallOperator,
+          new_team_leader: n.teamLeader,
+          new_asesor: n.asesor,
+          new_horario: n.horario,
+          new_substatus: n.substatus,
+          new_cc_comment: n.ccComment,
+        });
+      }
+    });
+    return alerts;
+  }
+
+  async function recBulkInsert(table, rows) {
+    const chunkSize = 500;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      await sbInsert(table, rows.slice(i, i + chunkSize));
+    }
+  }
+
+  async function recDeleteAllCurrent() {
+    const res = await fetch(`${SB_URL}/rest/v1/dt_recalls?id=gte.0`, {
+      method: 'DELETE',
+      headers: SB_HEADERS,
+    });
+    if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+  }
+
+  async function recOnFileSelected(event) {
+    const file = event.target.files[0];
+    event.target.value = ''; // permite volver a elegir el mismo archivo si hace falta reintentar
+    if (!file || !isSupervisor()) return;
+
+    const status = document.getElementById('rec-upload-status');
+    status.style.color = 'var(--text-light)';
+    status.textContent = 'Leyendo archivo...';
+
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      const parsed = recParseWorkbook(wb);
+      if (parsed.length === 0) {
+        status.style.color = 'var(--red)';
+        status.textContent = 'No encontré filas válidas — revisa que los encabezados del Excel coincidan.';
+        return;
+      }
+
+      status.textContent = `Procesando ${parsed.length} filas...`;
+      const [disIdx, oldRows] = await Promise.all([recFetchDisIndex(), sbFetch('dt_recalls', 'select=*')]);
+      const enriched = recEnrich(parsed, disIdx);
+      const alerts = recDetectChanges(oldRows, enriched);
+
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+
+      if (alerts.length > 0) {
+        status.textContent = `Guardando ${alerts.length} alerta(s) de reasignación...`;
+        await recBulkInsert('dt_recalls_alerts', alerts);
+      }
+
+      status.textContent = 'Actualizando tabla principal...';
+      await recDeleteAllCurrent();
+      const toInsert = enriched.map(r => ({
+        order_id: r.orderId,
+        country: r.country,
+        substatus: r.substatus,
+        cc_comment: r.ccComment,
+        last_call_operator: r.lastCallOperator,
+        team_leader: r.teamLeader,
+        asesor: r.asesor,
+        horario: r.horario,
+        uploaded_by: user ? user[0] : null,
+      }));
+      await recBulkInsert('dt_recalls', toInsert);
+
+      await recLoadAll();
+      status.style.color = 'var(--green)';
+      status.textContent = `✓ Listo — ${enriched.length} órdenes, ${alerts.length} reasignación(es) detectada(s)`;
+      setTimeout(() => { status.textContent = ''; }, 6000);
+    } catch (err) {
+      console.error('Error procesando Excel de Recalls:', err);
+      status.style.color = 'var(--red)';
+      status.textContent = 'Error al procesar el archivo, intenta de nuevo.';
+    }
+  }
+
+  async function recInitView() {
+    recLoaded = true;
+    document.getElementById('rec-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
+    document.getElementById('rec-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
+    await recLoadAll();
+  }
+
+  async function recLoadAll() {
+    document.getElementById('rec-loading').style.display = 'flex';
+    document.getElementById('rec-table').style.display   = 'none';
+    document.getElementById('rec-empty').style.display   = 'none';
+
+    try {
+      recCurrentRows = await sbFetch('dt_recalls', 'select=*&order=order_id.asc');
+    } catch (err) {
+      console.error('Error cargando dt_recalls:', err);
+      recCurrentRows = [];
+    }
+    try {
+      recAlertRows = await sbFetch('dt_recalls_alerts', 'select=*&order=detected_at.desc');
+    } catch (err) {
+      console.error('Error cargando dt_recalls_alerts:', err);
+      recAlertRows = [];
+    }
+
+    recPopulateFilters();
+    applyRecFilters();
+    applyRecAlertFilters();
+
+    document.getElementById('rec-count').textContent = recCurrentRows.length;
+    document.getElementById('rec-alert-count').textContent = recAlertRows.filter(a => !a.reviewed).length;
+
+    const now = new Date();
+    document.getElementById('rec-last-update').textContent =
+      `Actualizado: ${now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' })}`;
+  }
+
+  function recPopulateFilters() {
+    const unique = (arr, key) => [...new Set(arr.map(r => r[key]).filter(Boolean))].sort();
+    const fillSelect = (id, values) => {
+      const sel = document.getElementById(id);
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Todos</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
+      if (prev) sel.value = prev;
+    };
+
+    fillSelect('rec-f-country', unique(recCurrentRows, 'country'));
+    fillSelect('rec-f-tl',      unique(recCurrentRows, 'team_leader'));
+    fillSelect('rec-f-asesor',  unique(recCurrentRows, 'asesor'));
+    fillSelect('rec-f-hor',     unique(recCurrentRows, 'horario'));
+
+    fillSelect('rec-f-acountry', unique(recAlertRows, 'country'));
+    fillSelect('rec-f-oldtl',    unique(recAlertRows, 'old_team_leader'));
+    fillSelect('rec-f-newtl',    unique(recAlertRows, 'new_team_leader'));
+  }
+
+  function recClearPill(selectId, applyFn) {
+    document.getElementById(selectId).value = '';
+    applyFn();
+  }
+
+  function applyRecFilters() {
+    const country = document.getElementById('rec-f-country').value;
+    const tl       = document.getElementById('rec-f-tl').value;
+    const asesor   = document.getElementById('rec-f-asesor').value;
+    const hor      = document.getElementById('rec-f-hor').value;
+    const search   = document.getElementById('rec-search').value.toLowerCase();
+
+    recCurrentFiltered = recCurrentRows.filter(r => {
+      if (country && r.country !== country) return false;
+      if (tl && r.team_leader !== tl) return false;
+      if (asesor && r.asesor !== asesor) return false;
+      if (hor && r.horario !== hor) return false;
+      if (search) {
+        const hay = `${r.order_id} ${r.cc_comment} ${r.last_call_operator} ${r.substatus}`.toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    const pillMap = { 'rec-pill-country': country, 'rec-pill-tl': tl, 'rec-pill-asesor': asesor, 'rec-pill-hor': hor };
+    let anyActive = search.length > 0;
+    Object.entries(pillMap).forEach(([pillId, val]) => {
+      document.getElementById(pillId)?.classList.toggle('active', !!val);
+      if (val) anyActive = true;
+    });
+    document.getElementById('rec-clear-btn').style.display = anyActive ? 'flex' : 'none';
+    const sw = document.querySelector('#view-recalls .gd-search-wrap');
+    if (sw) sw.classList.toggle('active', search.length > 0);
+
+    renderRecTable();
+  }
+
+  function clearRecFilters() {
+    ['rec-f-country', 'rec-f-tl', 'rec-f-asesor', 'rec-f-hor'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('rec-search').value = '';
+    applyRecFilters();
+  }
+
+  function renderRecTable() {
+    const tbody   = document.getElementById('rec-tbody');
+    const table   = document.getElementById('rec-table');
+    const empty   = document.getElementById('rec-empty');
+    const loading = document.getElementById('rec-loading');
+    loading.style.display = 'none';
+
+    document.getElementById('rec-showing').textContent = recCurrentFiltered.length;
+    document.getElementById('rec-total').textContent   = recCurrentRows.length;
+
+    if (recCurrentFiltered.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = recCurrentFiltered.map(r => `
+      <tr>
+        <td><strong>${r.order_id || '—'}</strong></td>
+        <td>${countryFlag(r.country)}${r.country || '—'}</td>
+        <td>${r.substatus || '—'}</td>
+        <td style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
+        <td>${r.team_leader || '—'}</td>
+        <td>${r.asesor || '—'}</td>
+        <td>${r.last_call_operator || '—'}</td>
+        <td>${r.horario || '—'}</td>
+      </tr>`).join('');
+  }
+
+  function applyRecAlertFilters() {
+    const status  = document.getElementById('rec-f-status').value;
+    const country = document.getElementById('rec-f-acountry').value;
+    const oldtl   = document.getElementById('rec-f-oldtl').value;
+    const newtl   = document.getElementById('rec-f-newtl').value;
+    const search  = document.getElementById('rec-asearch').value.toLowerCase();
+
+    recAlertFiltered = recAlertRows.filter(a => {
+      if (status === 'pending' && a.reviewed) return false;
+      if (status === 'reviewed' && !a.reviewed) return false;
+      if (country && a.country !== country) return false;
+      if (oldtl && a.old_team_leader !== oldtl) return false;
+      if (newtl && a.new_team_leader !== newtl) return false;
+      if (search && !(a.order_id || '').toLowerCase().includes(search)) return false;
+      return true;
+    });
+
+    document.getElementById('rec-alert-pending-count').textContent = recAlertRows.filter(a => !a.reviewed).length;
+    renderRecAlertTable();
+  }
+
+  function recArrowHTML(oldVal, newVal) {
+    const o = oldVal || '—';
+    const n = newVal || '—';
+    return `<span style="color:var(--text-light)">${o}</span> <span style="color:#f87171">→</span> <span style="font-weight:700">${n}</span>`;
+  }
+
+  function renderRecAlertTable() {
+    const table = document.getElementById('rec-alert-table');
+    const tbody = document.getElementById('rec-alert-tbody');
+    const empty = document.getElementById('rec-alert-empty');
+
+    if (recAlertFiltered.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = recAlertFiltered.map(a => `
+      <tr style="${a.reviewed ? 'opacity:.5' : ''}">
+        <td><strong>${a.order_id || '—'}</strong></td>
+        <td>${countryFlag(a.country)}${a.country || '—'}</td>
+        <td style="white-space:nowrap">${recArrowHTML(a.old_operator, a.new_operator)}</td>
+        <td style="white-space:nowrap">${recArrowHTML(a.old_team_leader, a.new_team_leader)}</td>
+        <td style="white-space:nowrap">${recArrowHTML(a.old_asesor, a.new_asesor)}</td>
+        <td style="color:var(--text-light);white-space:nowrap">${repTimeAgo(a.detected_at)}</td>
+        <td>${a.reviewed
+          ? `<span class="badge badge-green">✓ Revisado</span>`
+          : (isSupervisor() ? `<button class="btn btn-ghost btn-sm" onclick="recMarkReviewed(${a.id})">Marcar revisado</button>` : `<span class="badge badge-red">Pendiente</span>`)
+        }</td>
+      </tr>`).join('');
+  }
+
+  async function recMarkReviewed(id) {
+    if (!isSupervisor()) return;
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    const user = stored ? JSON.parse(stored) : null;
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/dt_recalls_alerts?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ reviewed: true, reviewed_by: user ? user[0] : null, reviewed_at: new Date().toISOString() }),
+      });
+      if (!res.ok) throw new Error(`update error ${res.status}`);
+      await recLoadAll();
+    } catch (err) {
+      console.error('Error marcando alerta como revisada:', err);
+      alert('No se pudo marcar como revisado, intenta de nuevo.');
+    }
   }
 </script>
 </body>
