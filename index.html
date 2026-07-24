@@ -347,8 +347,10 @@
     tbody tr { transition: background .15s; }
     tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
     tbody tr:hover { background: var(--blue-soft); }
-    tbody td { padding: 11px 14px; font-size: 12px; color: var(--text-dark); border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody td, tfoot td { padding: 11px 14px; font-size: 12px; color: var(--text-dark); border-bottom: 1px solid var(--border); vertical-align: middle; }
     tbody tr:last-child td { border-bottom: none; }
+    tfoot tr { background: rgba(255,255,255,0.03); }
+    tfoot td { border-bottom: none; border-top: 2px solid var(--border); }
 
     /* ─── Progress bar ─── */
     .prog-bar {
@@ -675,6 +677,7 @@
       transition:opacity .18s, border-color .18s;
     }
     .rep-toggle-chip.off { opacity:.35; }
+    #rep-date-input::-webkit-calendar-picker-indicator { filter: invert(0.75); cursor: pointer; }
 
     /* ─── Responsive ─── */
     @media (max-width: 1100px) {
@@ -1319,8 +1322,15 @@
         <table>
           <thead>
             <tr>
-              <th>País</th><th>Leads</th><th>New</th><th>Recall</th><th>No answer</th>
-              <th>Approved</th><th>% Approve</th><th>Reject</th><th>Trash</th>
+              <th onclick="repSortTable(0)">País <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(1)">Leads <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(2)">New <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(3)">Recall <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(4)">No answer <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(5)">Approved <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(6)">% Approve <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(7)">Reject <span class="sort-icon">↕</span></th>
+              <th onclick="repSortTable(8)">Trash <span class="sort-icon">↕</span></th>
             </tr>
           </thead>
           <tbody id="rep-tbody"></tbody>
@@ -1339,6 +1349,14 @@
         <span id="rep-snap-count" style="font-size:11px;color:var(--text-light)">0 snapshots guardados</span>
       </div>
       <div class="panel-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary rep-date-btn" data-filter="today" onclick="repSetDateFilter('today')">Hoy</button>
+          <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="yesterday" onclick="repSetDateFilter('yesterday')">Ayer</button>
+          <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="7d" onclick="repSetDateFilter('7d')">Últimos 7 días</button>
+          <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="all" onclick="repSetDateFilter('all')">Todo</button>
+          <input type="date" id="rep-date-input" onchange="repSetDateFilter(this.value)"
+            style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:6px 10px;cursor:pointer;outline:none"/>
+        </div>
         <div id="rep-chart-toggles" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
         <div id="rep-chart-empty" class="gd-state" style="padding:40px 20px">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
@@ -2449,30 +2467,56 @@
     repTogglePaste();
   }
 
-  function repRenderReport() {
-    const byCountry = repAggregateByCountry(repRows);
-    const global = repGetGlobal(repRows);
+  let repByCountry = [];
+  let repGlobal    = { total: 0, approved: 0, approvePct: 0 };
+  let repSortCol   = null;
+  let repSortDir   = {};
+  const REP_SORT_KEYS = ['country','total','new','recall','noAnswer','approved','approvePct','reject','trash'];
 
+  function repRenderReport() {
+    repByCountry = repAggregateByCountry(repRows);
+    repGlobal = repGetGlobal(repRows);
+    repSortCol = null;
+    repSortDir = {};
+    document.querySelectorAll('#rep-table-panel thead th').forEach(th => {
+      th.classList.remove('sorted');
+      const icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = '↕';
+    });
+
+    repRenderKPIs();
+    repRenderTableBody();
+    repRenderTfoot();
+
+    document.getElementById('rep-table-panel').style.display = 'block';
+    const now = new Date();
+    document.getElementById('rep-generated-at').textContent =
+      `Generado: ${now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}`;
+  }
+
+  function repRenderKPIs() {
     const kpiWrap = document.getElementById('rep-kpis');
-    const gCls = repApproveClass(global.approvePct);
+    const gCls = repApproveClass(repGlobal.approvePct);
     const gColor = gCls === 'rep-approve-good' ? 'var(--green)' : gCls === 'rep-approve-bad' ? 'var(--red)' : 'var(--text-dark)';
     kpiWrap.innerHTML = `
       <div class="kpi-card">
         <div class="kpi-header"><span class="kpi-label">Leads Totales</span></div>
-        <div class="kpi-value">${global.total.toLocaleString('es-PE')}</div>
+        <div class="kpi-value">${repGlobal.total.toLocaleString('es-PE')}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-header"><span class="kpi-label">Aprobados</span></div>
-        <div class="kpi-value" style="color:var(--green)">${global.approved.toLocaleString('es-PE')}</div>
+        <div class="kpi-value" style="color:var(--green)">${repGlobal.approved.toLocaleString('es-PE')}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-header"><span class="kpi-label">% Approve Global</span></div>
-        <div class="kpi-value" style="color:${gColor}">${repFmtPct(global.approvePct)}</div>
+        <div class="kpi-value" style="color:${gColor}">${repFmtPct(repGlobal.approvePct)}</div>
       </div>`;
     kpiWrap.style.display = 'grid';
+  }
 
+  function repRenderTableBody() {
     const tbody = document.getElementById('rep-tbody');
-    tbody.innerHTML = byCountry.map(c => {
+    tbody.innerHTML = repByCountry.map(c => {
       const cls = repApproveClass(c.approvePct);
       return `<tr>
         <td style="font-weight:600;white-space:nowrap">${countryFlag(c.country)}${c.country}</td>
@@ -2486,21 +2530,38 @@
         <td style="color:var(--text-light)">${c.trash}</td>
       </tr>`;
     }).join('');
+  }
 
+  function repRenderTfoot() {
+    const gCls = repApproveClass(repGlobal.approvePct);
     const tfoot = document.getElementById('rep-tfoot');
     tfoot.innerHTML = `<tr style="font-weight:700">
       <td>Total</td>
-      <td>${global.total.toLocaleString('es-PE')}</td>
+      <td>${repGlobal.total.toLocaleString('es-PE')}</td>
       <td></td><td></td><td></td>
-      <td>${global.approved.toLocaleString('es-PE')}</td>
-      <td><span class="rep-approve-badge ${gCls}">${repFmtPct(global.approvePct)}</span></td>
+      <td>${repGlobal.approved.toLocaleString('es-PE')}</td>
+      <td><span class="rep-approve-badge ${gCls}">${repFmtPct(repGlobal.approvePct)}</span></td>
       <td></td><td></td>
     </tr>`;
+  }
 
-    document.getElementById('rep-table-panel').style.display = 'block';
-    const now = new Date();
-    document.getElementById('rep-generated-at').textContent =
-      `Generado: ${now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' })}`;
+  function repSortTable(col) {
+    const key = REP_SORT_KEYS[col];
+    repSortDir[col] = !repSortDir[col];
+    repSortCol = col;
+    repByCountry.sort((a, b) => {
+      const va = a[key], vb = b[key];
+      if (typeof va === 'string') {
+        return repSortDir[col] ? va.localeCompare(vb) : vb.localeCompare(va);
+      }
+      return repSortDir[col] ? va - vb : vb - va;
+    });
+    document.querySelectorAll('#rep-table-panel thead th').forEach((th, i) => {
+      th.classList.toggle('sorted', i === col);
+      const icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = i === col ? (repSortDir[col] ? '↑' : '↓') : '↕';
+    });
+    repRenderTableBody();
   }
 
   /* ── Supabase write helper (GET ya existe via sbFetch) ── */
@@ -2544,9 +2605,69 @@
     }
   }
 
+  /* ── Filtro de día para la línea de tiempo ── */
+  let repDateFilter = 'today'; // 'today' | 'yesterday' | '7d' | 'all' | 'YYYY-MM-DD'
+
+  function repLocalDayStart(offsetDays) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + offsetDays);
+    return d;
+  }
+
+  function repDateBoundsFor(filter) {
+    if (filter === 'today') {
+      const start = repLocalDayStart(0);
+      const end = repLocalDayStart(1);
+      return { start, end };
+    }
+    if (filter === 'yesterday') {
+      const start = repLocalDayStart(-1);
+      const end = repLocalDayStart(0);
+      return { start, end };
+    }
+    if (filter === '7d') {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(start.getDate() - 7);
+      return { start, end };
+    }
+    if (filter === 'all') return null;
+    // filtro = fecha específica 'YYYY-MM-DD'
+    const start = new Date(`${filter}T00:00:00`);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return { start, end };
+  }
+
+  function repSetDateFilter(value) {
+    if (!value) return;
+    repDateFilter = value;
+    document.querySelectorAll('.rep-date-btn').forEach(b => {
+      const active = b.dataset.filter === value;
+      b.classList.toggle('btn-primary', active);
+      b.classList.toggle('btn-ghost', !active);
+    });
+    if (['today', 'yesterday', '7d', 'all'].includes(value)) {
+      document.getElementById('rep-date-input').value = '';
+    } else {
+      document.querySelectorAll('.rep-date-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-ghost');
+      });
+    }
+    repLoadHistory();
+  }
+
   async function repLoadHistory() {
     try {
-      repHistory = await sbFetch('dt_reportes_ventas', 'select=created_at,by_country,global&order=created_at.asc&limit=500');
+      const bounds = repDateBoundsFor(repDateFilter);
+      let query = 'select=created_at,by_country,global&order=created_at.asc&limit=2000';
+      if (bounds) {
+        query += `&created_at=gte.${encodeURIComponent(bounds.start.toISOString())}`;
+        query += `&created_at=lt.${encodeURIComponent(bounds.end.toISOString())}`;
+      }
+      repHistory = await sbFetch('dt_reportes_ventas', query);
     } catch (err) {
       console.error('Error cargando historial de reportes:', err);
       repHistory = [];
@@ -2556,7 +2677,10 @@
 
   function repFmtTimestamp(iso) {
     const d = new Date(iso);
-    return d.toLocaleString('es-PE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+    const fmt = repDateFilter === 'today' || repDateFilter === 'yesterday'
+      ? { hour:'2-digit', minute:'2-digit' }
+      : { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' };
+    return d.toLocaleString('es-PE', fmt);
   }
 
   function repColorFor(country, i) {
@@ -2565,13 +2689,19 @@
 
   function repRenderChart() {
     const countEl = document.getElementById('rep-snap-count');
-    countEl.textContent = `${repHistory.length} snapshot${repHistory.length !== 1 ? 's' : ''} guardado${repHistory.length !== 1 ? 's' : ''}`;
+    countEl.textContent = `${repHistory.length} snapshot${repHistory.length !== 1 ? 's' : ''} en este rango`;
 
     const emptyEl = document.getElementById('rep-chart-empty');
     const wrapEl  = document.getElementById('rep-chart-wrap');
     const togglesEl = document.getElementById('rep-chart-toggles');
 
     if (repHistory.length === 0) {
+      const filterLabel = { today:'hoy', yesterday:'ayer', '7d':'los últimos 7 días', all:'el historial' }[repDateFilter]
+        || `el ${repDateFilter}`;
+      const p = emptyEl.querySelector('p');
+      const small = emptyEl.querySelector('small');
+      if (p) p.textContent = `No hay snapshots guardados para ${filterLabel}`;
+      if (small) small.textContent = 'Prueba con otro rango, o pega datos y guarda un snapshot ahora';
       emptyEl.style.display = 'flex';
       wrapEl.style.display  = 'none';
       togglesEl.innerHTML   = '';
