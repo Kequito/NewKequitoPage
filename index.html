@@ -1762,17 +1762,17 @@
     return `<div class="user-silhouette ${cls} ${extraClass}">${svg}</div>`;
   }
 
-  /* ── Load users from dt_session (Supabase) ── */
+  /* ── Load users from dt_session_public (Supabase) ── */
+  /* dt_session_public es una VIEW sin la columna de contraseña — nunca la exponemos al navegador */
   async function loadSessionUsers() {
     try {
-      const data = await sbFetch('dt_session', 'select=NOMBRE,PEROP1AM,CARGO,CLAVE,GENERO&order=NOMBRE.asc');
-      // Normalizar a array [NOMBRE, PEROP1AM, CARGO, CLAVE, GENERO]
+      const data = await sbFetch('dt_session_public', 'select=NOMBRE,PEROP1AM,CARGO,GENERO&order=NOMBRE.asc');
+      // Normalizar a array [NOMBRE, PEROP1AM, CARGO, GENERO]
       sessionUsers = data.map(r => [
-        r.NOMBRE  || '',
+        r.NOMBRE   || '',
         r.PEROP1AM || '',
-        r.CARGO   || '',
-        r.CLAVE   || '',
-        r.GENERO  || ''
+        r.CARGO    || '',
+        r.GENERO   || ''
       ]).filter(r => r[0].trim() !== '');
     } catch(e) {
       console.error('Error cargando usuarios:', e);
@@ -1836,7 +1836,7 @@
         No hay usuarios registrados para este cargo.</div>`;
     } else {
       grid.innerHTML = filtered.map((u, i) => {
-        const genero = (u[4]||'').toUpperCase().trim();
+        const genero = (u[3]||'').toUpperCase().trim();
         const cls    = genero === 'F' ? 'female' : 'male';
         const svg    = genero === 'F' ? SVG_FEMALE : SVG_MALE;
         return `<div class="user-card" onclick="selectUser(${sessionUsers.indexOf(u)}, this)">
@@ -1872,7 +1872,7 @@
   /* ── Step 3: Password ── */
   function renderPasswordStep() {
     const u = loginSelectedUser;
-    const genero = (u[4]||'').toUpperCase().trim();
+    const genero = (u[3]||'').toUpperCase().trim();
     const cls = genero === 'F' ? 'female' : 'male';
     const svg = genero === 'F' ? SVG_FEMALE : SVG_MALE;
     document.getElementById('pass-silhouette').className = `user-silhouette ${cls}`;
@@ -1883,21 +1883,38 @@
     document.getElementById('pass-error').textContent  = '';
   }
 
-  function submitPassword() {
+  /* La contraseña nunca llega al navegador: verify_login() corre en Supabase
+     (SECURITY DEFINER) contra clave_hash y solo devuelve datos del usuario si coincide. */
+  async function submitPassword() {
     const input = document.getElementById('pass-input').value.trim();
-    const correctPass = (loginSelectedUser[3]||'').trim();
-    if (input === correctPass) {
-      enterDashboard(loginSelectedUser);
-    } else {
-      const err = document.getElementById('pass-error');
-      err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
-      const inp = document.getElementById('pass-input');
-      inp.style.borderColor = 'var(--red)';
-      inp.value = '';
-      setTimeout(() => {
-        err.textContent = '';
-        inp.style.borderColor = '';
-      }, 2500);
+    const err = document.getElementById('pass-error');
+    const inp = document.getElementById('pass-input');
+    const btn = document.querySelector('#lstep-password .login-btn-primary');
+    err.textContent = '';
+    if (btn) btn.disabled = true;
+
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/rpc/verify_login`, {
+        method: 'POST',
+        headers: { ...SB_HEADERS, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_nombre: loginSelectedUser[0], p_password: input }),
+      });
+      if (!res.ok) throw new Error(`verify_login ${res.status}`);
+      const rows = await res.json();
+
+      if (rows && rows.length > 0) {
+        const u = rows[0];
+        enterDashboard([u.NOMBRE, u.PEROP1AM, u.CARGO, u.GENERO]);
+      } else {
+        err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+        inp.style.borderColor = 'var(--red)';
+        inp.value = '';
+        setTimeout(() => { err.textContent = ''; inp.style.borderColor = ''; }, 2500);
+      }
+    } catch (e) {
+      err.textContent = 'Error de conexión. Intenta de nuevo.';
+    } finally {
+      if (btn) btn.disabled = false;
     }
   }
 
@@ -1907,7 +1924,7 @@
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
 
     // Update topbar
-    const genero = (user[4]||'').toUpperCase().trim();
+    const genero = (user[3]||'').toUpperCase().trim();
     const avatarCls = genero === 'F' ? 'female' : 'male';
     const avatarSVG = genero === 'F'
       ? `<svg viewBox="0 0 24 24" fill="#e864c8"><circle cx="12" cy="6" r="3.5"/><path d="M12 11c-3.5 0-6 1.6-6 3.5V16h3v4h6v-4h3v-1.5c0-1.9-2.5-3.5-6-3.5z"/></svg>`
