@@ -6,6 +6,7 @@
   <title>Gestión Center</title>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     /* ─── Reset & Variables ─── */
@@ -2247,6 +2248,11 @@
   }
 
   /* ── Charts ── */
+  // Registrado globalmente pero apagado por defecto — solo el gráfico de Reportes lo enciende,
+  // así el resto de gráficas del Dashboard no se ven afectadas.
+  Chart.register(ChartDataLabels);
+  Chart.defaults.set('plugins.datalabels', { display: false });
+
   const CHART_GRID  = 'rgba(255,255,255,0.05)';
   const CHART_TICK  = '#93a89d';
   const chartDefaults = {
@@ -3086,7 +3092,19 @@
       data: { labels, datasets },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: true, labels: { ...chartDefaults.font, boxWidth: 12 } } },
+        plugins: {
+          legend: { display: true, labels: { ...chartDefaults.font, boxWidth: 12 } },
+          datalabels: {
+            display: (ctx) => ctx.datasetIndex === 0 && ctx.dataset.data[ctx.dataIndex] !== null,
+            formatter: (value) => `${value}%`,
+            color: '#fff',
+            textStrokeColor: 'rgba(0,0,0,.55)',
+            textStrokeWidth: 3,
+            font: { family: "'Lexend', sans-serif", weight: '700', size: 13 },
+            anchor: 'center',
+            align: 'center',
+          },
+        },
         scales: {
           x: { grid: { display: false }, ticks: { ...chartDefaults.font } },
           y: { grid: { color: CHART_GRID }, ticks: { ...chartDefaults.font, callback: v => v + '%' }, min: 0, max: axisMax }
