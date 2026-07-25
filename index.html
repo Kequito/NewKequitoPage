@@ -627,7 +627,6 @@
     /* ─── Approve Stats table ─── */
     .ops-tbl-wrap { overflow-x: auto; }
     .ops-tbl-wrap thead th {
-      position: sticky; top: 58px; z-index: 2;
       white-space: nowrap;
     }
     .ops-tbl-wrap thead th.country-group {
@@ -1259,6 +1258,12 @@
         <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
       </div>
 
+      <!-- Ventana de datos (BI-04, últimos 90 días) -->
+      <div id="ops-window-banner" class="rep-summary-banner" style="display:none;margin:16px 20px 0">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <span id="ops-window-text"></span>
+      </div>
+
       <!-- Pantalla de entrada: 8 países + Team Leader -->
       <div id="ops-picker" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:20px"></div>
 
@@ -1295,11 +1300,25 @@
           <span id="ops-country-title" style="font-size:14px;font-weight:700;display:flex;align-items:center"></span>
           <span style="font-size:11px;color:var(--text-light)">(<span id="ops-country-count">0</span> operadores)</span>
         </div>
-        <div class="ops-tbl-wrap" style="margin-top:10px">
+        <div class="gd-filters">
+          <div class="gd-filter-pill" id="ops-cf-pill-tl">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <span class="pill-label">Team Leader</span>
+            <select id="ops-cf-tl" onchange="applyOpsCountryFilters()"><option value="">Todos</option></select>
+            <span class="pill-clear" onclick="recClearPill('ops-cf-tl', applyOpsCountryFilters)">✕</span>
+          </div>
+          <div class="gd-filter-pill" id="ops-cf-pill-hor">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
+            <span class="pill-label">Horario</span>
+            <select id="ops-cf-hor" onchange="applyOpsCountryFilters()"><option value="">Todos</option></select>
+            <span class="pill-clear" onclick="recClearPill('ops-cf-hor', applyOpsCountryFilters)">✕</span>
+          </div>
+        </div>
+        <div class="ops-tbl-wrap">
           <table id="ops-country-table" style="display:none">
             <thead>
               <tr>
-                <th>Team Leader</th><th>Operador</th><th>PEROP1AM</th><th>Total</th>
+                <th>Team Leader</th><th>Operador</th><th>PEROP1AM</th><th>Horario</th><th>Total</th>
                 <th>Approve</th><th>Approve %</th><th>Reject</th><th>Reject %</th>
                 <th>Trash</th><th>Trash %</th><th>Avg Price ($)</th>
               </tr>
@@ -2463,6 +2482,33 @@
   // 8 países fijos que arma la pantalla de entrada — mismo set/orden que Reportes
   const OPS_STATS_COUNTRIES = ['Chile', 'Colombia', 'Costa Rica', 'Ecuador', 'Mexico', 'Paraguay', 'Peru', 'Uruguay'];
 
+  /* Fecha real de la última carga (no la hora en que el usuario abrió la página) */
+  async function opsFetchLastUpload() {
+    try {
+      const rows = await sbFetch('dt_ops', 'select=uploaded_at&order=uploaded_at.desc&limit=1');
+      return (rows && rows.length > 0) ? rows[0].uploaded_at : null;
+    } catch (err) {
+      console.error('Error obteniendo fecha de carga de dt_ops:', err);
+      return null;
+    }
+  }
+
+  /* El BI-04 siempre trae los últimos 90 días contados desde el momento de la carga */
+  function opsUpdateWindowBanner(uploadedAtIso) {
+    const box = document.getElementById('ops-window-banner');
+    const textEl = document.getElementById('ops-window-text');
+    if (!uploadedAtIso) {
+      box.style.display = 'none';
+      return;
+    }
+    const end = new Date(uploadedAtIso);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 90);
+    const fmt = d => d.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
+    textEl.textContent = `Estos datos son del reporte BI-04 de los últimos 90 días, contados desde la última vez que un Supervisor actualizó el reporte: del ${fmt(start)} al ${fmt(end)}.`;
+    box.style.display = 'flex';
+  }
+
   async function loadOps() {
     document.getElementById('ops-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
     document.getElementById('ops-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
@@ -2472,10 +2518,11 @@
     picker.style.pointerEvents = 'none';
 
     try {
-      // Fetch all dt_ops rows and all dt_dis rows
-      const [opsData, disData] = await Promise.all([
+      // Fetch all dt_ops rows, all dt_dis rows, y la fecha de la última carga
+      const [opsData, disData, lastUpload] = await Promise.all([
         sbFetch('dt_ops', 'select=*&order=Operator.asc'),
-        sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO')
+        sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO'),
+        opsFetchLastUpload(),
       ]);
 
       // Index dt_ops por Operator+Country — guarda la fila completa (ya trae todas las columnas del Excel)
@@ -2505,9 +2552,14 @@
       document.getElementById('ops-countries').textContent = opsCountries.length;
       opsLoaded = true;
 
-      const now = new Date();
-      document.getElementById('ops-last-update').textContent =
-        `Actualizado: ${now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+      if (lastUpload) {
+        const d = new Date(lastUpload);
+        document.getElementById('ops-last-update').textContent =
+          `Última carga: ${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+      } else {
+        document.getElementById('ops-last-update').textContent = '';
+      }
+      opsUpdateWindowBanner(lastUpload);
 
     } catch(err) {
       console.error('Error cargando Approve Stats:', err);
@@ -2641,6 +2693,9 @@
   }
 
   /* Vista plana por país: PEROP1AM con Total >= 1 en dt_ops Y asignado a un Team Leader en dt_dis */
+  let opsCountryRows     = []; // sin filtrar, para poblar filtros
+  let opsCountryFiltered = [];
+
   function opsShowCountryDetail(country) {
     document.getElementById('ops-picker').style.display = 'none';
     document.getElementById('ops-tl-list').style.display = 'none';
@@ -2668,6 +2723,7 @@
         teamLeader: dis.TEAMLEADER,
         asesor: dis.ASESORES || '—',
         operator,
+        horario: dis.HORARIO || '—',
         total,
         approve: Number(r.Approve) || 0,
         approvePct: (approvePctRaw !== undefined && approvePctRaw !== null && approvePctRaw !== '') ? Number(approvePctRaw) : null,
@@ -2682,8 +2738,39 @@
     // Orden: Total es el criterio más importante, Approve (%) desempata
     rows.sort((a, b) => (b.total - a.total) || (b.approvePct - a.approvePct));
 
-    document.getElementById('ops-country-count').textContent = rows.length;
-    renderOpsCountryTable(rows);
+    opsCountryRows = rows;
+    document.getElementById('ops-cf-tl').value = '';
+    document.getElementById('ops-cf-hor').value = '';
+    opsPopulateCountryFilters();
+    applyOpsCountryFilters();
+  }
+
+  function opsPopulateCountryFilters() {
+    const unique = (key) => [...new Set(opsCountryRows.map(r => r[key]).filter(v => v && v !== '—'))].sort();
+    const fillSelect = (id, values) => {
+      const sel = document.getElementById(id);
+      const prev = sel.value;
+      sel.innerHTML = '<option value="">Todos</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
+      if (prev) sel.value = prev;
+    };
+    fillSelect('ops-cf-tl', unique('teamLeader'));
+    fillSelect('ops-cf-hor', unique('horario'));
+  }
+
+  function applyOpsCountryFilters() {
+    const tl  = document.getElementById('ops-cf-tl').value;
+    const hor = document.getElementById('ops-cf-hor').value;
+
+    opsCountryFiltered = opsCountryRows.filter(r => {
+      if (tl && r.teamLeader !== tl) return false;
+      if (hor && r.horario !== hor) return false;
+      return true;
+    });
+
+    document.getElementById('ops-cf-pill-tl')?.classList.toggle('active', !!tl);
+    document.getElementById('ops-cf-pill-hor')?.classList.toggle('active', !!hor);
+    document.getElementById('ops-country-count').textContent = opsCountryFiltered.length;
+    renderOpsCountryTable(opsCountryFiltered);
   }
 
   function renderOpsCountryTable(rows) {
@@ -2705,6 +2792,7 @@
         <td>${recTlBadge(r.teamLeader)}</td>
         <td>${r.asesor}</td>
         <td>${r.operator}</td>
+        <td>${gdScheduleBadge(r.horario)}</td>
         <td>${r.total}</td>
         <td>${r.approve}</td>
         <td class="${ac}" style="font-weight:700">${r.approvePct !== null ? r.approvePct.toFixed(1)+'%' : '—'}</td>
