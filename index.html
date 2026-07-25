@@ -624,10 +624,10 @@
     /* ─── last updated chip ─── */
     #gd-last-update { font-size: 10px; color: var(--text-light); }
 
-    /* ─── OPs Performance table ─── */
-    .ops-tbl-wrap { overflow-x: auto; max-height: 560px; overflow-y: auto; }
+    /* ─── Approve Stats table ─── */
+    .ops-tbl-wrap { overflow-x: auto; }
     .ops-tbl-wrap thead th {
-      position: sticky; top: 0; z-index: 2;
+      position: sticky; top: 58px; z-index: 2;
       white-space: nowrap;
     }
     .ops-tbl-wrap thead th.country-group {
@@ -652,17 +652,24 @@
       text-align: center;
       font-size: 10px;
       border-left: 1px solid var(--border);
-      padding: 4px 2px;
+      padding: 3px 2px;
       min-width: 42px;
     }
     .ops-tbl-wrap tbody td.country-start { border-left: 2px solid var(--border); }
-    .ops-identity-cell { min-width: 130px; }
-    .ops-perop { font-size: 10px; font-weight: 700; color: var(--text-dark); }
-    .ops-name  { font-size: 9px; color: var(--text-mid); margin-top: 1px; }
-    .ops-meta  { font-size: 8px; color: var(--text-light); margin-top: 2px; display:flex; gap:4px; flex-wrap:wrap; }
-    .ops-meta span { background: var(--main-bg); padding: 1px 4px; border-radius: 3px; border: 1px solid var(--border); }
+    .ops-identity-cell { min-width: 260px; white-space: nowrap; }
+    .ops-name-inline { font-size: 11px; font-weight: 700; color: var(--text-dark); }
+    .ops-code-inline  { font-size: 10px; color: var(--text-light); margin-left: 6px; }
     /* Approve % colored cells — reutiliza el semáforo de .rep-approve-* (rojo/neutro/verde) */
     .ops-empty-cell   { color: var(--border); font-size: 11px; text-align:center; }
+
+    /* ─── Approve Stats — tarjetas de selección ─── */
+    .ops-pick-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      padding: 24px 10px; border-radius: var(--radius); border: 1.5px solid var(--border);
+      background: var(--main-bg); cursor: pointer; transition: all .18s;
+    }
+    .ops-pick-card:hover { transform: translateY(-3px); border-color: var(--nav-accent); box-shadow: var(--shadow-md); }
+    .ops-pick-label { font-size: 13px; font-weight: 700; }
 
     /* ─── Reportes — semáforo de Approve % ─── */
     .rep-approve-badge { display:inline-block; padding:3px 10px; border-radius:6px; font-weight:700; font-variant-numeric:tabular-nums; }
@@ -818,7 +825,7 @@
     </div>
     <div class="nav-item nav-sub" onclick="setNav(this, 'ops')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
-      OPs Performance
+      Approve Stats
     </div>
   </div>
 
@@ -1233,7 +1240,7 @@
       <div class="gd-infobar">
         <div class="gd-infobar-title">
           <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
-          OPs Performance — Rendimiento por País
+          Approve Stats — Rendimiento por País
         </div>
         <div class="gd-stat-chip">Operadores: <span id="ops-count">—</span></div>
         <div class="gd-stat-chip">Países: <span id="ops-countries">—</span></div>
@@ -1252,41 +1259,61 @@
         <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
       </div>
 
-      <!-- Filter bar -->
-      <div class="gd-filters" style="gap:8px;flex-wrap:wrap">
-        <div class="gd-filter-pill" id="ops-pill-tl">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          <span class="pill-label">Team Leader</span>
-          <select id="ops-f-tl" onchange="applyOpsFilters()"><option value="">Seleccionar...</option></select>
-          <span class="pill-clear" onclick="clearOpsPill('ops-f-tl')">✕</span>
+      <!-- Pantalla de entrada: 8 países + Team Leader -->
+      <div id="ops-picker" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:20px"></div>
+
+      <!-- Lista de Team Leaders -->
+      <div id="ops-tl-list" style="display:none;padding:20px">
+        <button class="btn btn-ghost btn-sm" onclick="opsShowPicker()" style="margin-bottom:14px">← Volver</button>
+        <div id="ops-tl-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+
+      <!-- Tabla matriz por Team Leader -->
+      <div id="ops-tl-detail" style="display:none">
+        <div style="padding:14px 20px 0">
+          <button class="btn btn-ghost btn-sm" onclick="opsShowPicker()">← Volver</button>
+        </div>
+        <div class="ops-tbl-wrap">
+          <div class="gd-state" id="ops-empty" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <p>Sin resultados</p><small>Este Team Leader no tiene operadores con datos</small>
+          </div>
+          <table id="ops-table" style="display:none">
+            <thead id="ops-thead"></thead>
+            <tbody id="ops-tbody"></tbody>
+          </table>
+        </div>
+        <div style="padding:8px 20px;background:var(--main-bg);border-top:1px solid var(--border);font-size:11px;color:var(--text-light)">
+          Mostrando <strong id="ops-showing">0</strong> de <strong id="ops-total">0</strong> operadores
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="ops-tbl-wrap">
-        <div class="gd-state" id="ops-loading" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          <p>Cargando datos desde Supabase…</p>
+      <!-- Tabla plana por País -->
+      <div id="ops-country-detail" style="display:none">
+        <div style="padding:14px 20px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="opsShowPicker()">← Volver</button>
+          <span id="ops-country-title" style="font-size:14px;font-weight:700;display:flex;align-items:center"></span>
+          <span style="font-size:11px;color:var(--text-light)">(<span id="ops-country-count">0</span> operadores)</span>
         </div>
-        <div class="gd-state" id="ops-select-tl">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          <p>Selecciona un Team Leader para ver los datos</p>
-          <small>Usa el filtro de arriba para comenzar</small>
+        <div class="ops-tbl-wrap" style="margin-top:10px">
+          <table id="ops-country-table" style="display:none">
+            <thead>
+              <tr>
+                <th>Team Leader</th><th>Operador</th><th>PEROP1AM</th><th>Total</th>
+                <th>Approve</th><th>Approve %</th><th>Reject</th><th>Reject %</th>
+                <th>Trash</th><th>Trash %</th><th>Avg Price ($)</th>
+              </tr>
+            </thead>
+            <tbody id="ops-country-tbody"></tbody>
+          </table>
+          <div class="gd-state" id="ops-country-empty" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <p>Sin operadores para este país</p>
+            <small>Ningún PEROP1AM con datos en dt_ops está asignado a un Team Leader</small>
+          </div>
         </div>
-        <div class="gd-state" id="ops-empty" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-          <p>Sin resultados</p><small>Intenta ajustar los filtros</small>
-        </div>
-        <table id="ops-table" style="display:none">
-          <thead id="ops-thead"></thead>
-          <tbody id="ops-tbody"></tbody>
-        </table>
       </div>
 
-      <!-- Count bar -->
-      <div style="padding:8px 20px;background:var(--main-bg);border-top:1px solid var(--border);font-size:11px;color:var(--text-light)">
-        Mostrando <strong id="ops-showing">0</strong> de <strong id="ops-total">0</strong> operadores
-      </div>
     </div>
   </div><!-- /view-ops -->
 
@@ -1587,7 +1614,7 @@
   const titleMap = {
     'dashboard':     ['Dashboard Operativo', 'Resumen general del turno'],
     'goodday':       ['GoodDay — Distribución', 'Datos en vivo desde Supabase'],
-    'ops':           ['OPs Performance', 'Rendimiento de operadores por país'],
+    'ops':           ['Approve Stats', 'Rendimiento de operadores por país'],
     'reportes':      ['Reportes', 'Generación y consulta de reportes'],
     'recalls':       ['Gestión de Recalls', 'Seguimiento de reasignación de órdenes'],
     'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
@@ -2343,26 +2370,38 @@
     return n <= 1 ? n * 100 : n;
   }
 
+  /* Convierte un valor crudo de Excel según el tipo de columna: % -> número 0-100, resto -> número */
+  function opsCoerceValue(header, raw) {
+    if (header.toLowerCase().includes('%')) return opsParsePercent(raw);
+    if (raw === null || raw === undefined || raw === '') return 0;
+    if (typeof raw === 'number') return raw;
+    const n = parseFloat(String(raw).replace(/[^0-9.\-]/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  /* Lee TODAS las columnas del Excel (23 en total), usando el texto exacto del encabezado
+     como clave — así coincide 1 a 1 con las columnas de dt_ops sin tener que listarlas a mano */
   function opsParseWorkbook(workbook) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
     if (raw.length === 0) return [];
 
-    const keyMap = {};
-    Object.keys(raw[0]).forEach(k => { keyMap[recNormalizeHeader(k)] = k; });
+    const headers = Object.keys(raw[0]);
+    const opKey = headers.find(h => recNormalizeHeader(h) === 'operator');
+    const coKey = headers.find(h => recNormalizeHeader(h) === 'country');
 
     return raw.map(row => {
-      const opKey  = keyMap['operator'];
-      const coKey  = keyMap['country'];
-      const totKey = keyMap['total'];
-      const apKey  = keyMap['approve (%)'];
-      return {
-        operator:   opKey  !== undefined ? String(row[opKey]  ?? '').trim() : '',
-        country:    coKey  !== undefined ? String(row[coKey]  ?? '').trim() : '',
-        total:      totKey !== undefined ? (parseInt(String(row[totKey]).replace(/[^\d-]/g, ''), 10) || 0) : 0,
-        approvePct: apKey  !== undefined ? opsParsePercent(row[apKey]) : 0,
-      };
-    }).filter(r => r.operator && r.country);
+      const operator = opKey ? String(row[opKey] ?? '').trim() : '';
+      const country  = coKey ? String(row[coKey] ?? '').trim() : '';
+      if (!operator || !country) return null;
+
+      const record = { 'Operator': operator, 'Country': country };
+      headers.forEach(h => {
+        if (h === opKey || h === coKey) return;
+        record[h] = opsCoerceValue(h, row[h]);
+      });
+      return record;
+    }).filter(Boolean);
   }
 
   async function opsDeleteAllCurrent() {
@@ -2394,13 +2433,7 @@
 
       status.textContent = `Guardando ${parsed.length} filas...`;
       await opsDeleteAllCurrent();
-      const toInsert = parsed.map(r => ({
-        'Operator': r.operator,
-        'Country': r.country,
-        'Total': r.total,
-        'Approve (%)': r.approvePct,
-      }));
-      await bulkInsert('dt_ops', toInsert);
+      await bulkInsert('dt_ops', parsed);
 
       await loadOps();
       status.style.color = 'var(--green)';
@@ -2427,13 +2460,16 @@
     return `<img src="https://flagcdn.com/20x15/${code}.png" srcset="https://flagcdn.com/40x30/${code}.png 2x" width="20" height="15" alt="${country}" style="border-radius:2px;vertical-align:middle;margin-right:4px;box-shadow:0 1px 3px rgba(0,0,0,.2)">`;
   }
 
+  // 8 países fijos que arma la pantalla de entrada — mismo set/orden que Reportes
+  const OPS_STATS_COUNTRIES = ['Chile', 'Colombia', 'Costa Rica', 'Ecuador', 'Mexico', 'Paraguay', 'Peru', 'Uruguay'];
+
   async function loadOps() {
     document.getElementById('ops-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
     document.getElementById('ops-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
-    document.getElementById('ops-loading').style.display    = 'flex';
-    document.getElementById('ops-select-tl').style.display = 'none';
-    document.getElementById('ops-table').style.display     = 'none';
-    document.getElementById('ops-empty').style.display     = 'none';
+
+    const picker = document.getElementById('ops-picker');
+    picker.style.opacity = '.4';
+    picker.style.pointerEvents = 'none';
 
     try {
       // Fetch all dt_ops rows and all dt_dis rows
@@ -2442,17 +2478,13 @@
         sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO')
       ]);
 
-      // Index dt_ops by Operator+Country for fast lookup — solo Total y Approve (%)
+      // Index dt_ops por Operator+Country — guarda la fila completa (ya trae todas las columnas del Excel)
       const opsIdx = {};
       opsData.forEach(r => {
         const op = (r.Operator||'').trim(), co = (r.Country||'').trim();
         if (!op || !co) return;
         if (!opsIdx[op]) opsIdx[op] = {};
-        const rawPct = r['Approve (%)'];
-        opsIdx[op][co] = {
-          total: r.Total || 0,
-          approvePct: (rawPct !== undefined && rawPct !== null && rawPct !== '') ? Number(rawPct) : null,
-        };
+        opsIdx[op][co] = r;
       });
 
       // Index dt_dis by PEROP1AM
@@ -2466,14 +2498,6 @@
       });
 
       opsCountries = [...new Set(opsData.map(r=>(r.Country||'').trim()).filter(Boolean))].sort();
-
-      // Fill TL filter only
-      const tls = [...new Set(disData.map(r=>r.TEAMLEADER).filter(Boolean))].sort();
-      const sel = document.getElementById('ops-f-tl');
-      const prev = sel.value;
-      sel.innerHTML = '<option value="">Seleccionar...</option>' + tls.map(v=>`<option>${v}</option>`).join('');
-      if (prev && tls.includes(prev)) sel.value = prev;
-
       window._opsIdx = opsIdx;
 
       // Stats chips
@@ -2481,57 +2505,72 @@
       document.getElementById('ops-countries').textContent = opsCountries.length;
       opsLoaded = true;
 
-      document.getElementById('ops-loading').style.display = 'none';
-      const tlVal = document.getElementById('ops-f-tl').value;
-      if (!tlVal) {
-        document.getElementById('ops-select-tl').style.display = 'flex';
-      } else {
-        applyOpsFilters();
-      }
-
       const now = new Date();
       document.getElementById('ops-last-update').textContent =
         `Actualizado: ${now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
 
     } catch(err) {
-      document.getElementById('ops-loading').innerHTML = `
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-        <p>No se pudo cargar los datos</p><small>${err.message}</small>`;
-      document.getElementById('ops-loading').style.display = 'flex';
+      console.error('Error cargando Approve Stats:', err);
+    } finally {
+      picker.style.opacity = '';
+      picker.style.pointerEvents = '';
     }
+
+    opsRenderPickerCards();
+    opsShowPicker();
   }
 
-  function applyOpsFilters() {
-    const tl  = document.getElementById('ops-f-tl').value;
+  function opsRenderPickerCards() {
+    const picker = document.getElementById('ops-picker');
+    const countryCards = OPS_STATS_COUNTRIES.map((c, i) => {
+      const color = REP_COUNTRY_COLORS[c] || REP_FALLBACK_COLORS[i % REP_FALLBACK_COLORS.length];
+      return `<div class="ops-pick-card" style="border-color:${color}55" onclick="opsShowCountryDetail('${c}')">
+        ${countryFlag(c)}
+        <div class="ops-pick-label" style="color:${color}">${c}</div>
+      </div>`;
+    }).join('');
+    const tlCard = `<div class="ops-pick-card" style="border-color:var(--nav-accent)" onclick="opsShowTlList()">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:26px;height:26px;color:var(--nav-accent)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      <div class="ops-pick-label" style="color:var(--nav-accent)">Team Leader</div>
+    </div>`;
+    picker.innerHTML = countryCards + tlCard;
+  }
 
-    // Require TL
-    if (!tl) {
-      document.getElementById('ops-table').style.display     = 'none';
-      document.getElementById('ops-empty').style.display     = 'none';
-      document.getElementById('ops-loading').style.display   = 'none';
-      document.getElementById('ops-select-tl').style.display = 'flex';
-      document.getElementById('ops-pill-tl')?.classList.remove('active');
-      document.getElementById('ops-showing').textContent = '0';
+  function opsShowPicker() {
+    document.getElementById('ops-picker').style.display = 'grid';
+    document.getElementById('ops-tl-list').style.display = 'none';
+    document.getElementById('ops-tl-detail').style.display = 'none';
+    document.getElementById('ops-country-detail').style.display = 'none';
+  }
+
+  function opsShowTlList() {
+    document.getElementById('ops-picker').style.display = 'none';
+    document.getElementById('ops-tl-detail').style.display = 'none';
+    document.getElementById('ops-country-detail').style.display = 'none';
+    document.getElementById('ops-tl-list').style.display = 'block';
+
+    const tls = [...new Set(Object.values(opsDisData).map(d => d.TEAMLEADER).filter(v => v && v !== '—'))].sort();
+    const chips = document.getElementById('ops-tl-chips');
+    if (tls.length === 0) {
+      chips.innerHTML = `<span style="color:var(--text-light);font-size:12px">No hay Team Leaders cargados todavía — revisa GoodDay.</span>`;
       return;
     }
+    chips.innerHTML = tls.map(tl => {
+      const safe = tl.replace(/'/g, "\\'");
+      return `<div class="rep-toggle-chip" style="border-color:var(--nav-accent);color:var(--nav-accent)" onclick="opsSelectTeamLeader('${safe}')">${tl}</div>`;
+    }).join('');
+  }
 
-    // All OPs in dt_dis for this TL
+  function opsSelectTeamLeader(tl) {
+    document.getElementById('ops-picker').style.display = 'none';
+    document.getElementById('ops-tl-list').style.display = 'none';
+    document.getElementById('ops-country-detail').style.display = 'none';
+    document.getElementById('ops-tl-detail').style.display = 'block';
+
     opsFiltered = Object.keys(opsDisData).filter(op => opsDisData[op].TEAMLEADER === tl);
-
-    document.getElementById('ops-select-tl').style.display = 'none';
-    document.getElementById('ops-pill-tl').classList.add('active');
     document.getElementById('ops-showing').textContent = opsFiltered.length;
     document.getElementById('ops-total').textContent   = opsFiltered.length;
     renderOpsTable(null);
-  }
-
-  function clearOpsFilters() {
-    document.getElementById('ops-f-tl').value = '';
-    applyOpsFilters();
-  }
-  function clearOpsPill(selId) {
-    document.getElementById(selId).value = '';
-    applyOpsFilters();
   }
 
   /* Semáforo unificado con el resto de la app: rojo <25%, neutro 25-30%, verde 30%+ */
@@ -2541,12 +2580,10 @@
   }
 
   function renderOpsTable(filterCountry) {
-    const table   = document.getElementById('ops-table');
-    const tbody   = document.getElementById('ops-tbody');
-    const thead   = document.getElementById('ops-thead');
-    const empty   = document.getElementById('ops-empty');
-    const loading = document.getElementById('ops-loading');
-    loading.style.display = 'none';
+    const table = document.getElementById('ops-table');
+    const tbody = document.getElementById('ops-tbody');
+    const thead = document.getElementById('ops-thead');
+    const empty = document.getElementById('ops-empty');
 
     if (opsFiltered.length === 0) {
       table.style.display = 'none'; empty.style.display = 'flex'; return;
@@ -2561,7 +2598,7 @@
     const mLabels = ['Total', 'Approve %'];
 
     // THEAD — compact sizing
-    let h1 = `<tr><th rowspan="2" style="position:sticky;left:0;z-index:3;background:var(--nav-bg);color:#fff;text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid rgba(255,255,255,.1);min-width:130px;white-space:nowrap">Operador</th>`;
+    let h1 = `<tr><th rowspan="2" class="ops-identity-cell" style="position:sticky;left:0;z-index:3;background:var(--nav-bg);color:#fff;text-align:left;padding:6px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid rgba(255,255,255,.1)">Operador</th>`;
     visibleCountries.forEach(co => {
       h1 += `<th colspan="${M}" class="country-group">${countryFlag(co)}${co}</th>`;
     });
@@ -2575,13 +2612,10 @@
     // TBODY
     tbody.innerHTML = opsFiltered.map(op => {
       const dis  = opsDisData[op] || {};
-      const name = dis.ASESORES   || '—';
-      const tl   = dis.TEAMLEADER || '—';
+      const name = dis.ASESORES || '—';
 
-      let row = `<tr><td style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:5px 10px;border-bottom:1px solid var(--border);min-width:130px">
-        <div class="ops-perop">${op}</div>
-        <div class="ops-name">${name}</div>
-        <div class="ops-meta"><span>${tl}</span></div>
+      let row = `<tr><td class="ops-identity-cell" style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:4px 12px;border-bottom:1px solid var(--border)">
+        <span class="ops-name-inline">${name}</span><span class="ops-code-inline">${op}</span>
       </td>`;
 
       visibleCountries.forEach((co, ci) => {
@@ -2590,16 +2624,96 @@
         if (!r) {
           for (let i=0;i<M;i++) row += `<td class="metric-cell ${i===0?sc:''} ops-empty-cell">—</td>`;
         } else {
-          const ac = approveClass(r.approvePct);
+          const total = Number(r.Total) || 0;
+          const rawPct = r['Approve (%)'];
+          const approvePct = (rawPct !== undefined && rawPct !== null && rawPct !== '') ? Number(rawPct) : null;
+          const ac = approveClass(approvePct);
           const bgStyle = ac === 'rep-approve-good' ? 'background:rgba(34,197,94,.06)'
                         : ac === 'rep-approve-mid'  ? 'background:rgba(255,255,255,.03)'
                         : ac === 'rep-approve-bad'  ? 'background:rgba(239,68,68,.06)' : '';
-          const apText = r.approvePct !== null ? `${r.approvePct.toFixed(1)}%` : '—';
-          row += `<td class="metric-cell ${sc}" style="${bgStyle}">${r.total || '—'}</td>`;
+          const apText = approvePct !== null ? `${approvePct.toFixed(1)}%` : '—';
+          row += `<td class="metric-cell ${sc}" style="${bgStyle}">${total || '—'}</td>`;
           row += `<td class="metric-cell ${ac}" style="font-weight:700">${apText}</td>`;
         }
       });
       return row + '</tr>';
+    }).join('');
+  }
+
+  /* Vista plana por país: PEROP1AM con Total >= 1 en dt_ops Y asignado a un Team Leader en dt_dis */
+  function opsShowCountryDetail(country) {
+    document.getElementById('ops-picker').style.display = 'none';
+    document.getElementById('ops-tl-list').style.display = 'none';
+    document.getElementById('ops-tl-detail').style.display = 'none';
+    document.getElementById('ops-country-detail').style.display = 'block';
+
+    document.getElementById('ops-country-title').innerHTML = `${countryFlag(country)}${country}`;
+
+    const idx = window._opsIdx || {};
+    const rows = [];
+    Object.keys(idx).forEach(operator => {
+      const r = (idx[operator] || {})[country];
+      if (!r) return;
+      const total = Number(r.Total) || 0;
+      if (total < 1) return;
+      const dis = opsDisData[operator];
+      if (!dis || !dis.TEAMLEADER || dis.TEAMLEADER === '—') return; // debe pertenecer a un Team Leader
+
+      const approvePctRaw = r['Approve (%)'];
+      const rejectPctRaw  = r['Reject (%)'];
+      const trashPctRaw   = r['Trash (%)'];
+      const avgPriceRaw   = r['Avg Price ($)'];
+
+      rows.push({
+        teamLeader: dis.TEAMLEADER,
+        asesor: dis.ASESORES || '—',
+        operator,
+        total,
+        approve: Number(r.Approve) || 0,
+        approvePct: (approvePctRaw !== undefined && approvePctRaw !== null && approvePctRaw !== '') ? Number(approvePctRaw) : null,
+        reject: Number(r.Reject) || 0,
+        rejectPct: (rejectPctRaw !== undefined && rejectPctRaw !== null && rejectPctRaw !== '') ? Number(rejectPctRaw) : null,
+        trash: Number(r.Trash) || 0,
+        trashPct: (trashPctRaw !== undefined && trashPctRaw !== null && trashPctRaw !== '') ? Number(trashPctRaw) : null,
+        avgPrice: (avgPriceRaw !== undefined && avgPriceRaw !== null && avgPriceRaw !== '') ? Number(avgPriceRaw) : null,
+      });
+    });
+
+    // Orden: Total es el criterio más importante, Approve (%) desempata
+    rows.sort((a, b) => (b.total - a.total) || (b.approvePct - a.approvePct));
+
+    document.getElementById('ops-country-count').textContent = rows.length;
+    renderOpsCountryTable(rows);
+  }
+
+  function renderOpsCountryTable(rows) {
+    const table = document.getElementById('ops-country-table');
+    const empty = document.getElementById('ops-country-empty');
+    const tbody = document.getElementById('ops-country-tbody');
+
+    if (rows.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = rows.map(r => {
+      const ac = approveClass(r.approvePct);
+      return `<tr>
+        <td>${recTlBadge(r.teamLeader)}</td>
+        <td>${r.asesor}</td>
+        <td>${r.operator}</td>
+        <td>${r.total}</td>
+        <td>${r.approve}</td>
+        <td class="${ac}" style="font-weight:700">${r.approvePct !== null ? r.approvePct.toFixed(1)+'%' : '—'}</td>
+        <td>${r.reject}</td>
+        <td>${r.rejectPct !== null ? r.rejectPct.toFixed(1)+'%' : '—'}</td>
+        <td>${r.trash}</td>
+        <td>${r.trashPct !== null ? r.trashPct.toFixed(1)+'%' : '—'}</td>
+        <td>${r.avgPrice !== null ? r.avgPrice.toFixed(2) : '—'}</td>
+      </tr>`;
     }).join('');
   }
 
