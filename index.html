@@ -1467,6 +1467,7 @@
           <thead><tr>
             <th>Id in CC</th><th>Country</th><th>Substatus</th><th>CC comment</th>
             <th>Team Leader</th><th>Asesor</th><th>Last call operator</th><th>Horario</th>
+            <th style="width:36px">Change</th><th style="width:36px">View</th>
           </tr></thead>
           <tbody id="rec-tbody"></tbody>
         </table>
@@ -1491,6 +1492,10 @@
         <div class="gd-stat-chip" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3)">
           Pendientes: <span id="rec-alert-pending-count">—</span>
         </div>
+        <button id="rec-delete-reviewed-btn" class="gd-clear-all" style="display:none" onclick="recDeleteReviewedAlerts()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          Eliminar revisadas
+        </button>
         <div class="gd-filter-pill" id="rec-pill-status" style="margin-left:auto">
           <span class="pill-label">Estado</span>
           <select id="rec-f-status" onchange="applyRecAlertFilters()">
@@ -1527,6 +1532,7 @@
             <th>Id in CC</th><th>Country</th><th>Operador: Antes → Ahora</th>
             <th>Team Leader: Antes → Ahora</th><th>Asesor: Antes → Ahora</th>
             <th>Detectado</th><th>Acción</th>
+            <th style="width:36px">Change</th><th style="width:36px">View</th>
           </tr></thead>
           <tbody id="rec-alert-tbody"></tbody>
         </table>
@@ -3243,7 +3249,26 @@
     recLoaded = true;
     document.getElementById('rec-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
     document.getElementById('rec-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
+    document.getElementById('rec-delete-reviewed-btn').style.display = isSupervisor() ? 'flex' : 'none';
     await recLoadAll();
+  }
+
+  async function recDeleteReviewedAlerts() {
+    if (!isSupervisor()) return;
+    const reviewedCount = recAlertRows.filter(a => a.reviewed).length;
+    if (reviewedCount === 0) return;
+    if (!confirm(`¿Eliminar ${reviewedCount} alerta(s) marcada(s) como revisada(s)? Esta acción no se puede deshacer.`)) return;
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/dt_recalls_alerts?reviewed=eq.true`, {
+        method: 'DELETE',
+        headers: SB_HEADERS,
+      });
+      if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+      await recLoadAll();
+    } catch (err) {
+      console.error('Error eliminando alertas revisadas:', err);
+      alert('No se pudo eliminar, intenta de nuevo.');
+    }
   }
 
   async function recLoadAll() {
@@ -3338,6 +3363,45 @@
     applyRecFilters();
   }
 
+  /* Color determinístico por nombre (mismo hash siempre da el mismo color) — para Team Leader */
+  function recColorForName(name) {
+    const s = (name || '').trim();
+    if (!s || s === '—') return null;
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+    const hue = hash % 360;
+    return { bg: `hsla(${hue},65%,55%,.16)`, color: `hsl(${hue},70%,72%)` };
+  }
+
+  function recTlBadge(name) {
+    const v = (name || '').trim();
+    if (!v || v === '—') return `<span style="color:var(--text-light)">—</span>`;
+    const c = recColorForName(v);
+    return `<span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;background:${c.bg};color:${c.color}">${v}</span>`;
+  }
+
+  function recTlArrowHTML(oldVal, newVal) {
+    return `${recTlBadge(oldVal)} <span style="color:#f87171">→</span> ${recTlBadge(newVal)}`;
+  }
+
+  /* Columnas rápidas hacia el panel externo (2wcall) usando el Id in CC */
+  function recLinkCells(idInCc) {
+    if (!idInCc) return '<td></td><td></td>';
+    const changeUrl = `https://panel.2wcall.com/order/change/${encodeURIComponent(idInCc)}`;
+    const viewUrl   = `https://panel.2wcall.com/order/index/view/${encodeURIComponent(idInCc)}`;
+    return `
+      <td style="text-align:center">
+        <a href="${changeUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" title="Abrir en Change" style="padding:4px 8px">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        </a>
+      </td>
+      <td style="text-align:center">
+        <a href="${viewUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" title="Abrir en View" style="padding:4px 8px">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+        </a>
+      </td>`;
+  }
+
   function renderRecTable() {
     const tbody   = document.getElementById('rec-tbody');
     const table   = document.getElementById('rec-table');
@@ -3362,10 +3426,11 @@
         <td>${countryFlag(r.country)}${r.country || '—'}</td>
         <td>${r.substatus || '—'}</td>
         <td style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
-        <td>${r.team_leader || '—'}</td>
+        <td>${recTlBadge(r.team_leader)}</td>
         <td>${r.asesor || '—'}</td>
         <td>${r.last_call_operator || '—'}</td>
-        <td>${r.horario || '—'}</td>
+        <td>${gdScheduleBadge(r.horario)}</td>
+        ${recLinkCells(r.id_in_cc)}
       </tr>`).join('');
   }
 
@@ -3414,13 +3479,14 @@
         <td><strong>${a.id_in_cc || '—'}</strong></td>
         <td>${countryFlag(a.country)}${a.country || '—'}</td>
         <td style="white-space:nowrap">${recArrowHTML(a.old_operator, a.new_operator)}</td>
-        <td style="white-space:nowrap">${recArrowHTML(a.old_team_leader, a.new_team_leader)}</td>
+        <td style="white-space:nowrap">${recTlArrowHTML(a.old_team_leader, a.new_team_leader)}</td>
         <td style="white-space:nowrap">${recArrowHTML(a.old_asesor, a.new_asesor)}</td>
         <td style="color:var(--text-light);white-space:nowrap">${repTimeAgo(a.detected_at)}</td>
         <td>${a.reviewed
           ? `<span class="badge badge-green">✓ Revisado</span>`
           : (isSupervisor() ? `<button class="btn btn-ghost btn-sm" onclick="recMarkReviewed(${a.id})">Marcar revisado</button>` : `<span class="badge badge-red">Pendiente</span>`)
         }</td>
+        ${recLinkCells(a.id_in_cc)}
       </tr>`).join('');
   }
 
