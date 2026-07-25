@@ -634,36 +634,34 @@
       background: var(--nav-bg);
       color: #fff;
       text-align: center;
-      font-size: 11px; font-weight: 700;
-      letter-spacing: .5px;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .3px;
       border-left: 2px solid rgba(255,255,255,.1);
+      padding: 4px 3px;
     }
     .ops-tbl-wrap thead tr.sub-header th {
       background: var(--nav-bg2);
       color: var(--nav-muted);
-      font-size: 9px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: .4px;
+      font-size: 8px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .3px;
       border-left: 1px solid rgba(255,255,255,.06);
       text-align: center;
-      padding: 4px 5px;
+      padding: 3px 2px;
     }
     .ops-tbl-wrap tbody td.metric-cell {
       text-align: center;
-      font-size: 11px;
+      font-size: 10px;
       border-left: 1px solid var(--border);
-      padding: 5px 5px;
-      min-width: 58px;
+      padding: 4px 2px;
+      min-width: 42px;
     }
     .ops-tbl-wrap tbody td.country-start { border-left: 2px solid var(--border); }
-    .ops-identity-cell { min-width: 200px; }
-    .ops-perop { font-size: 11px; font-weight: 700; color: var(--text-dark); }
-    .ops-name  { font-size: 10px; color: var(--text-mid); margin-top: 1px; }
-    .ops-meta  { font-size: 9px; color: var(--text-light); margin-top: 2px; display:flex; gap:4px; flex-wrap:wrap; }
-    .ops-meta span { background: var(--main-bg); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
-    /* Approve % colored cells */
-    .ops-approve-good { color: #4ade80; font-weight: 700; background: rgba(34,197,94,.16); border-radius: 4px; }
-    .ops-approve-mid  { color: #fbbf24; font-weight: 700; background: rgba(245,158,11,.16); border-radius: 4px; }
-    .ops-approve-bad  { color: #f87171; font-weight: 700; background: rgba(239,68,68,.16); border-radius: 4px; }
+    .ops-identity-cell { min-width: 130px; }
+    .ops-perop { font-size: 10px; font-weight: 700; color: var(--text-dark); }
+    .ops-name  { font-size: 9px; color: var(--text-mid); margin-top: 1px; }
+    .ops-meta  { font-size: 8px; color: var(--text-light); margin-top: 2px; display:flex; gap:4px; flex-wrap:wrap; }
+    .ops-meta span { background: var(--main-bg); padding: 1px 4px; border-radius: 3px; border: 1px solid var(--border); }
+    /* Approve % colored cells — reutiliza el semáforo de .rep-approve-* (rojo/neutro/verde) */
     .ops-empty-cell   { color: var(--border); font-size: 11px; text-align:center; }
 
     /* ─── Reportes — semáforo de Approve % ─── */
@@ -1240,10 +1238,18 @@
         <div class="gd-stat-chip">Operadores: <span id="ops-count">—</span></div>
         <div class="gd-stat-chip">Países: <span id="ops-countries">—</span></div>
         <span id="ops-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
-        <button class="gd-refresh-btn" onclick="loadOps()">
-          <svg id="ops-spin-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          Actualizar
-        </button>
+        <div id="ops-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
+          <span id="ops-upload-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
+          <label class="btn btn-primary btn-sm" for="ops-file-input" style="cursor:pointer;margin:0">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Subir Excel
+          </label>
+          <input type="file" id="ops-file-input" accept=".xlsx,.xls" style="display:none" onchange="opsOnFileSelected(event)"/>
+        </div>
+      </div>
+      <div id="ops-tl-note" class="gd-state" style="display:none;padding:16px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
       </div>
 
       <!-- Filter bar -->
@@ -1254,14 +1260,6 @@
           <select id="ops-f-tl" onchange="applyOpsFilters()"><option value="">Seleccionar...</option></select>
           <span class="pill-clear" onclick="clearOpsPill('ops-f-tl')">✕</span>
         </div>
-        <div class="gd-search-wrap" style="margin-left:auto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="ops-search" placeholder="Buscar PEROP1AM o asesor..." oninput="applyOpsFilters()"/>
-        </div>
-        <button class="gd-clear-all" id="ops-clear-btn" onclick="clearOpsFilters()" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          Limpiar
-        </button>
       </div>
 
       <!-- Table -->
@@ -2329,13 +2327,91 @@
 
 
   /* ══════════════════════════════
-     OPS PERFORMANCE
+     OPS PERFORMANCE — Excel (Total + Approve %), como Recalls
   ══════════════════════════════ */
-  let opsRawData   = [];
   let opsDisData   = {};  // keyed by PEROP1AM → {ASESORES, TEAMLEADER, HORARIO, PAIS, CAMPANA}
   let opsFiltered  = [];
   let opsCountries = [];
   let opsLoaded    = false;
+
+  /* Excel a veces guarda % como fracción (0.228) y a veces como número/texto ("22.8" o "22.8%") */
+  function opsParsePercent(raw) {
+    if (raw === null || raw === undefined || raw === '') return 0;
+    if (typeof raw === 'number') return raw <= 1 ? raw * 100 : raw;
+    const n = parseFloat(String(raw).replace('%', '').trim());
+    if (isNaN(n)) return 0;
+    return n <= 1 ? n * 100 : n;
+  }
+
+  function opsParseWorkbook(workbook) {
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (raw.length === 0) return [];
+
+    const keyMap = {};
+    Object.keys(raw[0]).forEach(k => { keyMap[recNormalizeHeader(k)] = k; });
+
+    return raw.map(row => {
+      const opKey  = keyMap['operator'];
+      const coKey  = keyMap['country'];
+      const totKey = keyMap['total'];
+      const apKey  = keyMap['approve (%)'];
+      return {
+        operator:   opKey  !== undefined ? String(row[opKey]  ?? '').trim() : '',
+        country:    coKey  !== undefined ? String(row[coKey]  ?? '').trim() : '',
+        total:      totKey !== undefined ? (parseInt(String(row[totKey]).replace(/[^\d-]/g, ''), 10) || 0) : 0,
+        approvePct: apKey  !== undefined ? opsParsePercent(row[apKey]) : 0,
+      };
+    }).filter(r => r.operator && r.country);
+  }
+
+  async function opsDeleteAllCurrent() {
+    const res = await fetch(`${SB_URL}/rest/v1/dt_ops?Operator=not.is.null`, {
+      method: 'DELETE',
+      headers: SB_HEADERS,
+    });
+    if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+  }
+
+  async function opsOnFileSelected(event) {
+    const file = event.target.files[0];
+    event.target.value = '';
+    if (!file || !isSupervisor()) return;
+
+    const status = document.getElementById('ops-upload-status');
+    status.style.color = 'var(--text-light)';
+    status.textContent = 'Leyendo archivo...';
+
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      const parsed = opsParseWorkbook(wb);
+      if (parsed.length === 0) {
+        status.style.color = 'var(--red)';
+        status.textContent = 'No encontré filas válidas — revisa que los encabezados del Excel coincidan.';
+        return;
+      }
+
+      status.textContent = `Guardando ${parsed.length} filas...`;
+      await opsDeleteAllCurrent();
+      const toInsert = parsed.map(r => ({
+        'Operator': r.operator,
+        'Country': r.country,
+        'Total': r.total,
+        'Approve (%)': r.approvePct,
+      }));
+      await bulkInsert('dt_ops', toInsert);
+
+      await loadOps();
+      status.style.color = 'var(--green)';
+      status.textContent = `✓ Listo — ${parsed.length} filas cargadas`;
+      setTimeout(() => { status.textContent = ''; }, 6000);
+    } catch (err) {
+      console.error('Error procesando Excel de OPs:', err);
+      status.style.color = 'var(--red)';
+      status.textContent = 'Error al procesar el archivo, intenta de nuevo.';
+    }
+  }
 
   const COUNTRY_CODES = {
     'CHILE':'cl','COLOMBIA':'co','ECUADOR':'ec','PERU':'pe','PERÚ':'pe',
@@ -2352,8 +2428,8 @@
   }
 
   async function loadOps() {
-    const spinIcon = document.getElementById('ops-spin-icon');
-    spinIcon.classList.add('spin');
+    document.getElementById('ops-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
+    document.getElementById('ops-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
     document.getElementById('ops-loading').style.display    = 'flex';
     document.getElementById('ops-select-tl').style.display = 'none';
     document.getElementById('ops-table').style.display     = 'none';
@@ -2366,12 +2442,17 @@
         sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO')
       ]);
 
-      // Index dt_ops by Operator+Country for fast lookup
+      // Index dt_ops by Operator+Country for fast lookup — solo Total y Approve (%)
       const opsIdx = {};
       opsData.forEach(r => {
         const op = (r.Operator||'').trim(), co = (r.Country||'').trim();
+        if (!op || !co) return;
         if (!opsIdx[op]) opsIdx[op] = {};
-        opsIdx[op][co] = r;
+        const rawPct = r['Approve (%)'];
+        opsIdx[op][co] = {
+          total: r.Total || 0,
+          approvePct: (rawPct !== undefined && rawPct !== null && rawPct !== '') ? Number(rawPct) : null,
+        };
       });
 
       // Index dt_dis by PEROP1AM
@@ -2384,7 +2465,6 @@
         }
       });
 
-      opsRawData   = opsData;
       opsCountries = [...new Set(opsData.map(r=>(r.Country||'').trim()).filter(Boolean))].sort();
 
       // Fill TL filter only
@@ -2418,15 +2498,11 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <p>No se pudo cargar los datos</p><small>${err.message}</small>`;
       document.getElementById('ops-loading').style.display = 'flex';
-    } finally {
-      spinIcon.classList.remove('spin');
     }
   }
 
   function applyOpsFilters() {
-    const tl     = document.getElementById('ops-f-tl').value;
-    const search = document.getElementById('ops-search').value.toLowerCase();
-    const idx    = window._opsIdx || {};
+    const tl  = document.getElementById('ops-f-tl').value;
 
     // Require TL
     if (!tl) {
@@ -2435,35 +2511,22 @@
       document.getElementById('ops-loading').style.display   = 'none';
       document.getElementById('ops-select-tl').style.display = 'flex';
       document.getElementById('ops-pill-tl')?.classList.remove('active');
-      document.getElementById('ops-clear-btn').style.display = 'none';
       document.getElementById('ops-showing').textContent = '0';
       return;
     }
 
     // All OPs in dt_dis for this TL
-    opsFiltered = Object.keys(opsDisData).filter(op => {
-      const dis = opsDisData[op];
-      if (dis.TEAMLEADER !== tl) return false;
-      if (search) {
-        const name = (dis.ASESORES||'').toLowerCase();
-        if (!op.toLowerCase().includes(search) && !name.includes(search)) return false;
-      }
-      return true;
-    });
+    opsFiltered = Object.keys(opsDisData).filter(op => opsDisData[op].TEAMLEADER === tl);
 
     document.getElementById('ops-select-tl').style.display = 'none';
     document.getElementById('ops-pill-tl').classList.add('active');
-    const sw = document.querySelector('#view-ops .gd-search-wrap');
-    if (sw) sw.classList.toggle('active', !!search);
-    document.getElementById('ops-clear-btn').style.display = search ? 'flex' : 'none';
     document.getElementById('ops-showing').textContent = opsFiltered.length;
-    document.getElementById('ops-total').textContent   = Object.keys(opsDisData).filter(op=>opsDisData[op].TEAMLEADER===tl).length;
+    document.getElementById('ops-total').textContent   = opsFiltered.length;
     renderOpsTable(null);
   }
 
   function clearOpsFilters() {
-    document.getElementById('ops-f-tl').value   = '';
-    document.getElementById('ops-search').value = '';
+    document.getElementById('ops-f-tl').value = '';
     applyOpsFilters();
   }
   function clearOpsPill(selId) {
@@ -2471,10 +2534,10 @@
     applyOpsFilters();
   }
 
+  /* Semáforo unificado con el resto de la app: rojo <25%, neutro 25-30%, verde 30%+ */
   function approveClass(pct) {
-    const n = parseFloat(pct);
-    if (isNaN(n)) return '';
-    return n >= 35 ? 'ops-approve-good' : n >= 25 ? 'ops-approve-mid' : 'ops-approve-bad';
+    if (pct === null || pct === undefined || isNaN(pct)) return '';
+    return repApproveClass(pct);
   }
 
   function renderOpsTable(filterCountry) {
@@ -2494,17 +2557,13 @@
     // Which countries to show: if filtered by país, only that one; else all
     const visibleCountries = filterCountry ? [filterCountry] : opsCountries;
 
-    // Detect approve% key
-    const sampleRow  = opsRawData[0] || {};
-    const approveKey = Object.keys(sampleRow).find(k=>k.toLowerCase().includes('approve')&&k.includes('%')) || 'Approve (%)';
-
-    const M = 3; // Total, Aprobados, Aprobados%
-    const mLabels = ['Total','Aprobados','Aprobados %'];
+    const M = 2; // Total, Approve %
+    const mLabels = ['Total', 'Approve %'];
 
     // THEAD — compact sizing
-    let h1 = `<tr><th rowspan="2" style="position:sticky;left:0;z-index:3;background:var(--nav-bg);color:#fff;text-align:left;padding:8px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;border-bottom:2px solid rgba(255,255,255,.1);min-width:190px;white-space:nowrap">Operador</th>`;
+    let h1 = `<tr><th rowspan="2" style="position:sticky;left:0;z-index:3;background:var(--nav-bg);color:#fff;text-align:left;padding:6px 10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid rgba(255,255,255,.1);min-width:130px;white-space:nowrap">Operador</th>`;
     visibleCountries.forEach(co => {
-      h1 += `<th colspan="${M}" class="country-group" style="padding:6px 8px">${countryFlag(co)}${co}</th>`;
+      h1 += `<th colspan="${M}" class="country-group">${countryFlag(co)}${co}</th>`;
     });
     h1 += '</tr>';
 
@@ -2519,7 +2578,7 @@
       const name = dis.ASESORES   || '—';
       const tl   = dis.TEAMLEADER || '—';
 
-      let row = `<tr><td style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:7px 12px;border-bottom:1px solid var(--border);min-width:190px">
+      let row = `<tr><td style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:5px 10px;border-bottom:1px solid var(--border);min-width:130px">
         <div class="ops-perop">${op}</div>
         <div class="ops-name">${name}</div>
         <div class="ops-meta"><span>${tl}</span></div>
@@ -2531,15 +2590,13 @@
         if (!r) {
           for (let i=0;i<M;i++) row += `<td class="metric-cell ${i===0?sc:''} ops-empty-cell">—</td>`;
         } else {
-          const ap = r[approveKey] || '—';
-          const ac = approveClass(ap);
-          // Total and Approve get subtle bg based on approve color
-          const bgStyle = ac === 'ops-approve-good' ? 'background:rgba(34,197,94,.06)'
-                        : ac === 'ops-approve-mid'  ? 'background:rgba(245,158,11,.06)'
-                        : ac === 'ops-approve-bad'  ? 'background:rgba(239,68,68,.06)' : '';
-          row += `<td class="metric-cell ${sc}" style="${bgStyle}">${r.Total||'—'}</td>`;
-          row += `<td class="metric-cell" style="${bgStyle}">${r.Approve||'—'}</td>`;
-          row += `<td class="metric-cell ${ac}" style="padding:3px 5px">${ap}</td>`;
+          const ac = approveClass(r.approvePct);
+          const bgStyle = ac === 'rep-approve-good' ? 'background:rgba(34,197,94,.06)'
+                        : ac === 'rep-approve-mid'  ? 'background:rgba(255,255,255,.03)'
+                        : ac === 'rep-approve-bad'  ? 'background:rgba(239,68,68,.06)' : '';
+          const apText = r.approvePct !== null ? `${r.approvePct.toFixed(1)}%` : '—';
+          row += `<td class="metric-cell ${sc}" style="${bgStyle}">${r.total || '—'}</td>`;
+          row += `<td class="metric-cell ${ac}" style="font-weight:700">${apText}</td>`;
         }
       });
       return row + '</tr>';
@@ -3265,7 +3322,7 @@
     return alerts;
   }
 
-  async function recBulkInsert(table, rows) {
+  async function bulkInsert(table, rows) {
     const chunkSize = 500;
     for (let i = 0; i < rows.length; i += chunkSize) {
       await sbInsert(table, rows.slice(i, i + chunkSize));
@@ -3309,7 +3366,7 @@
 
       if (alerts.length > 0) {
         status.textContent = `Guardando ${alerts.length} alerta(s) de reasignación...`;
-        await recBulkInsert('dt_recalls_alerts', alerts);
+        await bulkInsert('dt_recalls_alerts', alerts);
       }
 
       status.textContent = 'Actualizando tabla principal...';
@@ -3325,7 +3382,7 @@
         horario: r.horario,
         uploaded_by: user ? user[0] : null,
       }));
-      await recBulkInsert('dt_recalls', toInsert);
+      await bulkInsert('dt_recalls', toInsert);
 
       await recLoadAll();
       status.style.color = 'var(--green)';
