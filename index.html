@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -353,6 +354,11 @@
     tbody tr:last-child td { border-bottom: none; }
     tfoot tr { background: rgba(255,255,255,0.03); }
     tfoot td { border-bottom: none; border-top: 2px solid var(--border); }
+    /* Recalls — filas marcadas por comparación de Status */
+    tbody tr.rec-status-yellow { background: rgba(240,178,62,.14); }
+    tbody tr.rec-status-red    { background: rgba(239,68,68,.14); }
+    tbody tr.rec-status-yellow:hover { background: rgba(240,178,62,.24); }
+    tbody tr.rec-status-red:hover    { background: rgba(239,68,68,.24); }
 
     /* ─── Progress bar ─── */
     .prog-bar {
@@ -1473,6 +1479,25 @@
       </div>
     </div>
 
+    <!-- Comparar Status (solo Supervisor) -->
+    <div class="panel" id="rec-status-paste-panel" style="display:none;margin-bottom:22px">
+      <div class="panel-head" style="cursor:pointer" onclick="recToggleStatusPaste()">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/></svg>
+          Comparar Status (pegar datos)
+        </span>
+        <svg id="rec-status-paste-chevron" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:var(--text-light);transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+      </div>
+      <div class="panel-body" id="rec-status-paste-body">
+        <textarea id="rec-status-raw-input" placeholder="Pega aquí el bloque completo (con encabezado, incluyendo las columnas # y Status)" style="width:100%;min-height:150px;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-mid);font-family:inherit;font-size:12px;padding:14px;resize:vertical;outline:none"></textarea>
+        <div id="rec-status-parse-error" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:12px;margin-top:10px"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="recCompareStatus()">Comparar y marcar</button>
+          <span id="rec-status-compare-status" style="font-size:12px;font-weight:600"></span>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabla principal (estado actual) -->
     <div class="panel" style="margin-bottom:22px;overflow:hidden">
       <div class="gd-filters">
@@ -1507,6 +1532,19 @@
         <button class="gd-clear-all" onclick="clearRecFilters()" id="rec-clear-btn" style="display:none">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           Limpiar todo
+        </button>
+        <button class="btn btn-ghost btn-sm" id="rec-copy-ids-btn" onclick="recCopyIds()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          <span id="rec-copy-ids-label">Copiar IDs</span>
+        </button>
+      </div>
+      <div id="rec-color-actions" style="display:none;padding:10px 20px;background:var(--main-bg);border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text-light)">Acciones masivas:</span>
+        <button class="btn btn-sm" style="background:rgba(240,178,62,.16);color:#f0b23e;border:1px solid rgba(240,178,62,.35)" onclick="recDeleteByStatusColor('yellow')">
+          Eliminar marcadas en amarillo
+        </button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,.16);color:#f87171;border:1px solid rgba(239,68,68,.35)" onclick="recDeleteByStatusColor('red')">
+          Eliminar marcadas en rojo
         </button>
       </div>
       <div class="gd-tbl-wrap" id="rec-table-wrap">
@@ -3559,8 +3597,14 @@
       }
 
       status.textContent = `Procesando ${parsed.length} filas...`;
-      const [disIdx, oldRows] = await Promise.all([recFetchDisIndex(), sbFetch('dt_recalls', 'select=*')]);
-      const enriched = recEnrich(parsed, disIdx);
+      const [disIdx, oldRows, excludedIds] = await Promise.all([
+        recFetchDisIndex(),
+        sbFetch('dt_recalls', 'select=*'),
+        recFetchExcludedIds(),
+      ]);
+      const enrichedAll = recEnrich(parsed, disIdx);
+      const skippedCount = enrichedAll.filter(r => excludedIds.has(r.idInCc)).length;
+      const enriched = enrichedAll.filter(r => !excludedIds.has(r.idInCc));
       const alerts = recDetectChanges(oldRows, enriched);
 
       const stored = sessionStorage.getItem(SESSION_KEY);
@@ -3588,7 +3632,7 @@
 
       await recLoadAll();
       status.style.color = 'var(--green)';
-      status.textContent = `✓ Listo — ${enriched.length} órdenes, ${alerts.length} reasignación(es) detectada(s)`;
+      status.textContent = `✓ Listo — ${enriched.length} órdenes, ${alerts.length} reasignación(es) detectada(s)${skippedCount ? `, ${skippedCount} excluida(s)` : ''}`;
       setTimeout(() => { status.textContent = ''; }, 6000);
     } catch (err) {
       console.error('Error procesando Excel de Recalls:', err);
@@ -3602,6 +3646,8 @@
     document.getElementById('rec-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
     document.getElementById('rec-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
     document.getElementById('rec-delete-reviewed-btn').style.display = isSupervisor() ? 'flex' : 'none';
+    document.getElementById('rec-status-paste-panel').style.display = isSupervisor() ? 'block' : 'none';
+    document.getElementById('rec-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
     await recLoadAll();
   }
 
@@ -3772,8 +3818,10 @@
     empty.style.display = 'none';
     table.style.display = 'table';
 
-    tbody.innerHTML = recCurrentFiltered.map(r => `
-      <tr>
+    tbody.innerHTML = recCurrentFiltered.map(r => {
+      const statusCls = recStatusColorClass(r.status_check);
+      return `
+      <tr class="${statusCls}">
         <td><strong>${r.id_in_cc || '—'}</strong></td>
         <td>${countryFlag(r.country)}${r.country || '—'}</td>
         <td>${r.substatus || '—'}</td>
@@ -3783,7 +3831,178 @@
         <td>${r.last_call_operator || '—'}</td>
         <td>${gdScheduleBadge(r.horario)}</td>
         ${recLinkCells(r.id_in_cc)}
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Copiar todos los Id in CC visibles al portapapeles, separados por espacio ── */
+  async function recCopyIds() {
+    const ids = recCurrentFiltered.map(r => r.id_in_cc).filter(Boolean);
+    if (ids.length === 0) return;
+    const text = ids.join(' ');
+    const label = document.getElementById('rec-copy-ids-label');
+    const original = label.textContent;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      label.textContent = `✓ ${ids.length} copiados`;
+      setTimeout(() => { label.textContent = original; }, 2000);
+    } catch (err) {
+      console.error('Error copiando al portapapeles:', err);
+      alert('No se pudo copiar al portapapeles.');
+    }
+  }
+
+  /* ── Comparar Status: pega una exportación con columnas "#" (Id in CC) y "Status" ── */
+  function recToggleStatusPaste() {
+    const body = document.getElementById('rec-status-paste-body');
+    const chevron = document.getElementById('rec-status-paste-chevron');
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    chevron.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
+  }
+
+  function recParseStatusPaste(raw) {
+    const lines = raw.split('\n').map(l => l.replace(/\r$/, '')).filter(l => l.trim() !== '');
+    if (lines.length < 2) return [];
+    const headerCells = lines[0].split('\t');
+    const idIdx = headerCells.findIndex(h => h.trim() === '#');
+    const statusIdx = headerCells.findIndex(h => h.trim().toLowerCase() === 'status');
+    if (idIdx === -1 || statusIdx === -1) return [];
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split('\t');
+      const id = (cells[idIdx] || '').trim();
+      const status = (cells[statusIdx] || '').trim();
+      if (id) rows.push({ id, status });
+    }
+    return rows;
+  }
+
+  /* Rojo/Amarillo/sin color según el Status recién pegado */
+  function recStatusColorClass(statusCheck) {
+    const s = (statusCheck || '').trim().toLowerCase();
+    if (!s || s === 'recall') return '';
+    if (s === 'no answer') return 'rec-status-yellow';
+    if (s === 'reject' || s === 'approved' || s === 'trash') return 'rec-status-red';
+    return '';
+  }
+
+  async function recUpdateStatusCheck(ids, statusValue) {
+    const idsParam = ids.map(id => encodeURIComponent(id)).join(',');
+    const res = await fetch(`${SB_URL}/rest/v1/dt_recalls?id_in_cc=in.(${idsParam})`, {
+      method: 'PATCH',
+      headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status_check: statusValue }),
+    });
+    if (!res.ok) throw new Error(`Supabase update error ${res.status}`);
+  }
+
+  async function recCompareStatus() {
+    if (!isSupervisor()) return;
+    const raw = document.getElementById('rec-status-raw-input').value;
+    const errBox = document.getElementById('rec-status-parse-error');
+    const statusEl = document.getElementById('rec-status-compare-status');
+    errBox.style.display = 'none';
+    statusEl.textContent = '';
+
+    const parsed = recParseStatusPaste(raw);
+    if (parsed.length === 0) {
+      errBox.textContent = 'No pude reconocer filas válidas — revisa que hayas pegado el bloque con encabezado, incluyendo las columnas "#" y "Status".';
+      errBox.style.display = 'flex';
+      return;
+    }
+
+    const currentIds = new Set(recCurrentRows.map(r => r.id_in_cc));
+    const matches = parsed.filter(p => currentIds.has(p.id));
+    if (matches.length === 0) {
+      statusEl.style.color = 'var(--text-light)';
+      statusEl.textContent = 'Ningún Id in CC de lo pegado coincide con la tabla actual.';
+      return;
+    }
+
+    statusEl.style.color = 'var(--text-light)';
+    statusEl.textContent = `Actualizando ${matches.length} orden(es)...`;
+
+    const byStatus = {};
+    matches.forEach(m => {
+      const key = m.status || '';
+      if (!byStatus[key]) byStatus[key] = [];
+      byStatus[key].push(m.id);
+    });
+
+    try {
+      for (const [statusValue, ids] of Object.entries(byStatus)) {
+        await recUpdateStatusCheck(ids, statusValue);
+      }
+      await recLoadAll();
+      statusEl.style.color = 'var(--green)';
+      statusEl.textContent = `✓ ${matches.length} orden(es) actualizadas`;
+      setTimeout(() => { statusEl.textContent = ''; }, 6000);
+      recToggleStatusPaste();
+    } catch (err) {
+      console.error('Error comparando status:', err);
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'Error al actualizar, intenta de nuevo.';
+    }
+  }
+
+  /* ── Eliminar por color + exclusión permanente (no se vuelven a cargar en futuras subidas) ── */
+  function recColorGroup(row) {
+    const cls = recStatusColorClass(row.status_check);
+    if (cls === 'rec-status-yellow') return 'yellow';
+    if (cls === 'rec-status-red') return 'red';
+    return null;
+  }
+
+  async function recFetchExcludedIds() {
+    try {
+      const rows = await sbFetch('dt_recalls_excluded', 'select=id_in_cc');
+      return new Set(rows.map(r => r.id_in_cc));
+    } catch (err) {
+      console.error('Error cargando exclusiones de Recalls:', err);
+      return new Set();
+    }
+  }
+
+  async function recDeleteByStatusColor(color) {
+    if (!isSupervisor()) return;
+    const ids = recCurrentRows.filter(r => recColorGroup(r) === color).map(r => r.id_in_cc);
+    if (ids.length === 0) return;
+    const label = color === 'yellow' ? 'amarillas' : 'rojas';
+    if (!confirm(`¿Eliminar ${ids.length} orden(es) marcadas en ${label}? No se van a volver a cargar aunque aparezcan en un Excel futuro.`)) return;
+
+    try {
+      const excludeRows = ids.map(id => ({ id_in_cc: id, reason: color }));
+      await fetch(`${SB_URL}/rest/v1/dt_recalls_excluded?on_conflict=id_in_cc`, {
+        method: 'POST',
+        headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+        body: JSON.stringify(excludeRows),
+      });
+
+      const idsParam = ids.map(id => encodeURIComponent(id)).join(',');
+      const res = await fetch(`${SB_URL}/rest/v1/dt_recalls?id_in_cc=in.(${idsParam})`, {
+        method: 'DELETE',
+        headers: SB_HEADERS,
+      });
+      if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+
+      await recLoadAll();
+    } catch (err) {
+      console.error('Error eliminando órdenes por color:', err);
+      alert('No se pudo eliminar, intenta de nuevo.');
+    }
   }
 
   function applyRecAlertFilters() {
