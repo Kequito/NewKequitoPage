@@ -814,7 +814,7 @@
 
   <div class="nav-item active" onclick="setNav(this, 'dashboard')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-    Dashboard
+    Inicio
   </div>
 
   <!-- Distribución con submenú -->
@@ -824,17 +824,17 @@
     <svg class="chevron" viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;margin-left:auto;transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
   </div>
   <div class="sub-menu" id="sub-dist">
-    <div class="nav-item nav-sub" onclick="setNav(this, 'goodday')">
+    <div class="nav-item nav-sub" id="nav-goodday" onclick="setNav(this, 'goodday')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
       GoodDay
     </div>
-    <div class="nav-item nav-sub" onclick="setNav(this, 'ops')">
+    <div class="nav-item nav-sub" id="nav-ops" onclick="setNav(this, 'ops')">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
       Approve Stats
     </div>
   </div>
 
-  <div class="nav-item" onclick="setNav(this, 'reportes')">
+  <div class="nav-item" id="nav-reportes" onclick="setNav(this, 'reportes')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
     Reportes
   </div>
@@ -871,14 +871,10 @@
   <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-left">
-      <h1>Dashboard Operativo</h1>
+      <h1>Inicio</h1>
       <span id="live-time">Lunes, 09 de Marzo 2026</span>
     </div>
     <div class="topbar-right">
-      <div class="topbar-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" placeholder="Buscar agente, campaña..."/>
-      </div>
       <div class="icon-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="notif-dot"></span>
@@ -901,244 +897,82 @@
   <!-- Content -->
   <div class="content">
 
-  <!-- ══ VIEW: DASHBOARD ══ -->
+  <!-- ══ VIEW: DASHBOARD (Inicio) ══ -->
   <div class="view active" id="view-dashboard">
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-label">Agentes Activos</span>
-          <div class="kpi-icon" style="background:var(--blue-soft)">
-            <svg viewBox="0 0 24 24" fill="var(--blue)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          </div>
-        </div>
-        <div class="kpi-value">247</div>
-        <div class="kpi-footer">
-          <span class="kpi-delta delta-up">▲ 12%</span>
-          <span class="kpi-sub">vs. hora anterior</span>
-        </div>
-      </div>
 
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-label">Llamadas / Hora</span>
-          <div class="kpi-icon" style="background:var(--green-soft)">
-            <svg viewBox="0 0 24 24" fill="var(--green)"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
-          </div>
-        </div>
-        <div class="kpi-value">1,842</div>
-        <div class="kpi-footer">
-          <span class="kpi-delta delta-up">▲ 8%</span>
-          <span class="kpi-sub">meta: 2,000</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-label">TMO Promedio</span>
-          <div class="kpi-icon" style="background:var(--amber-soft)">
-            <svg viewBox="0 0 24 24" fill="var(--amber)"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
-          </div>
-        </div>
-        <div class="kpi-value">4:32</div>
-        <div class="kpi-footer">
-          <span class="kpi-delta delta-down">▼ 3%</span>
-          <span class="kpi-sub">meta: &lt;5:00 min</span>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-label">Nivel de Servicio</span>
-          <div class="kpi-icon" style="background:var(--green-soft)">
-            <svg viewBox="0 0 24 24" fill="var(--green)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-          </div>
-        </div>
-        <div class="kpi-value">87.4%</div>
-        <div class="kpi-footer">
-          <span class="kpi-delta delta-up">▲ 2.1%</span>
-          <span class="kpi-sub">meta: 85%</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Charts Row -->
     <div class="row row-2">
-      <!-- Line chart -->
+      <!-- Widget 1: Top Operadores por Campaña -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+            Top Operadores por Campaña
+          </span>
+          <div class="panel-actions">
+            <button class="btn btn-ghost btn-sm" onclick="dashTopOpsPrev()" title="Anterior">‹</button>
+            <button class="btn btn-ghost btn-sm" onclick="dashTopOpsNext()" title="Siguiente">›</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="dash-top-ops-progress" style="display:none;height:3px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:14px">
+            <div id="dash-top-ops-progress-fill" style="height:100%;width:0%;background:var(--nav-accent);border-radius:99px"></div>
+          </div>
+          <div id="dash-top-ops-slide">
+            <div class="gd-state" style="padding:30px"><p>Cargando…</p></div>
+          </div>
+          <div id="dash-top-ops-dots" style="display:flex;gap:6px;justify-content:center;margin-top:14px"></div>
+        </div>
+      </div>
+
+      <!-- Widget 2: Approve general últimos 7 días -->
       <div class="panel">
         <div class="panel-head">
           <span class="panel-title">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-            Llamadas por Hora — Hoy
+            Approve General — Últimos 7 días
           </span>
-          <div class="panel-actions">
-            <button class="btn btn-ghost btn-sm">Exportar</button>
-          </div>
+          <button class="btn btn-ghost btn-sm" onclick="dashGoToReportes()">Ver detalle →</button>
         </div>
         <div class="panel-body">
-          <div class="chart-wrap" style="height:220px">
-            <canvas id="lineChart"></canvas>
+          <div id="dash-approve-updated" style="font-size:11px;color:var(--text-light);margin-bottom:8px"></div>
+          <div class="chart-wrap" style="height:130px">
+            <canvas id="dashApproveChart"></canvas>
+          </div>
+          <div id="dash-lowest-campaign" style="margin-top:14px">
+            <div class="gd-state" style="padding:20px"><p>Cargando…</p></div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Donut / Campaign split -->
+    <div class="row" style="grid-template-columns:1fr 1fr">
+      <!-- Widget 3a: Conteo de OPs -->
       <div class="panel">
         <div class="panel-head">
           <span class="panel-title">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2.03 0v8.99H22c-.47-4.74-4.24-8.52-8.97-8.99zm0 11.01V22c4.74-.47 8.5-4.25 8.97-8.99h-8.97z"/></svg>
-            Cobertura de Campañas
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Conteo de OPs
           </span>
+          <button class="btn btn-ghost btn-sm" onclick="dashGoToGoodDay()">Ver detalle →</button>
         </div>
-        <div class="panel-body">
-          <div class="chart-wrap" style="height:140px; display:flex; align-items:center; justify-content:center;">
-            <canvas id="donutChart"></canvas>
-          </div>
-          <div style="margin-top:14px">
-            <div class="stat-row">
-              <span class="stat-row-label"><span class="stat-color-dot" style="background:#4c8dff"></span>Campaña Retención</span>
-              <span class="stat-row-val">42%</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-row-label"><span class="stat-color-dot" style="background:#0fb87a"></span>Campaña Ventas</span>
-              <span class="stat-row-val">31%</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-row-label"><span class="stat-color-dot" style="background:#f5a623"></span>Soporte Técnico</span>
-              <span class="stat-row-val">17%</span>
-            </div>
-            <div class="stat-row">
-              <span class="stat-row-label"><span class="stat-color-dot" style="background:#e040fb"></span>Cobranza</span>
-              <span class="stat-row-val">10%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Agents Table -->
-    <div class="panel" style="margin-bottom:22px">
-      <div class="panel-head">
-        <span class="panel-title">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          Agentes — Turno Actual
-        </span>
-        <div class="panel-actions">
-          <button class="btn btn-ghost btn-sm">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 18h16v-2H4v2zm0-5h16v-2H4v2zm0-7v2h16V6H4z"/></svg>
-            Filtrar
-          </button>
-          <button class="btn btn-primary btn-sm">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            Exportar
-          </button>
+        <div class="panel-body" id="dash-ops-count-body">
+          <div class="gd-state" style="padding:30px"><p>Cargando…</p></div>
         </div>
       </div>
 
-      <!-- Filter bar -->
-      <div class="filter-bar">
-        <label>Campaña:</label>
-        <select class="filter-select" onchange="filterTable()">
-          <option value="">Todas</option>
-          <option>Retención</option>
-          <option>Ventas</option>
-          <option>Soporte</option>
-          <option>Cobranza</option>
-        </select>
-        <label>Estado:</label>
-        <select class="filter-select" id="filterStatus" onchange="filterTable()">
-          <option value="">Todos</option>
-          <option>En llamada</option>
-          <option>Disponible</option>
-          <option>Break</option>
-          <option>Offline</option>
-        </select>
-        <input class="filter-input" type="text" placeholder="🔍 Buscar agente..." oninput="filterTable()" id="searchInput"/>
-      </div>
-
-      <div class="tbl-wrap">
-        <table id="agentTable">
-          <thead>
-            <tr>
-              <th onclick="sortTable(0)">Agente <span class="sort-icon">↕</span></th>
-              <th onclick="sortTable(1)">Campaña <span class="sort-icon">↕</span></th>
-              <th onclick="sortTable(2)">Estado <span class="sort-icon">↕</span></th>
-              <th onclick="sortTable(3)">Llamadas <span class="sort-icon">↕</span></th>
-              <th onclick="sortTable(4)">TMO <span class="sort-icon">↕</span></th>
-              <th onclick="sortTable(5)">Nivel Srv. <span class="sort-icon">↕</span></th>
-              <th>Cumplimiento</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody">
-            <!-- rows injected by JS -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Bars Row -->
-    <div class="row row-3">
+      <!-- Widget 3b: Conteo de Descanso -->
       <div class="panel">
         <div class="panel-head">
-          <span class="panel-title">Llamadas por País</span>
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+            Conteo de Descanso por Campaña
+          </span>
+          <button class="btn btn-ghost btn-sm" onclick="dashGoToGoodDay()">Ver detalle →</button>
         </div>
         <div class="panel-body">
-          <canvas id="barChart" height="180"></canvas>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <span class="panel-title">Resumen de Turnos</span>
-        </div>
-        <div class="panel-body">
-          <div class="stat-row">
-            <span class="stat-row-label">Turno Mañana</span>
-            <div style="flex:1;padding:0 14px">
-              <div class="prog-bar"><div class="prog-fill" style="width:78%;background:var(--blue)"></div></div>
-            </div>
-            <span class="stat-row-val">78%</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-row-label">Turno Tarde</span>
-            <div style="flex:1;padding:0 14px">
-              <div class="prog-bar"><div class="prog-fill" style="width:91%;background:var(--green)"></div></div>
-            </div>
-            <span class="stat-row-val">91%</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-row-label">Turno Noche</span>
-            <div style="flex:1;padding:0 14px">
-              <div class="prog-bar"><div class="prog-fill" style="width:54%;background:var(--amber)"></div></div>
-            </div>
-            <span class="stat-row-val">54%</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-row-label">Mixto</span>
-            <div style="flex:1;padding:0 14px">
-              <div class="prog-bar"><div class="prog-fill" style="width:65%;background:#e040fb"></div></div>
-            </div>
-            <span class="stat-row-val">65%</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <span class="panel-title">Alertas Activas</span>
-          <span class="badge badge-red">3 nuevas</span>
-        </div>
-        <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
-          <div style="padding:10px 12px;border-radius:var(--radius-sm);background:var(--red-soft);border-left:3px solid var(--red)">
-            <div style="font-size:12px;font-weight:700;color:var(--red)">Cola de espera alta</div>
-            <div style="font-size:11px;color:var(--text-mid);margin-top:2px">Campaña Ventas — 18 llamadas en espera</div>
-          </div>
-          <div style="padding:10px 12px;border-radius:var(--radius-sm);background:var(--amber-soft);border-left:3px solid var(--amber)">
-            <div style="font-size:12px;font-weight:700;color:var(--amber)">TMO elevado</div>
-            <div style="font-size:11px;color:var(--text-mid);margin-top:2px">Agente M. González — TMO: 9:12 min</div>
-          </div>
-          <div style="padding:10px 12px;border-radius:var(--radius-sm);background:var(--blue-soft);border-left:3px solid var(--blue)">
-            <div style="font-size:12px;font-weight:700;color:var(--blue)">Reporte listo</div>
-            <div style="font-size:11px;color:var(--text-mid);margin-top:2px">Cierre de turno mañana generado</div>
+          <select id="dash-rest-country-filter" onchange="dashRenderRestCount()" style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:6px 10px;cursor:pointer;outline:none;margin-bottom:14px;width:100%"></select>
+          <div id="dash-rest-count-body">
+            <div class="gd-state" style="padding:30px"><p>Cargando…</p></div>
           </div>
         </div>
       </div>
@@ -1669,7 +1503,7 @@
     'configuracion': 'view-configuracion',
   };
   const titleMap = {
-    'dashboard':     ['Dashboard Operativo', 'Resumen general del turno'],
+    'dashboard':     ['Inicio', 'Resumen general de la operación'],
     'goodday':       ['GoodDay — Distribución', 'Datos en vivo desde Supabase'],
     'ops':           ['Approve Stats', 'Rendimiento de operadores por país'],
     'reportes':      ['Reportes', 'Generación y consulta de reportes'],
@@ -1700,6 +1534,8 @@
     if (page === 'reportes' && !repLoaded) repInitView();
     // auto-load Recalls on first visit
     if (page === 'recalls' && !recLoaded) recInitView();
+    // auto-load Inicio (normalmente ya se cargó en enterDashboard, esto es solo respaldo)
+    if (page === 'dashboard' && !dashLoaded) loadDashboard();
   }
 
   /* ── Toggle submenu ── */
@@ -2230,6 +2066,9 @@
 
     // Hide login screen
     document.getElementById('login-screen').classList.add('hidden');
+
+    // Inicio ya está activo por defecto sin pasar por setNav — cargar sus datos ahora
+    if (!dashLoaded) loadDashboard();
   }
 
   /* ── Logout ── */
@@ -2257,81 +2096,9 @@
   updateTime();
   setInterval(updateTime, 1000);
 
-  /* ── Agent Table Data ── */
-  const agents = [
-    { name:'Ana Ramírez',    campaign:'Retención',  status:'En llamada', calls:34, tmo:'4:12', ns:'91%', comp:91 },
-    { name:'Carlos Vega',    campaign:'Ventas',     status:'Disponible', calls:28, tmo:'5:43', ns:'78%', comp:78 },
-    { name:'María González', campaign:'Soporte',    status:'Break',      calls:21, tmo:'9:12', ns:'62%', comp:62 },
-    { name:'Luis Mora',      campaign:'Retención',  status:'En llamada', calls:39, tmo:'3:58', ns:'95%', comp:95 },
-    { name:'Patricia Salas', campaign:'Ventas',     status:'En llamada', calls:31, tmo:'4:30', ns:'88%', comp:88 },
-    { name:'Diego Torres',   campaign:'Cobranza',   status:'Disponible', calls:25, tmo:'6:10', ns:'74%', comp:74 },
-    { name:'Camila Ríos',    campaign:'Soporte',    status:'En llamada', calls:37, tmo:'4:05', ns:'93%', comp:93 },
-    { name:'Roberto Núñez',  campaign:'Ventas',     status:'Offline',    calls:12, tmo:'7:22', ns:'55%', comp:55 },
-  ];
-
-  const statusClass = { 'En llamada':'badge-blue', 'Disponible':'badge-green', 'Break':'badge-amber', 'Offline':'badge-red' };
-
-  function compColor(v) {
-    if (v >= 85) return 'var(--green)';
-    if (v >= 65) return 'var(--amber)';
-    return 'var(--red)';
-  }
-
-  function renderTable(data) {
-    const body = document.getElementById('tableBody');
-    body.innerHTML = data.map(a => `
-      <tr>
-        <td><strong>${a.name}</strong></td>
-        <td>${a.campaign}</td>
-        <td><span class="badge ${statusClass[a.status]}"><span class="badge-dot"></span>${a.status}</span></td>
-        <td>${a.calls}</td>
-        <td>${a.tmo}</td>
-        <td>${a.ns}</td>
-        <td>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="prog-bar" style="width:80px">
-              <div class="prog-fill" style="width:${a.comp}%;background:${compColor(a.comp)}"></div>
-            </div>
-            <span style="font-size:11px;font-weight:700;color:${compColor(a.comp)}">${a.comp}%</span>
-          </div>
-        </td>
-      </tr>`).join('');
-  }
-  renderTable(agents);
-
-  /* ── Filter ── */
-  function filterTable() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const status = document.getElementById('filterStatus').value;
-    const filtered = agents.filter(a =>
-      a.name.toLowerCase().includes(search) &&
-      (status === '' || a.status === status)
-    );
-    renderTable(filtered);
-  }
-
-  /* ── Sort ── */
-  let sortDir = {};
-  function sortTable(col) {
-    const keys = ['name','campaign','status','calls','tmo','ns'];
-    const key = keys[col];
-    sortDir[col] = !sortDir[col];
-    agents.sort((a,b) => {
-      const va = isNaN(a[key]) ? a[key] : +a[key];
-      const vb = isNaN(b[key]) ? b[key] : +b[key];
-      return sortDir[col] ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
-    });
-    document.querySelectorAll('thead th').forEach((th, i) => {
-      th.classList.toggle('sorted', i === col);
-      const icon = th.querySelector('.sort-icon');
-      if (icon) icon.textContent = i === col ? (sortDir[col] ? '↑' : '↓') : '↕';
-    });
-    renderTable(agents);
-  }
-
-  /* ── Charts ── */
+  /* ── Chart.js — configuración compartida por todas las gráficas reales del sitio ── */
   // Registrado globalmente pero apagado por defecto — solo el gráfico de Reportes lo enciende,
-  // así el resto de gráficas del Dashboard no se ven afectadas.
+  // así el resto de gráficas no se ven afectadas.
   Chart.register(ChartDataLabels);
   Chart.defaults.set('plugins.datalabels', { display: false });
 
@@ -2340,75 +2107,6 @@
   const chartDefaults = {
     font: { family: "'Lexend', sans-serif", size: 11, color: CHART_TICK },
   };
-
-  // Line Chart
-  new Chart(document.getElementById('lineChart'), {
-    type: 'line',
-    data: {
-      labels: ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'],
-      datasets: [
-        {
-          label: 'Llamadas',
-          data: [120, 185, 280, 340, 410, 390, 450, 430, 380, 320, 290, 260],
-          borderColor: '#4c8dff',
-          backgroundColor: 'rgba(76,141,255,0.12)',
-          fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5,
-        },
-        {
-          label: 'Meta',
-          data: [200,200,200,350,350,350,400,400,400,300,300,300],
-          borderColor: '#22c55e', borderDash: [5,5],
-          backgroundColor: 'transparent', pointRadius: 0, tension: 0,
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { ...chartDefaults.font, boxWidth: 12 } } },
-      scales: {
-        x: { grid: { color: CHART_GRID }, ticks: { ...chartDefaults.font } },
-        y: { grid: { color: CHART_GRID }, ticks: { ...chartDefaults.font } }
-      }
-    }
-  });
-
-  // Donut Chart
-  new Chart(document.getElementById('donutChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Retención','Ventas','Soporte','Cobranza'],
-      datasets: [{ data: [42,31,17,10], backgroundColor: ['#4c8dff','#22c55e','#f0b23e','#e040fb'], borderWidth: 0 }]
-    },
-    options: {
-      responsive: false, cutout: '70%',
-      plugins: { legend: { display: false } },
-      width: 140, height: 140
-    }
-  });
-
-  // Bar Chart
-  new Chart(document.getElementById('barChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Colombia','México','Perú','Chile','Ecuador','Argentina'],
-      datasets: [{
-        label: 'Llamadas',
-        data: [520, 410, 330, 280, 190, 155],
-        backgroundColor: ['#4c8dff','#22c55e','#f0b23e','#e040fb','#4c8dff','#22c55e'],
-        borderRadius: 6, borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display:false }, ticks: { ...chartDefaults.font } },
-        y: { grid: { color: CHART_GRID }, ticks: { ...chartDefaults.font } }
-      }
-    }
-  });
-
-
 
   /* ══════════════════════════════
      OPS PERFORMANCE — Excel (Total + Approve %), como Recalls
@@ -2730,18 +2428,12 @@
     }).join('');
   }
 
-  /* Vista plana por país: PEROP1AM con Total >= 1 en dt_ops Y asignado a un Team Leader en dt_dis */
+  /* Vista plana por país: PEROP1AM con Total >= 1 en dt_ops Y asignado a un Team Leader en dt_dis.
+     Reutilizable — la usa tanto la vista de Approve Stats como el widget "Top Operadores" del Inicio. */
   let opsCountryRows     = []; // sin filtrar, para poblar filtros
   let opsCountryFiltered = [];
 
-  function opsShowCountryDetail(country) {
-    document.getElementById('ops-picker').style.display = 'none';
-    document.getElementById('ops-tl-list').style.display = 'none';
-    document.getElementById('ops-tl-detail').style.display = 'none';
-    document.getElementById('ops-country-detail').style.display = 'block';
-
-    document.getElementById('ops-country-title').innerHTML = `${countryFlag(country)}${country}`;
-
+  function opsGetCountryRows(country) {
     const idx = window._opsIdx || {};
     const rows = [];
     Object.keys(idx).forEach(operator => {
@@ -2775,8 +2467,18 @@
 
     // Orden: Total es el criterio más importante, Approve (%) desempata
     rows.sort((a, b) => (b.total - a.total) || (b.approvePct - a.approvePct));
+    return rows;
+  }
 
-    opsCountryRows = rows;
+  function opsShowCountryDetail(country) {
+    document.getElementById('ops-picker').style.display = 'none';
+    document.getElementById('ops-tl-list').style.display = 'none';
+    document.getElementById('ops-tl-detail').style.display = 'none';
+    document.getElementById('ops-country-detail').style.display = 'block';
+
+    document.getElementById('ops-country-title').innerHTML = `${countryFlag(country)}${country}`;
+
+    opsCountryRows = opsGetCountryRows(country);
     document.getElementById('ops-cf-tl').value = '';
     document.getElementById('ops-cf-hor').value = '';
     opsPopulateCountryFilters();
@@ -4077,6 +3779,403 @@
       console.error('Error marcando alerta como revisada:', err);
       alert('No se pudo marcar como revisado, intenta de nuevo.');
     }
+  }
+
+  /* ══════════════════════════════
+     INICIO — widgets reales (Top Operadores, Approve 7 días, Conteo GoodDay)
+  ══════════════════════════════ */
+  let dashLoaded = false;
+
+  async function loadDashboard() {
+    dashLoaded = true;
+    dashLoadTopOps();
+    dashLoadApproveWidget();
+    dashLoadCountsWidget();
+  }
+
+  function dashGoToOpsCountry(country) {
+    const sub = document.getElementById('sub-dist');
+    sub.classList.add('open');
+    sub.previousElementSibling?.querySelector('.chevron')?.classList.add('rotated');
+    setNav(document.getElementById('nav-ops'), 'ops');
+    (async () => {
+      if (!opsLoaded) await loadOps();
+      opsShowCountryDetail(country);
+    })();
+  }
+
+  function dashGoToReportes() {
+    setNav(document.getElementById('nav-reportes'), 'reportes');
+  }
+
+  function dashGoToGoodDay() {
+    const sub = document.getElementById('sub-dist');
+    sub.classList.add('open');
+    sub.previousElementSibling?.querySelector('.chevron')?.classList.add('rotated');
+    setNav(document.getElementById('nav-goodday'), 'goodday');
+  }
+
+  /* ── Widget 1: Top Operadores por Campaña (carrusel tipo publicidad) ── */
+  let dashTopOpsCountries = []; // [{country, rows}], solo países con datos
+  let dashTopOpsIndex     = 0;
+  let dashTopOpsTimer     = null;
+  const DASH_TOP_OPS_N        = 6;
+  const DASH_TOP_OPS_INTERVAL = 6000;
+
+  async function dashLoadTopOps() {
+    try {
+      if (!opsLoaded) await loadOps();
+      dashBuildTopOpsData();
+      dashRenderTopOpsSlide();
+      dashResetTopOpsTimer();
+    } catch (err) {
+      console.error('Error cargando Top Operadores:', err);
+    }
+  }
+
+  function dashBuildTopOpsData() {
+    dashTopOpsCountries = OPS_STATS_COUNTRIES
+      .map(c => ({ country: c, rows: opsGetCountryRows(c).slice(0, DASH_TOP_OPS_N) }))
+      .filter(x => x.rows.length > 0);
+    if (dashTopOpsIndex >= dashTopOpsCountries.length) dashTopOpsIndex = 0;
+  }
+
+  function dashRenderTopOpsSlide() {
+    const wrap = document.getElementById('dash-top-ops-slide');
+    const dots = document.getElementById('dash-top-ops-dots');
+
+    if (dashTopOpsCountries.length === 0) {
+      wrap.innerHTML = `<div class="gd-state" style="padding:30px">
+        <p>Sin datos de Approve Stats todavía</p>
+        <small>Sube un Excel en Approve Stats para ver aquí el top de operadores.</small>
+      </div>`;
+      dots.innerHTML = '';
+      return;
+    }
+
+    const slide = dashTopOpsCountries[dashTopOpsIndex];
+    const color = REP_COUNTRY_COLORS[slide.country] || REP_FALLBACK_COLORS[dashTopOpsIndex % REP_FALLBACK_COLORS.length];
+
+    const rowsHtml = slide.rows.map((r, i) => {
+      const ac = approveClass(r.approvePct);
+      return `<tr>
+        <td style="font-weight:700;color:var(--text-light)">${i + 1}</td>
+        <td style="font-weight:600">${r.asesor}<div style="font-size:10px;color:var(--text-light);font-weight:400">${r.operator}</div></td>
+        <td>${recTlBadge(r.teamLeader)}</td>
+        <td>${gdScheduleBadge(r.horario)}</td>
+        <td style="text-align:right">${r.total}</td>
+        <td class="${ac}" style="font-weight:700;text-align:right">${r.approvePct !== null ? r.approvePct.toFixed(1) + '%' : '—'}</td>
+      </tr>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:${color}">
+          ${countryFlag(slide.country)}${slide.country}
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="dashGoToOpsCountry('${slide.country}')">Ver detalle →</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th></th><th>Operador</th><th>Team Leader</th><th>Horario</th><th style="text-align:right">Total</th><th style="text-align:right">Approve %</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>`;
+
+    dots.innerHTML = dashTopOpsCountries.map((s, i) => `<span onclick="dashTopOpsGoto(${i})" style="width:7px;height:7px;border-radius:50%;cursor:pointer;background:${i === dashTopOpsIndex ? 'var(--nav-accent)' : 'rgba(255,255,255,.15)'};transition:background .2s"></span>`).join('');
+  }
+
+  function dashTopOpsGoto(i) {
+    if (dashTopOpsCountries.length === 0) return;
+    dashTopOpsIndex = ((i % dashTopOpsCountries.length) + dashTopOpsCountries.length) % dashTopOpsCountries.length;
+    dashRenderTopOpsSlide();
+    dashResetTopOpsTimer();
+  }
+  function dashTopOpsNext() { dashTopOpsGoto(dashTopOpsIndex + 1); }
+  function dashTopOpsPrev() { dashTopOpsGoto(dashTopOpsIndex - 1); }
+
+  /* Barrita que se llena hasta el próximo cambio automático de slide */
+  function dashStartProgressBar() {
+    const fill = document.getElementById('dash-top-ops-progress-fill');
+    if (!fill) return;
+    fill.style.transition = 'none';
+    fill.style.width = '0%';
+    void fill.offsetWidth; // fuerza reflow para que el próximo transition se note
+    fill.style.transition = `width ${DASH_TOP_OPS_INTERVAL}ms linear`;
+    fill.style.width = '100%';
+  }
+
+  function dashResetTopOpsTimer() {
+    if (dashTopOpsTimer) clearInterval(dashTopOpsTimer);
+    const progressBox = document.getElementById('dash-top-ops-progress');
+    if (dashTopOpsCountries.length > 1) {
+      progressBox.style.display = 'block';
+      dashStartProgressBar();
+      dashTopOpsTimer = setInterval(() => {
+        dashTopOpsIndex = (dashTopOpsIndex + 1) % dashTopOpsCountries.length;
+        dashRenderTopOpsSlide();
+        dashStartProgressBar();
+      }, DASH_TOP_OPS_INTERVAL);
+    } else {
+      progressBox.style.display = 'none';
+    }
+  }
+
+  /* ── Widget 2: Approve general de CC en los últimos 7 días (datos de Reportes) ──
+     Solo se muestra UN punto por día: el último snapshot guardado ese día. */
+  let dashApproveChartInstance = null;
+
+  async function dashLoadApproveWidget() {
+    try {
+      const [history, latestTwo] = await Promise.all([
+        repFetchSnapshotsForRange('7d'),
+        repFetchLatestTwo(),
+      ]);
+      const latest = latestTwo[0] || null;
+      dashRenderApproveChart(dashLastSnapshotPerDay(history));
+      dashRenderCampaignExtremes(latest);
+      dashUpdateApproveTimestamp(latest);
+    } catch (err) {
+      console.error('Error cargando widget de Approve general:', err);
+    }
+  }
+
+  /* Agrupa por día calendario local y se queda solo con el snapshot más reciente de cada día */
+  function dashLastSnapshotPerDay(history) {
+    const byDay = {};
+    (history || []).forEach(h => {
+      const d = new Date(h.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!byDay[key] || new Date(h.created_at) > new Date(byDay[key].created_at)) byDay[key] = h;
+    });
+    return Object.keys(byDay).sort().map(k => byDay[k]);
+  }
+
+  function dashUpdateApproveTimestamp(latest) {
+    const el = document.getElementById('dash-approve-updated');
+    if (!latest) { el.textContent = ''; return; }
+    const d = new Date(latest.created_at);
+    const fecha = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const hora = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    el.textContent = `Última actualización: ${fecha} ${hora}`;
+  }
+
+  function dashRenderApproveChart(perDay) {
+    const canvas = document.getElementById('dashApproveChart');
+    if (dashApproveChartInstance) { dashApproveChartInstance.destroy(); dashApproveChartInstance = null; }
+
+    if (!perDay || perDay.length === 0) {
+      canvas.style.display = 'none';
+      return;
+    }
+    canvas.style.display = 'block';
+
+    // Etiqueta = día + hora exacta en que se guardó ese snapshot (el "Approve del día")
+    const labels = perDay.map(h => {
+      const d = new Date(h.created_at);
+      const dayAbbr = d.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '');
+      const hora = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+      return `${dayAbbr.charAt(0).toUpperCase()}${dayAbbr.slice(1)} ${hora}`;
+    });
+    const values = perDay.map(h => (h.global && h.global.approvePct !== undefined) ? Number(h.global.approvePct.toFixed(1)) : null);
+
+    const seen = values.filter(v => v !== null && v !== undefined);
+    const dataMax = seen.length ? Math.max(...seen) : 0;
+    const axisMax = Math.min(100, Math.max(REP_CHART_MAX_DEFAULT, Math.ceil((dataMax + 5) / 5) * 5));
+
+    dashApproveChartInstance = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Approve % del día',
+          data: values,
+          backgroundColor: values.map(repBarColor),
+          borderRadius: 4, borderSkipped: false,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            display: true,
+            formatter: v => v !== null && v !== undefined ? `${v}%` : '',
+            color: '#fff', textStrokeColor: 'rgba(0,0,0,.55)', textStrokeWidth: 3,
+            font: { family: "'Lexend', sans-serif", weight: '700', size: 11 },
+            anchor: 'center', align: 'center',
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { ...chartDefaults.font, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },
+          y: { grid: { color: CHART_GRID }, ticks: { ...chartDefaults.font, callback: v => v + '%' }, min: 0, max: axisMax },
+        },
+      },
+    });
+  }
+
+  function dashCampaignCardHTML(label, c) {
+    const cls = repApproveClass(c.approvePct);
+    return `
+      <div style="margin-bottom:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:12px;color:var(--text-light)">${label}</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700">
+            ${countryFlag(c.country)}${c.country}
+            <span class="rep-approve-badge ${cls}">${repFmtPct(c.approvePct)}</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Leads</th><th>New</th><th>Recall</th><th>No answer</th><th>Approved</th><th>%Approve</th><th>Reject</th><th>Trash</th>
+            </tr></thead>
+            <tbody><tr>
+              <td>${c.total.toLocaleString('es-PE')}</td>
+              <td style="color:var(--text-light)">${c.new}</td>
+              <td style="color:var(--text-light)">${c.recall}</td>
+              <td style="color:var(--text-light)">${c.noAnswer}</td>
+              <td>${c.approved}</td>
+              <td class="${cls}" style="font-weight:700">${repFmtPct(c.approvePct)}</td>
+              <td style="color:var(--text-light)">${c.reject}</td>
+              <td style="color:var(--text-light)">${c.trash}</td>
+            </tr></tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  function dashRenderCampaignExtremes(latest) {
+    const box = document.getElementById('dash-lowest-campaign');
+    const candidates = latest ? (latest.by_country || []).filter(c => c.total > 0) : [];
+
+    if (candidates.length === 0) {
+      box.innerHTML = `<div class="gd-state" style="padding:20px"><p>Todavía no hay reportes guardados</p></div>`;
+      return;
+    }
+
+    const lowest  = candidates.reduce((min, c) => c.approvePct < min.approvePct ? c : min, candidates[0]);
+    const highest = candidates.reduce((max, c) => c.approvePct > max.approvePct ? c : max, candidates[0]);
+
+    box.innerHTML = dashCampaignCardHTML('📉 Campaña más baja ahora mismo', lowest)
+      + (highest.country !== lowest.country ? dashCampaignCardHTML('📈 Campaña más alta ahora mismo', highest) : '');
+  }
+
+  /* ── Widget 3: Conteo de OPs y Conteo de Descanso (datos de GoodDay / dt_dis) ── */
+  let dashRestByPais = {}; // { pais: { diaDescanso: cantidad } }
+
+  async function dashLoadCountsWidget() {
+    try {
+      const data = await sbFetch('dt_dis', 'select=PEROP1AM,PAIS,EMPRESA,HORARIO,DESCANSO');
+      dashRenderOpsCount(data);
+      dashBuildRestData(data);
+      dashPopulateRestFilter();
+      dashRenderRestCount();
+    } catch (err) {
+      console.error('Error cargando conteo de OPs/Descanso:', err);
+    }
+  }
+
+  function dashCountBy(rows, key) {
+    const map = {};
+    rows.forEach(r => {
+      const v = (r[key] || '').trim() || 'Sin dato';
+      map[v] = (map[v] || 0) + 1;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }
+
+  function dashCountTableHTML(headerLabel, entries, badgeFn) {
+    return `
+      <table style="margin-bottom:16px">
+        <thead><tr><th>${headerLabel}</th><th style="text-align:right">Cantidad</th></tr></thead>
+        <tbody>
+          ${entries.map(([label, count]) => `<tr><td>${badgeFn ? badgeFn(label) : label}</td><td style="text-align:right;font-weight:700">${count}</td></tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  function dashRenderOpsCount(rows) {
+    const body = document.getElementById('dash-ops-count-body');
+    const total = rows.length;
+    const byPais    = dashCountBy(rows, 'PAIS');
+    const byEmpresa = dashCountBy(rows, 'EMPRESA');
+    const byHorario = dashCountBy(rows, 'HORARIO');
+
+    body.innerHTML = `
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px">
+        <div style="font-size:28px;font-weight:800;color:var(--nav-accent)">${total}</div>
+        <div style="font-size:12px;color:var(--text-light)">OPs totales en la empresa</div>
+      </div>
+      ${dashCountTableHTML('Campaña / País', byPais, gdCountryBadge)}
+      ${dashCountTableHTML('Empresa', byEmpresa, gdEmpresaBadge)}
+      ${dashCountTableHTML('Horario', byHorario, gdScheduleBadge)}`;
+  }
+
+  /* Nota: "turno" se interpreta aquí como el día de descanso (columna DESCANSO de dt_dis) —
+     cada país muestra cuántos OPs descansan cada día. Se filtra por campaña porque
+     mostrar los 8 países a la vez era demasiada información para un widget de Inicio. */
+  function dashBuildRestData(rows) {
+    dashRestByPais = {};
+    rows.forEach(r => {
+      const pais = (r.PAIS || '').trim() || 'Sin dato';
+      const descanso = (r.DESCANSO || '').trim();
+      if (!descanso || descanso.toUpperCase() === 'EMPTY') return;
+      if (!dashRestByPais[pais]) dashRestByPais[pais] = {};
+      dashRestByPais[pais][descanso] = (dashRestByPais[pais][descanso] || 0) + 1;
+    });
+  }
+
+  function dashPopulateRestFilter() {
+    const sel = document.getElementById('dash-rest-country-filter');
+    const prev = sel.value;
+    const paisEntries = Object.entries(dashRestByPais).sort((a, b) => {
+      const totalA = Object.values(a[1]).reduce((s, n) => s + n, 0);
+      const totalB = Object.values(b[1]).reduce((s, n) => s + n, 0);
+      return totalB - totalA;
+    });
+    if (paisEntries.length === 0) {
+      sel.innerHTML = '<option value="">Sin datos</option>';
+      return;
+    }
+    sel.innerHTML = paisEntries.map(([pais]) => `<option value="${pais}">${pais}</option>`).join('');
+    if (prev && dashRestByPais[prev]) sel.value = prev;
+  }
+
+  const DASH_WEEKDAY_ORDER = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
+  function dashNormalizeDay(day) {
+    return (day || '').toUpperCase().trim()
+      .replace('É', 'E').replace('Á', 'A').replace('Í', 'I').replace('Ó', 'O').replace('Ú', 'U');
+  }
+  function dashWeekdayRank(day) {
+    const idx = DASH_WEEKDAY_ORDER.indexOf(dashNormalizeDay(day));
+    return idx === -1 ? 99 : idx;
+  }
+
+  function dashRenderRestCount() {
+    const body = document.getElementById('dash-rest-count-body');
+    const sel = document.getElementById('dash-rest-country-filter');
+    const pais = sel.value;
+    const days = dashRestByPais[pais];
+
+    if (!pais || !days) {
+      body.innerHTML = `<div class="gd-state" style="padding:20px"><p>Sin datos de descanso todavía</p></div>`;
+      return;
+    }
+
+    const dayEntries = Object.entries(days).sort((a, b) => dashWeekdayRank(a[0]) - dashWeekdayRank(b[0]));
+    const total = dayEntries.reduce((s, [, n]) => s + n, 0);
+
+    body.innerHTML = `
+      <table>
+        <thead><tr><th>Día</th><th style="text-align:right">Cantidad</th></tr></thead>
+        <tbody>
+          ${dayEntries.map(([day, count]) => `<tr><td>${gdDayBadge(day)}</td><td style="text-align:right;font-weight:700">${count}</td></tr>`).join('')}
+        </tbody>
+        <tfoot><tr><td style="font-weight:700">Total</td><td style="text-align:right;font-weight:700">${total}</td></tr></tfoot>
+      </table>`;
   }
 </script>
 </body>
