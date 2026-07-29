@@ -463,6 +463,16 @@
     .gd-clear-all svg { width: 11px; height: 11px; }
     .gd-clear-all:hover { background: var(--red); color: #fff; }
 
+    /* ─── Menú de "Copiar IDs" en grupos ─── */
+    .rec-copy-menu-item {
+      padding: 9px 14px; font-size: 12px; color: var(--text-dark); cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      transition: background .15s; white-space: nowrap;
+    }
+    .rec-copy-menu-item:hover { background: var(--blue-soft); }
+    .rec-copy-menu-item.all { border-top: 1px solid var(--border); font-weight: 700; }
+    .rec-copy-menu-range { font-size: 10px; color: var(--text-light); font-weight: 400; }
+
     /* ─── Submenu ─── */
     .sub-menu {
       max-height: 0; overflow: hidden;
@@ -1367,10 +1377,14 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           Limpiar todo
         </button>
-        <button class="btn btn-ghost btn-sm" id="rec-copy-ids-btn" onclick="recCopyIds()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-          <span id="rec-copy-ids-label">Copiar IDs</span>
-        </button>
+        <div style="position:relative;display:inline-block">
+          <button class="btn btn-ghost btn-sm" id="rec-copy-ids-btn" onclick="recToggleCopyMenu(event)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            <span id="rec-copy-ids-label">Copiar IDs</span>
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;margin-left:2px"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+          </button>
+          <div id="rec-copy-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);min-width:230px;z-index:50;overflow:hidden"></div>
+        </div>
       </div>
       <div id="rec-color-actions" style="display:none;padding:10px 20px;background:var(--main-bg);border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text-light)">Acciones masivas:</span>
@@ -3537,9 +3551,62 @@
     }).join('');
   }
 
-  /* ── Copiar todos los Id in CC visibles al portapapeles, separados por espacio ── */
-  async function recCopyIds() {
-    const ids = recCurrentFiltered.map(r => r.id_in_cc).filter(Boolean);
+  /* ── Copiar Id in CC visibles al portapapeles, en grupos de REC_COPY_CHUNK_SIZE
+     (el sistema externo donde se pegan no acepta bloques muy grandes de una vez) ── */
+  const REC_COPY_CHUNK_SIZE = 150;
+  const REC_COPY_ORDINALS = ['primeros', 'segundos', 'terceros', 'cuartos', 'quintos', 'sextos', 'séptimos', 'octavos', 'novenos', 'décimos'];
+
+  function recToggleCopyMenu(evt) {
+    evt.stopPropagation();
+    const menu = document.getElementById('rec-copy-menu');
+    const opening = menu.style.display === 'none';
+    if (opening) {
+      recRenderCopyMenu();
+      menu.style.display = 'block';
+    } else {
+      menu.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('rec-copy-menu');
+    if (!menu || menu.style.display === 'none') return;
+    if (!menu.contains(e.target) && !e.target.closest('#rec-copy-ids-btn')) {
+      menu.style.display = 'none';
+    }
+  });
+
+  function recRenderCopyMenu() {
+    const menu = document.getElementById('rec-copy-menu');
+    const total = recCurrentFiltered.filter(r => r.id_in_cc).length;
+
+    if (total === 0) {
+      menu.innerHTML = `<div class="rec-copy-menu-item" style="cursor:default;color:var(--text-light)">No hay IDs para copiar</div>`;
+      return;
+    }
+
+    let items = '';
+    for (let start = 0; start < total; start += REC_COPY_CHUNK_SIZE) {
+      const end = Math.min(start + REC_COPY_CHUNK_SIZE, total);
+      const count = end - start;
+      const groupIdx = start / REC_COPY_CHUNK_SIZE;
+      const label = REC_COPY_ORDINALS[groupIdx] || `grupo ${groupIdx + 1}`;
+      items += `<div class="rec-copy-menu-item" onclick="recCopyIdsChunk(${start},${end})">
+        <span>Copiar ${label} ${count} IDs</span>
+        <span class="rec-copy-menu-range">${start + 1}–${end}</span>
+      </div>`;
+    }
+    if (total > REC_COPY_CHUNK_SIZE) {
+      items += `<div class="rec-copy-menu-item all" onclick="recCopyIdsChunk(0,${total})">
+        <span>Copiar todos (${total})</span>
+      </div>`;
+    }
+    menu.innerHTML = items;
+  }
+
+  async function recCopyIdsChunk(start, end) {
+    const ids = recCurrentFiltered.map(r => r.id_in_cc).filter(Boolean).slice(start, end);
+    document.getElementById('rec-copy-menu').style.display = 'none';
     if (ids.length === 0) return;
     const text = ids.join(' ');
     const label = document.getElementById('rec-copy-ids-label');
