@@ -1678,7 +1678,14 @@
   }
 
   /* ── Carga de Excel para dt_dis (reemplazo total), usada desde "Actualización de Data" ──
-     Encabezado esperado: TEAMLEADER  ASESORES  PEROP1AM  PAIS  DESCANSO  HORARIO  EMPRESA */
+     Encabezado actual: TEAMLEADER ASESORES PEROP1AM (col. vacía) CAMPAÑA DESCANSO HORARIO LUNCH TARDANZA TELEFONIA EMPRESA
+     Solo se leen las columnas que ya usa la página (GD_COLS) — la vacía y LUNCH/TARDANZA/TELEFONIA se ignoran.
+     "CAMPAÑA" es el nuevo nombre de encabezado para lo que en dt_dis sigue siendo la columna PAIS —
+     el contenido guardado y el orden en que se muestra en GoodDay no cambian. */
+  const GD_HEADER_ALIASES = {
+    'PAIS': ['PAIS', 'PAÍS', 'CAMPAÑA', 'CAMPANA'],
+  };
+
   function gdParseWorkbook(workbook) {
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
@@ -1691,7 +1698,8 @@
     return raw.map(row => {
       const record = {};
       GD_COLS.forEach(col => {
-        const actualKey = keyMap[col.toLowerCase()];
+        const candidates = GD_HEADER_ALIASES[col] || [col];
+        const actualKey = candidates.map(c => keyMap[c.toLowerCase()]).find(k => k !== undefined);
         record[col] = actualKey !== undefined ? String(row[actualKey] ?? '').trim() : '';
       });
       return record;
@@ -4294,7 +4302,7 @@
     {
       key: 'goodday',
       label: 'GoodDay — Distribución de Agentes',
-      hint: 'Excel con encabezados: TEAMLEADER, ASESORES, PEROP1AM, PAIS, DESCANSO, HORARIO, EMPRESA',
+      hint: 'Excel con: TEAMLEADER, ASESORES, PEROP1AM, CAMPAÑA, DESCANSO, HORARIO, EMPRESA (el resto de columnas se ignora)',
       table: 'dt_dis',
       parseWorkbook: gdParseWorkbook,
       deleteAll: gdDeleteAllCurrent,
