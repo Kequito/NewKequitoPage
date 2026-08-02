@@ -852,6 +852,10 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
     Gestión de Recalls
   </div>
+  <div class="nav-item" onclick="setNav(this, 'tl')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+    Top Team Leader
+  </div>
   <div class="nav-item" onclick="setNav(this, 'estadisticas')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
     Estadísticas
@@ -1480,6 +1484,93 @@
 
   </div>
 
+  <!-- ══ VIEW: TOP TEAM LEADER ══ -->
+  <div class="view" id="view-tl">
+
+    <!-- Header -->
+    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+          Top Team Leader — Rendimiento Mensual
+        </div>
+        <span id="tl-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
+        <div id="tl-save-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
+          <span id="tl-save-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
+          <button class="btn btn-primary btn-sm" id="tl-save-btn" onclick="tlSaveSnapshot()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+            Guardar avance
+          </button>
+        </div>
+      </div>
+      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <small>Esta data se actualiza desde <strong>Actualización de Data</strong> (solo Supervisores). "Guardar avance" registra el estado actual como un nuevo punto en la evolución de abajo — los % y las flechas de cambio se ven siempre, se guarde o no.</small>
+      </div>
+    </div>
+
+    <!-- Ranking -->
+    <div class="panel" style="margin-bottom:22px">
+      <div class="panel-head">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          Ranking por % Approve (Approve ÷ Unique Orders)
+        </span>
+      </div>
+      <div class="tbl-wrap">
+        <table id="tl-table" style="display:none">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Team Leader</th>
+              <th>Unique Orders</th>
+              <th>Approve</th>
+              <th>Approve %</th>
+            </tr>
+          </thead>
+          <tbody id="tl-tbody"></tbody>
+        </table>
+      </div>
+      <div class="gd-state" id="tl-empty" style="padding:40px 20px">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <p>Todavía no hay data de Team Leaders</p>
+        <small>Un Supervisor puede subirla desde "Actualización de Data"</small>
+      </div>
+    </div>
+
+    <!-- Evolución / comparador -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          Evolución y comparador de % Approve
+        </span>
+        <span id="tl-snap-count" style="font-size:11px;color:var(--text-light)">0 snapshots guardados</span>
+      </div>
+      <div class="panel-body">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="today" onclick="tlSetDateFilter('today')">Hoy</button>
+          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="yesterday" onclick="tlSetDateFilter('yesterday')">Ayer</button>
+          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="7d" onclick="tlSetDateFilter('7d')">Últimos 7 días</button>
+          <button class="btn btn-sm btn-primary tl-date-btn" data-filter="all" onclick="tlSetDateFilter('all')">Todo</button>
+          <input type="date" id="tl-date-input" onchange="tlSetDateFilter(this.value)"
+            style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:6px 10px;cursor:pointer;outline:none"/>
+        </div>
+        <div style="font-size:11px;color:var(--text-light);margin-bottom:6px">Elige uno o más Team Leaders para comparar:</div>
+        <div id="tl-chart-toggles" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
+        <div id="tl-chart-empty" class="gd-state" style="padding:40px 20px">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          <p>Todavía no hay snapshots guardados para comparar</p>
+          <small>Pulsa "Guardar avance" en la tabla de arriba para empezar a registrar evolución</small>
+        </div>
+        <div class="chart-wrap" style="height:340px;display:none" id="tl-chart-wrap">
+          <canvas id="tlChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /view-tl -->
+
   <!-- ══ VIEW: ESTADÍSTICAS ══ -->
   <div class="view" id="view-estadisticas">
     <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
@@ -1541,6 +1632,7 @@
     'ops':           'view-ops',
     'reportes':      'view-reportes',
     'recalls':       'view-recalls',
+    'tl':            'view-tl',
     'estadisticas':  'view-estadisticas',
     'actualizacion': 'view-actualizacion',
     'configuracion': 'view-configuracion',
@@ -1551,6 +1643,7 @@
     'ops':           ['Approve Stats', 'Rendimiento de operadores por país'],
     'reportes':      ['Reportes', 'Generación y consulta de reportes'],
     'recalls':       ['Gestión de Recalls', 'Seguimiento de reasignación de órdenes'],
+    'tl':            ['Top Team Leader', 'Ranking y evolución de % Approve por Team Leader'],
     'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
     'actualizacion': ['Actualización de Data', 'Centraliza la carga de información de todas las secciones'],
     'configuracion': ['Configuración', 'Ajustes del sistema'],
@@ -1578,6 +1671,8 @@
     if (page === 'reportes' && !repLoaded) repInitView();
     // auto-load Recalls on first visit
     if (page === 'recalls' && !recLoaded) recInitView();
+    // auto-load Top Team Leader on first visit
+    if (page === 'tl' && !tlLoaded) loadTlStats();
     // auto-load Inicio (normalmente ya se cargó en enterDashboard, esto es solo respaldo)
     if (page === 'dashboard' && !dashLoaded) loadDashboard();
     // auto-load Actualización de Data on first visit
@@ -4299,6 +4394,338 @@
   }
 
   /* ══════════════════════════════
+     TOP TEAM LEADER — ranking + evolución con comparador multi-TL
+     Se alimenta de un Excel con 27 columnas (reporte "Team Leader Mensual");
+     solo importan "Team Leader", "All calls - Unique Orders" y
+     "Call resulting statuses - Approve", pero se guardan las 27 tal cual
+     vienen (mismo criterio que Approve Stats) por si hacen falta después.
+  ══════════════════════════════ */
+  const TL_COL_UNIQUE_ORDERS = 'All calls - Unique Orders';
+  const TL_COL_APPROVE       = 'Call resulting statuses - Approve';
+
+  function tlParseWorkbook(workbook) {
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (raw.length === 0) return [];
+
+    const headers = Object.keys(raw[0]);
+    const tlKey = headers.find(h => recNormalizeHeader(h) === 'team leader');
+
+    return raw.map(row => {
+      const teamLeader = tlKey ? String(row[tlKey] ?? '').trim() : '';
+      if (!teamLeader) return null;
+
+      const record = { 'Team Leader': teamLeader };
+      headers.forEach(h => {
+        if (h === tlKey) return;
+        record[h] = opsCoerceValue(h, row[h]);
+      });
+      return record;
+    }).filter(Boolean);
+  }
+
+  async function tlDeleteAllCurrent() {
+    const res = await fetch(`${SB_URL}/rest/v1/dt_tl_stats?${encodeURIComponent('Team Leader')}=not.is.null`, {
+      method: 'DELETE',
+      headers: SB_HEADERS,
+    });
+    if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+  }
+
+  async function tlFetchLastUpload() {
+    try {
+      const rows = await sbFetch('dt_tl_stats', 'select=uploaded_at&order=uploaded_at.desc&limit=1');
+      return (rows && rows.length > 0) ? rows[0].uploaded_at : null;
+    } catch (err) {
+      console.error('Error obteniendo fecha de carga de dt_tl_stats:', err);
+      return null;
+    }
+  }
+
+  let tlLoaded = false;
+  let tlCurrentRows  = [];   // [{teamLeader, uniqueOrders, approve, approvePct, deltaPct}], orden desc por approvePct
+  let tlPrevSnapshot = null; // último snapshot guardado — deltas siempre se calculan contra este, se guarde o no ahora
+  let tlHistory      = [];
+  let tlDateFilter   = 'all'; // el reporte es mensual, "hoy" casi siempre saldría vacío
+  let tlChartSeries  = new Set(); // nombres de Team Leader seleccionados para el comparador
+  let tlChartInstance = null;
+
+  function tlComputeRanking(rawRows) {
+    const rows = (rawRows || []).map(r => {
+      const teamLeader   = (r['Team Leader'] || '').trim();
+      const uniqueOrders = Number(r[TL_COL_UNIQUE_ORDERS]) || 0;
+      const approve      = Number(r[TL_COL_APPROVE]) || 0;
+      const approvePct   = uniqueOrders > 0 ? (approve / uniqueOrders) * 100 : 0;
+      return { teamLeader, uniqueOrders, approve, approvePct };
+    }).filter(r => r.teamLeader);
+    rows.sort((a, b) => b.approvePct - a.approvePct);
+    return rows;
+  }
+
+  async function tlFetchPrevSnapshot() {
+    try {
+      const rows = await sbFetch('dt_tl_history', 'select=created_at,rows&order=created_at.desc&limit=1');
+      return (rows && rows.length > 0) ? rows[0] : null;
+    } catch (err) {
+      console.error('Error cargando snapshot anterior de Team Leaders:', err);
+      return null;
+    }
+  }
+
+  async function loadTlStats() {
+    tlLoaded = true;
+    document.getElementById('tl-save-wrap').style.display = isSupervisor() ? 'flex' : 'none';
+
+    try {
+      const [rawRows, lastUpload, prevSnap] = await Promise.all([
+        sbFetch('dt_tl_stats', 'select=*'),
+        tlFetchLastUpload(),
+        tlFetchPrevSnapshot(),
+      ]);
+      tlPrevSnapshot = prevSnap;
+      tlCurrentRows = tlComputeRanking(rawRows);
+
+      // Deltas vs. el último snapshot guardado — independiente de si se guarda "ahora" o no
+      const prevRows = prevSnap ? (prevSnap.rows || []) : [];
+      tlCurrentRows.forEach(r => {
+        const prev = prevRows.find(p => p.teamLeader === r.teamLeader);
+        r.deltaPct = prev ? r.approvePct - prev.approvePct : null;
+      });
+
+      if (lastUpload) {
+        const d = new Date(lastUpload);
+        document.getElementById('tl-last-update').textContent =
+          `Última carga: ${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+      } else {
+        document.getElementById('tl-last-update').textContent = '';
+      }
+
+      renderTlTable();
+    } catch (err) {
+      console.error('Error cargando Top Team Leader:', err);
+    }
+
+    tlLoadHistory();
+  }
+
+  /* Color por rango: mejor cuartil verde, peor cuartil rojo, resto neutro —
+     tiene más sentido en un ranking que un umbral fijo, ya que acá el % es Approve/Unique Orders,
+     una proporción distinta (y normalmente mucho más baja) que el Approve% de Reportes/Approve Stats. */
+  function tlRankClass(index, total) {
+    if (total <= 1) return 'rep-approve-mid';
+    const p = index / (total - 1); // 0 = mejor, 1 = peor (tlCurrentRows ya viene ordenado desc)
+    if (p <= 0.25) return 'rep-approve-good';
+    if (p >= 0.75) return 'rep-approve-bad';
+    return 'rep-approve-mid';
+  }
+
+  function renderTlTable() {
+    const table = document.getElementById('tl-table');
+    const empty = document.getElementById('tl-empty');
+    const tbody = document.getElementById('tl-tbody');
+    const total = tlCurrentRows.length;
+
+    if (total === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = tlCurrentRows.map((r, i) => {
+      const cls = tlRankClass(i, total);
+      return `<tr>
+        <td style="font-weight:700;color:var(--text-light)">${i + 1}</td>
+        <td>${recTlBadge(r.teamLeader)}</td>
+        <td>${r.uniqueOrders.toLocaleString('es-PE')}</td>
+        <td>${r.approve.toLocaleString('es-PE')}</td>
+        <td style="white-space:nowrap"><span class="rep-approve-badge ${cls}">${r.approvePct.toFixed(2)}%</span> ${repDeltaHTML(r.deltaPct)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* Guarda el ranking actual como un nuevo punto de evolución — acción manual, solo Supervisor */
+  async function tlSaveSnapshot() {
+    if (!isSupervisor() || tlCurrentRows.length === 0) return;
+    const btn = document.getElementById('tl-save-btn');
+    const status = document.getElementById('tl-save-status');
+    btn.disabled = true;
+    status.style.color = 'var(--text-light)';
+    status.textContent = 'Guardando...';
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+      const rows = tlCurrentRows.map(r => ({
+        teamLeader: r.teamLeader, uniqueOrders: r.uniqueOrders, approve: r.approve, approvePct: r.approvePct,
+      }));
+      await sbInsert('dt_tl_history', [{ created_by: user ? user[0] : null, rows }]);
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Avance guardado';
+      await loadTlStats(); // refresca deltas (nuevo "último snapshot") y el historial del comparador
+    } catch (err) {
+      console.error('Error guardando avance de Team Leaders:', err);
+      status.style.color = 'var(--red)';
+      status.textContent = 'Error al guardar, intenta de nuevo';
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => { status.textContent = ''; }, 3000);
+    }
+  }
+
+  /* ── Evolución / comparador — mismo patrón de filtros de fecha que Reportes ── */
+  function tlLocalDayStart(offsetDays) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + offsetDays);
+    return d;
+  }
+
+  function tlDateBoundsFor(filter) {
+    if (filter === 'today') { const start = tlLocalDayStart(0); const end = tlLocalDayStart(1); return { start, end }; }
+    if (filter === 'yesterday') { const start = tlLocalDayStart(-1); const end = tlLocalDayStart(0); return { start, end }; }
+    if (filter === '7d') { const end = new Date(); const start = new Date(); start.setDate(start.getDate() - 7); return { start, end }; }
+    if (filter === 'all') return null;
+    const start = new Date(`${filter}T00:00:00`);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return { start, end };
+  }
+
+  function tlSetDateFilter(value) {
+    if (!value) return;
+    tlDateFilter = value;
+    document.querySelectorAll('.tl-date-btn').forEach(b => {
+      const active = b.dataset.filter === value;
+      b.classList.toggle('btn-primary', active);
+      b.classList.toggle('btn-ghost', !active);
+    });
+    if (['today', 'yesterday', '7d', 'all'].includes(value)) {
+      document.getElementById('tl-date-input').value = '';
+    } else {
+      document.querySelectorAll('.tl-date-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-ghost');
+      });
+    }
+    tlLoadHistory();
+  }
+
+  async function tlFetchSnapshotsForRange(filter) {
+    try {
+      const bounds = tlDateBoundsFor(filter);
+      let query = 'select=created_at,rows&order=created_at.asc&limit=500';
+      if (bounds) {
+        query += `&created_at=gte.${encodeURIComponent(bounds.start.toISOString())}`;
+        query += `&created_at=lt.${encodeURIComponent(bounds.end.toISOString())}`;
+      }
+      return await sbFetch('dt_tl_history', query);
+    } catch (err) {
+      console.error('Error cargando historial de Team Leaders:', err);
+      return [];
+    }
+  }
+
+  async function tlLoadHistory() {
+    tlHistory = await tlFetchSnapshotsForRange(tlDateFilter);
+    document.getElementById('tl-snap-count').textContent = `${tlHistory.length} snapshot${tlHistory.length !== 1 ? 's' : ''} en este rango`;
+
+    // Si todavía no hay nada seleccionado, arranca mostrando el top 3 actual para que no salga vacío
+    if (tlChartSeries.size === 0 && tlCurrentRows.length > 0) {
+      tlCurrentRows.slice(0, 3).forEach(r => tlChartSeries.add(r.teamLeader));
+    }
+
+    renderTlChips();
+    renderTlChart();
+  }
+
+  function renderTlChips() {
+    const wrap = document.getElementById('tl-chart-toggles');
+    const allNames = [...new Set([
+      ...tlCurrentRows.map(r => r.teamLeader),
+      ...tlHistory.flatMap(h => (h.rows || []).map(r => r.teamLeader)),
+    ])].sort();
+
+    if (allNames.length === 0) {
+      wrap.innerHTML = '';
+      return;
+    }
+
+    wrap.innerHTML = allNames.map(name => {
+      const on = tlChartSeries.has(name);
+      const color = (recColorForName(name) || {}).color || '#9ca8b5';
+      const safeName = name.replace(/'/g, "\\'");
+      return `<div class="rep-toggle-chip ${on ? '' : 'off'}" style="border-color:${color};color:${color}" onclick="tlToggleSeries('${safeName}')">${name}</div>`;
+    }).join('');
+  }
+
+  function tlToggleSeries(name) {
+    if (tlChartSeries.has(name)) tlChartSeries.delete(name);
+    else tlChartSeries.add(name);
+    renderTlChips();
+    renderTlChart();
+  }
+
+  function tlFmtTimestamp(iso) {
+    const d = new Date(iso);
+    const fmt = (tlDateFilter === 'today' || tlDateFilter === 'yesterday')
+      ? { hour: '2-digit', minute: '2-digit' }
+      : { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' };
+    return d.toLocaleString('es-PE', fmt);
+  }
+
+  function renderTlChart() {
+    const canvas = document.getElementById('tlChart');
+    const emptyEl = document.getElementById('tl-chart-empty');
+    const wrapEl = document.getElementById('tl-chart-wrap');
+
+    if (tlHistory.length === 0 || tlChartSeries.size === 0) {
+      emptyEl.style.display = 'flex';
+      wrapEl.style.display = 'none';
+      if (tlChartInstance) { tlChartInstance.destroy(); tlChartInstance = null; }
+      return;
+    }
+    emptyEl.style.display = 'none';
+    wrapEl.style.display = 'block';
+
+    const labels = tlHistory.map(h => tlFmtTimestamp(h.created_at));
+
+    const datasets = [...tlChartSeries].sort().map(name => {
+      const color = (recColorForName(name) || {}).color || '#9ca8b5';
+      const values = tlHistory.map(h => {
+        const found = (h.rows || []).find(r => r.teamLeader === name);
+        return (found && found.approvePct !== undefined && found.approvePct !== null) ? Number(found.approvePct.toFixed(1)) : null;
+      });
+      return {
+        type: 'line', label: name, data: values,
+        borderColor: color, backgroundColor: color,
+        spanGaps: true, tension: .3, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2,
+      };
+    });
+
+    const seen = datasets.flatMap(d => d.data).filter(v => v !== null && v !== undefined);
+    const dataMax = seen.length ? Math.max(...seen) : 0;
+    const axisMax = Math.min(100, Math.max(REP_CHART_MAX_DEFAULT, Math.ceil((dataMax + 5) / 5) * 5));
+
+    if (tlChartInstance) tlChartInstance.destroy();
+    tlChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, labels: { ...chartDefaults.font, boxWidth: 12 } },
+          datalabels: { display: false },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { ...chartDefaults.font } },
+          y: { grid: { color: CHART_GRID }, ticks: { ...chartDefaults.font, callback: v => v + '%' }, min: 0, max: axisMax },
+        },
+      },
+    });
+  }
+
+  /* ══════════════════════════════
      ACTUALIZACIÓN DE DATA — centro de carga (solo Supervisores)
      Centraliza los uploads de Excel que antes vivían dentro de cada sección
      (GoodDay y Approve Stats), más un link de referencia por sección.
@@ -4326,6 +4753,16 @@
       deleteAll: opsDeleteAllCurrent,
       fetchLastUpload: opsFetchLastUpload,
       afterUpload: () => loadOps(),
+    },
+    {
+      key: 'tl',
+      label: 'Top Team Leader — Rendimiento Mensual',
+      hint: 'Excel con: Team Leader, All calls - Unique Orders, Call resulting statuses - Approve (+ el resto del reporte, se guarda tal cual)',
+      table: 'dt_tl_stats',
+      parseWorkbook: tlParseWorkbook,
+      deleteAll: tlDeleteAllCurrent,
+      fetchLastUpload: tlFetchLastUpload,
+      afterUpload: () => loadTlStats(),
     },
   ];
 
