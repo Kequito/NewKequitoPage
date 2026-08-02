@@ -221,26 +221,6 @@
       border: 2px solid var(--card-bg);
     }
 
-    .live-badge {
-      display: flex; align-items: center; gap: 6px;
-      background: var(--green-soft);
-      color: var(--green);
-      font-size: 11px; font-weight: 600;
-      padding: 5px 10px;
-      border-radius: 99px;
-      letter-spacing: .4px;
-    }
-    .pulse {
-      width: 7px; height: 7px;
-      background: var(--green);
-      border-radius: 50%;
-      animation: pulse 1.6s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%,100% { opacity:1; transform: scale(1); }
-      50% { opacity:.5; transform: scale(.7); }
-    }
-
     /* ─── Content ─── */
     .content { padding: 26px 28px; flex: 1; }
 
@@ -898,7 +878,6 @@
   <header class="topbar">
     <div class="topbar-left">
       <h1>Inicio</h1>
-      <span id="live-time">Lunes, 09 de Marzo 2026</span>
     </div>
     <div class="topbar-right">
       <div class="icon-btn">
@@ -913,9 +892,6 @@
           <span class="topbar-user-name"  id="topbar-username">—</span>
           <span class="topbar-user-cargo" id="topbar-usercargo">—</span>
         </div>
-      </div>
-      <div class="live-badge">
-        <span class="pulse"></span> EN VIVO
       </div>
     </div>
   </header>
@@ -2432,29 +2408,19 @@
   }
 
   /* ── Logout ── */
+  /* Recarga completa a propósito: la app guarda "ya cargué esto" en muchas banderas
+     (opsLoaded, repLoaded, dashLoaded, etc.) que solo se resetean al abrir la página desde cero.
+     Sin el reload, cambiar de cuenta dejaba visibles controles de Supervisor (formularios de subida,
+     botones de editar, secciones enteras) para quien entraba después con otro cargo. */
   function logoutUser() {
     if (!confirm('¿Cerrar sesión?')) return;
     sessionStorage.removeItem(SESSION_KEY);
-    loginCargo = null;
-    loginSelectedUser = null;
-    document.getElementById('login-screen').classList.remove('hidden');
-    goLoginStep('cargo');
+    location.reload();
   }
 
   /* ── Boot: load users on page load ── */
   loadSessionUsers();
 
-
-  /* ── Live clock ── */
-  function updateTime() {
-    const now = new Date();
-    const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
-    const date = now.toLocaleDateString('es-ES', opts);
-    const time = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-    document.getElementById('live-time').textContent = `${date} — ${time}`;
-  }
-  updateTime();
-  setInterval(updateTime, 1000);
 
   /* ── Chart.js — configuración compartida por todas las gráficas reales del sitio ── */
   // Registrado globalmente pero apagado por defecto — solo el gráfico de Reportes lo enciende,
@@ -5172,6 +5138,13 @@
     'Team Leader': { bg: 'rgba(76,141,255,.16)',  color: '#7db0ff' },
     'Supervisor':  { bg: 'rgba(34,197,94,.16)',   color: '#4ade80' },
   };
+  /* Devuelve "status — mensaje real de Postgres/PostgREST" en vez de un status pelado,
+     para no tener que adivinar la causa (RLS, constraint, etc.) cuando algo falla. */
+  async function acctErrorDetail(res) {
+    const text = await res.text().catch(() => '');
+    return `${res.status}${text ? ` — ${text}` : ''}`;
+  }
+
   function acctCargoBadge(cargo) {
     const c = ACCT_CARGO_COLORS[cargo] || { bg: 'var(--main-bg)', color: 'var(--text-mid)' };
     return `<span style="display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;background:${c.bg};color:${c.color}">${cargo || '—'}</span>`;
@@ -5310,7 +5283,7 @@
       headers: { ...SB_HEADERS, 'Content-Type': 'application/json' },
       body: JSON.stringify({ p_nombre: nombre, p_new_password: password || null }),
     });
-    if (!res.ok) throw new Error(`set_user_password error ${res.status}`);
+    if (!res.ok) throw new Error(`set_user_password error ${await acctErrorDetail(res)}`);
   }
 
   async function acctSubmitForm() {
@@ -5336,7 +5309,7 @@
           headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify([{ NOMBRE: nombre, PEROP1AM: perop, CARGO: cargo, GENERO: genero }]),
         });
-        if (!res.ok) throw new Error(`Supabase insert error ${res.status}`);
+        if (!res.ok) throw new Error(`Supabase insert error ${await acctErrorDetail(res)}`);
 
         const wantsPass = document.getElementById('acct-f-haspass').checked;
         const pass = document.getElementById('acct-f-pass').value;
@@ -5347,14 +5320,14 @@
           headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           body: JSON.stringify({ NOMBRE: nombre, PEROP1AM: perop, CARGO: cargo, GENERO: genero }),
         });
-        if (!res.ok) throw new Error(`Supabase update error ${res.status}`);
+        if (!res.ok) throw new Error(`Supabase update error ${await acctErrorDetail(res)}`);
       }
       acctCloseForm();
       await acctLoadList();
       await loadSessionUsers(); // refresca también el picker de login con el cambio
     } catch (err) {
       console.error('Error guardando cuenta:', err);
-      errBox.textContent = 'No se pudo guardar, intenta de nuevo.';
+      errBox.textContent = (err && err.message) ? err.message : 'No se pudo guardar, intenta de nuevo.';
       errBox.style.display = 'block';
     } finally {
       btn.disabled = false;
@@ -5378,7 +5351,7 @@
       await loadSessionUsers();
     } catch (err) {
       console.error('Error cambiando contraseña:', err);
-      alert('No se pudo actualizar la contraseña, intenta de nuevo.');
+      alert(`No se pudo actualizar la contraseña: ${(err && err.message) || 'intenta de nuevo.'}`);
     }
   }
 
@@ -5393,12 +5366,12 @@
         method: 'DELETE',
         headers: SB_HEADERS,
       });
-      if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+      if (!res.ok) throw new Error(`Supabase delete error ${await acctErrorDetail(res)}`);
       await acctLoadList();
       await loadSessionUsers();
     } catch (err) {
       console.error('Error eliminando cuenta:', err);
-      alert('No se pudo eliminar la cuenta, intenta de nuevo.');
+      alert(`No se pudo eliminar la cuenta: ${(err && err.message) || 'intenta de nuevo.'}`);
     }
   }
 </script>
