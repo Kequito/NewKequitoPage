@@ -1703,7 +1703,10 @@
         record[col] = actualKey !== undefined ? String(row[actualKey] ?? '').trim() : '';
       });
       return record;
-    }).filter(r => r.PEROP1AM);
+    // El archivo suele traer, después de las filas reales, bloques de relleno (filas vacías)
+    // y una tabla-resumen tipo "CONECTADOS Y CAMPAÑAS" con solo PEROP1AM y todo lo demás en blanco.
+    // Exigir también TEAMLEADER descarta ambos casos y deja solo las filas de asignación reales.
+    }).filter(r => r.PEROP1AM && r.TEAMLEADER);
   }
 
   async function gdDeleteAllCurrent() {
@@ -4302,7 +4305,7 @@
     {
       key: 'goodday',
       label: 'GoodDay — Distribución de Agentes',
-      hint: 'Excel con: TEAMLEADER, ASESORES, PEROP1AM, CAMPAÑA, DESCANSO, HORARIO, EMPRESA (el resto de columnas se ignora)',
+      hint: 'Excel o CSV con: TEAMLEADER, ASESORES, PEROP1AM, CAMPAÑA, DESCANSO, HORARIO, EMPRESA (el resto de columnas se ignora)',
       table: 'dt_dis',
       parseWorkbook: gdParseWorkbook,
       deleteAll: gdDeleteAllCurrent,
@@ -4368,7 +4371,7 @@
             <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Subir Excel
           </label>
-          <input type="file" id="data-file-${s.key}" accept=".xlsx,.xls" style="display:none" onchange="dataSectionFileSelected(event,'${s.key}')"/>
+          <input type="file" id="data-file-${s.key}" accept=".xlsx,.xls,.csv" style="display:none" onchange="dataSectionFileSelected(event,'${s.key}')"/>
         </td>
       </tr>`;
     }).join('');
@@ -4421,7 +4424,8 @@
 
     try {
       const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
+      // codepage:65001 (UTF-8) evita que los acentos/ñ de un .csv salgan corruptos ("Ã")
+      const wb = XLSX.read(buf, { type: 'array', codepage: 65001 });
       const parsed = section.parseWorkbook(wb);
       if (parsed.length === 0) {
         status.style.color = 'var(--red)';
