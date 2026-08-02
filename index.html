@@ -1614,8 +1614,8 @@
      GOODDAY — SUPABASE
   ══════════════════════════════ */
   // Columnas en dt_dis — nombres exactos como están en Supabase
-  const GD_COLS = ['TEAMLEADER','ASESORES','PEROP1AM','PAIS','DESCANSO','HORARIO','EMPRESA'];
-  const GD_COL_LABELS = { 'TEAMLEADER':'Team Leader', 'ASESORES':'Asesor', 'PEROP1AM':'PEROP1AM', 'PAIS':'País', 'DESCANSO':'Descanso', 'HORARIO':'Horario', 'EMPRESA':'Empresa' };
+  const GD_COLS = ['TEAMLEADER','ASESORES','PEROP1AM','PAIS','DESCANSO','HORARIO','EMPRESA','ASISTENCIA'];
+  const GD_COL_LABELS = { 'TEAMLEADER':'Team Leader', 'ASESORES':'Asesor', 'PEROP1AM':'PEROP1AM', 'PAIS':'País', 'DESCANSO':'Descanso', 'HORARIO':'Horario', 'EMPRESA':'Empresa', 'ASISTENCIA':'Asistencia' };
 
   let gdRawData  = [];
   let gdFiltered = [];
@@ -1677,11 +1677,13 @@
     }
   }
 
-  /* ── Carga de Excel para dt_dis (reemplazo total), usada desde "Actualización de Data" ──
-     Encabezado actual: TEAMLEADER ASESORES PEROP1AM (col. vacía) CAMPAÑA DESCANSO HORARIO LUNCH TARDANZA TELEFONIA EMPRESA
-     Solo se leen las columnas que ya usa la página (GD_COLS) — la vacía y LUNCH/TARDANZA/TELEFONIA se ignoran.
-     "CAMPAÑA" es el nuevo nombre de encabezado para lo que en dt_dis sigue siendo la columna PAIS —
-     el contenido guardado y el orden en que se muestra en GoodDay no cambian. */
+  /* ── Carga de Excel/CSV/TSV para dt_dis (reemplazo total), usada desde "Actualización de Data" ──
+     Encabezado actual: TEAMLEADER ASESORES PEROP1AM PAIS DESCANSO HORARIO IGNORAR IGNORAR IGNORAR EMPRESA ASISTENCIA
+     La lectura es por NOMBRE de encabezado, no por posición — solo se toman las columnas listadas
+     en GD_COLS; cualquier columna llamada "IGNORAR" (haya una o varias) nunca calza con ningún
+     nombre de GD_COLS, así que se descarta sola sin necesidad de lógica especial.
+     GD_HEADER_ALIASES cubre nombres alternativos que ha tenido la misma columna en versiones
+     anteriores del archivo (p.ej. "CAMPAÑA" para lo que en dt_dis sigue siendo la columna PAIS). */
   const GD_HEADER_ALIASES = {
     'PAIS': ['PAIS', 'PAÍS', 'CAMPAÑA', 'CAMPANA'],
   };
@@ -4305,7 +4307,7 @@
     {
       key: 'goodday',
       label: 'GoodDay — Distribución de Agentes',
-      hint: 'Excel o CSV con: TEAMLEADER, ASESORES, PEROP1AM, CAMPAÑA, DESCANSO, HORARIO, EMPRESA (el resto de columnas se ignora)',
+      hint: 'Excel, CSV o TSV con: TEAMLEADER, ASESORES, PEROP1AM, PAIS, DESCANSO, HORARIO, EMPRESA, ASISTENCIA (las columnas "IGNORAR" no se guardan)',
       table: 'dt_dis',
       parseWorkbook: gdParseWorkbook,
       deleteAll: gdDeleteAllCurrent,
@@ -4371,7 +4373,7 @@
             <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Subir Excel
           </label>
-          <input type="file" id="data-file-${s.key}" accept=".xlsx,.xls,.csv" style="display:none" onchange="dataSectionFileSelected(event,'${s.key}')"/>
+          <input type="file" id="data-file-${s.key}" accept=".xlsx,.xls,.csv,.tsv,.txt" style="display:none" onchange="dataSectionFileSelected(event,'${s.key}')"/>
         </td>
       </tr>`;
     }).join('');
