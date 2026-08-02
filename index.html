@@ -859,6 +859,11 @@
 
   <div class="sidebar-section-label">Sistema</div>
 
+  <div class="nav-item" id="nav-data-update" onclick="setNav(this, 'actualizacion')" style="display:none">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+    Actualización de Data
+  </div>
+
   <div class="nav-item" onclick="setNav(this, 'configuracion')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
     Configuración
@@ -1094,18 +1099,10 @@
         <div class="gd-stat-chip">Operadores: <span id="ops-count">—</span></div>
         <div class="gd-stat-chip">Países: <span id="ops-countries">—</span></div>
         <span id="ops-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
-        <div id="ops-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
-          <span id="ops-upload-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
-          <label class="btn btn-primary btn-sm" for="ops-file-input" style="cursor:pointer;margin:0">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            Subir Excel
-          </label>
-          <input type="file" id="ops-file-input" accept=".xlsx,.xls" style="display:none" onchange="opsOnFileSelected(event)"/>
-        </div>
       </div>
-      <div id="ops-tl-note" class="gd-state" style="display:none;padding:16px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+      <div id="ops-tl-note" class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-        <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
+        <small>Esta data se actualiza desde <strong>Actualización de Data</strong> (solo Supervisores).</small>
       </div>
 
       <!-- Ventana de datos (BI-04, últimos 90 días) -->
@@ -1491,6 +1488,37 @@
     </div>
   </div>
 
+  <!-- ══ VIEW: ACTUALIZACIÓN DE DATA (solo Supervisores) ══ -->
+  <div class="view" id="view-actualizacion">
+    <div class="panel" style="overflow:hidden">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          Centro de Carga de Datos
+        </div>
+      </div>
+      <div class="rep-summary-banner" style="margin:16px 20px 0">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <span>Guarda aquí el link de la fuente de cada sección y sube el Excel correspondiente cuando tengas información nueva — todo desde un solo lugar.</span>
+      </div>
+      <div class="tbl-wrap" style="padding:20px">
+        <table>
+          <thead>
+            <tr>
+              <th>Sección</th>
+              <th>Última actualización</th>
+              <th>Link de datos</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="data-update-tbody">
+            <tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:24px">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ VIEW: CONFIGURACIÓN ══ -->
   <div class="view" id="view-configuracion">
     <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
@@ -1514,6 +1542,7 @@
     'reportes':      'view-reportes',
     'recalls':       'view-recalls',
     'estadisticas':  'view-estadisticas',
+    'actualizacion': 'view-actualizacion',
     'configuracion': 'view-configuracion',
   };
   const titleMap = {
@@ -1523,6 +1552,7 @@
     'reportes':      ['Reportes', 'Generación y consulta de reportes'],
     'recalls':       ['Gestión de Recalls', 'Seguimiento de reasignación de órdenes'],
     'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
+    'actualizacion': ['Actualización de Data', 'Centraliza la carga de información de todas las secciones'],
     'configuracion': ['Configuración', 'Ajustes del sistema'],
   };
 
@@ -1550,6 +1580,8 @@
     if (page === 'recalls' && !recLoaded) recInitView();
     // auto-load Inicio (normalmente ya se cargó en enterDashboard, esto es solo respaldo)
     if (page === 'dashboard' && !dashLoaded) loadDashboard();
+    // auto-load Actualización de Data on first visit
+    if (page === 'actualizacion' && !dataUpdateLoaded) loadDataUpdateView();
   }
 
   /* ── Toggle submenu ── */
@@ -1642,6 +1674,45 @@
       document.getElementById('gd-loading').style.display = 'flex';
     } finally {
       spinIcon.classList.remove('spin');
+    }
+  }
+
+  /* ── Carga de Excel para dt_dis (reemplazo total), usada desde "Actualización de Data" ──
+     Encabezado esperado: TEAMLEADER  ASESORES  PEROP1AM  PAIS  DESCANSO  HORARIO  EMPRESA */
+  function gdParseWorkbook(workbook) {
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (raw.length === 0) return [];
+
+    const headers = Object.keys(raw[0]);
+    const keyMap = {};
+    headers.forEach(h => { keyMap[recNormalizeHeader(h)] = h; });
+
+    return raw.map(row => {
+      const record = {};
+      GD_COLS.forEach(col => {
+        const actualKey = keyMap[col.toLowerCase()];
+        record[col] = actualKey !== undefined ? String(row[actualKey] ?? '').trim() : '';
+      });
+      return record;
+    }).filter(r => r.PEROP1AM);
+  }
+
+  async function gdDeleteAllCurrent() {
+    const res = await fetch(`${SB_URL}/rest/v1/dt_dis?PEROP1AM=not.is.null`, {
+      method: 'DELETE',
+      headers: SB_HEADERS,
+    });
+    if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+  }
+
+  async function gdFetchLastUpload() {
+    try {
+      const rows = await sbFetch('dt_dis', 'select=uploaded_at&order=uploaded_at.desc&limit=1');
+      return (rows && rows.length > 0) ? rows[0].uploaded_at : null;
+    } catch (err) {
+      console.error('Error obteniendo fecha de carga de dt_dis:', err);
+      return null;
     }
   }
 
@@ -2081,6 +2152,9 @@
     // Hide login screen
     document.getElementById('login-screen').classList.add('hidden');
 
+    // "Actualización de Data" es exclusivo de Supervisores — ni el nav item se muestra a otros cargos
+    document.getElementById('nav-data-update').style.display = isSupervisor() ? 'flex' : 'none';
+
     // Inicio ya está activo por defecto sin pasar por setNav — cargar sus datos ahora
     if (!dashLoaded) loadDashboard();
   }
@@ -2181,40 +2255,6 @@
     if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
   }
 
-  async function opsOnFileSelected(event) {
-    const file = event.target.files[0];
-    event.target.value = '';
-    if (!file || !isSupervisor()) return;
-
-    const status = document.getElementById('ops-upload-status');
-    status.style.color = 'var(--text-light)';
-    status.textContent = 'Leyendo archivo...';
-
-    try {
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
-      const parsed = opsParseWorkbook(wb);
-      if (parsed.length === 0) {
-        status.style.color = 'var(--red)';
-        status.textContent = 'No encontré filas válidas — revisa que los encabezados del Excel coincidan.';
-        return;
-      }
-
-      status.textContent = `Guardando ${parsed.length} filas...`;
-      await opsDeleteAllCurrent();
-      await bulkInsert('dt_ops', parsed);
-
-      await loadOps();
-      status.style.color = 'var(--green)';
-      status.textContent = `✓ Listo — ${parsed.length} filas cargadas`;
-      setTimeout(() => { status.textContent = ''; }, 6000);
-    } catch (err) {
-      console.error('Error procesando Excel de OPs:', err);
-      status.style.color = 'var(--red)';
-      status.textContent = 'Error al procesar el archivo, intenta de nuevo.';
-    }
-  }
-
   const COUNTRY_CODES = {
     'CHILE':'cl','COLOMBIA':'co','ECUADOR':'ec','PERU':'pe','PERÚ':'pe',
     'MEXICO':'mx','MÉXICO':'mx','ARGENTINA':'ar','URUGUAY':'uy','BOLIVIA':'bo',
@@ -2260,9 +2300,6 @@
   }
 
   async function loadOps() {
-    document.getElementById('ops-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
-    document.getElementById('ops-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
-
     const picker = document.getElementById('ops-picker');
     picker.style.opacity = '.4';
     picker.style.pointerEvents = 'none';
@@ -4243,6 +4280,167 @@
         </tbody>
         <tfoot><tr><td style="font-weight:700">Total</td><td style="text-align:right;font-weight:700">${total}</td></tr></tfoot>
       </table>`;
+  }
+
+  /* ══════════════════════════════
+     ACTUALIZACIÓN DE DATA — centro de carga (solo Supervisores)
+     Centraliza los uploads de Excel que antes vivían dentro de cada sección
+     (GoodDay y Approve Stats), más un link de referencia por sección.
+  ══════════════════════════════ */
+  let dataUpdateLoaded = false;
+  let dataLinksMap = {}; // { section_key: { section_key, url, updated_at, updated_by } }
+
+  const DATA_SECTIONS = [
+    {
+      key: 'goodday',
+      label: 'GoodDay — Distribución de Agentes',
+      hint: 'Excel con encabezados: TEAMLEADER, ASESORES, PEROP1AM, PAIS, DESCANSO, HORARIO, EMPRESA',
+      table: 'dt_dis',
+      parseWorkbook: gdParseWorkbook,
+      deleteAll: gdDeleteAllCurrent,
+      fetchLastUpload: gdFetchLastUpload,
+      afterUpload: () => loadGoodDay(),
+    },
+    {
+      key: 'ops',
+      label: 'Approve Stats — Rendimiento por País',
+      hint: 'Excel del reporte BI-04 — debe incluir columnas Operator y Country (el resto se guarda tal cual)',
+      table: 'dt_ops',
+      parseWorkbook: opsParseWorkbook,
+      deleteAll: opsDeleteAllCurrent,
+      fetchLastUpload: opsFetchLastUpload,
+      afterUpload: () => loadOps(),
+    },
+  ];
+
+  async function loadDataUpdateView() {
+    dataUpdateLoaded = true;
+    try {
+      const [linkRows, ...lastUploads] = await Promise.all([
+        sbFetch('dt_data_links', 'select=*'),
+        ...DATA_SECTIONS.map(s => s.fetchLastUpload()),
+      ]);
+      dataLinksMap = {};
+      (linkRows || []).forEach(r => { dataLinksMap[r.section_key] = r; });
+      DATA_SECTIONS.forEach((s, i) => { s._lastUpload = lastUploads[i]; });
+      renderDataUpdateTable();
+    } catch (err) {
+      console.error('Error cargando Actualización de Data:', err);
+      document.getElementById('data-update-tbody').innerHTML =
+        `<tr><td colspan="4" style="text-align:center;color:var(--red);padding:24px">No se pudo cargar esta sección, intenta de nuevo.</td></tr>`;
+    }
+  }
+
+  function dataFmtDate(iso) {
+    if (!iso) return 'Sin datos todavía';
+    const d = new Date(iso);
+    return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderDataUpdateTable() {
+    const tbody = document.getElementById('data-update-tbody');
+    tbody.innerHTML = DATA_SECTIONS.map(s => {
+      const link = dataLinksMap[s.key];
+      const linkCell = (link && link.url)
+        ? `<a href="${link.url}" target="_blank" rel="noopener" style="color:var(--blue);font-weight:600;text-decoration:none">🔗 Abrir enlace</a>
+           <button class="btn btn-ghost btn-sm" onclick="dataLinkEdit('${s.key}')" title="Cambiar link" style="margin-left:6px">✎ Cambiar</button>`
+        : `<button class="btn btn-ghost btn-sm" onclick="dataLinkEdit('${s.key}')">+ Configurar link</button>`;
+
+      return `<tr>
+        <td>
+          <div style="font-weight:600">${s.label}</div>
+          <div style="font-size:10px;color:var(--text-light);margin-top:2px">${s.hint}</div>
+        </td>
+        <td style="color:var(--text-light);white-space:nowrap">${dataFmtDate(s._lastUpload)}</td>
+        <td style="white-space:nowrap">${linkCell}</td>
+        <td style="white-space:nowrap">
+          <span id="data-status-${s.key}" style="font-size:11px;font-weight:600;color:var(--text-light);margin-right:8px"></span>
+          <label class="btn btn-primary btn-sm" for="data-file-${s.key}" style="cursor:pointer;margin:0">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Subir Excel
+          </label>
+          <input type="file" id="data-file-${s.key}" accept=".xlsx,.xls" style="display:none" onchange="dataSectionFileSelected(event,'${s.key}')"/>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* Guarda/reemplaza el link de referencia de una sección — confirma antes de pisar uno existente */
+  async function dataLinkEdit(sectionKey) {
+    if (!isSupervisor()) return;
+    const section = DATA_SECTIONS.find(s => s.key === sectionKey);
+    const current = (dataLinksMap[sectionKey] && dataLinksMap[sectionKey].url) || '';
+
+    const next = prompt(`Pega el link de datos para "${section.label}":`, current);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed) return;
+
+    if (current && current !== trimmed) {
+      const ok = confirm(`Ya hay un link guardado para "${section.label}".\n\nActual: ${current}\nNuevo: ${trimmed}\n\n¿Deseas reemplazarlo por este nuevo link?`);
+      if (!ok) return;
+    }
+
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+      const res = await fetch(`${SB_URL}/rest/v1/dt_data_links?on_conflict=section_key`, {
+        method: 'POST',
+        headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify([{ section_key: sectionKey, url: trimmed, updated_by: user ? user[0] : null, updated_at: new Date().toISOString() }]),
+      });
+      if (!res.ok) throw new Error(`Supabase upsert error ${res.status}`);
+      const rows = await res.json();
+      dataLinksMap[sectionKey] = rows[0];
+      renderDataUpdateTable();
+    } catch (err) {
+      console.error('Error guardando link:', err);
+      alert('No se pudo guardar el link, intenta de nuevo.');
+    }
+  }
+
+  /* Handler genérico de subida: reemplaza toda la tabla de la sección con el Excel pegado */
+  async function dataSectionFileSelected(event, sectionKey) {
+    const file = event.target.files[0];
+    event.target.value = '';
+    if (!file || !isSupervisor()) return;
+
+    const section = DATA_SECTIONS.find(s => s.key === sectionKey);
+    const status = document.getElementById(`data-status-${sectionKey}`);
+    status.style.color = 'var(--text-light)';
+    status.textContent = 'Leyendo archivo...';
+
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      const parsed = section.parseWorkbook(wb);
+      if (parsed.length === 0) {
+        status.style.color = 'var(--red)';
+        status.textContent = 'No encontré filas válidas — revisa que los encabezados del Excel coincidan.';
+        return;
+      }
+
+      status.textContent = `Guardando ${parsed.length} filas...`;
+      await section.deleteAll();
+      await bulkInsert(section.table, parsed);
+      await section.afterUpload();
+      section._lastUpload = await section.fetchLastUpload();
+
+      // renderDataUpdateTable() reconstruye la fila (incluida esta misma etiqueta de status) —
+      // hay que reescribir el mensaje de éxito DESPUÉS de re-renderizar, sobre el elemento nuevo
+      renderDataUpdateTable();
+      const doneStatus = document.getElementById(`data-status-${sectionKey}`);
+      if (doneStatus) {
+        doneStatus.style.color = 'var(--green)';
+        doneStatus.textContent = `✓ Listo — ${parsed.length} filas cargadas`;
+        setTimeout(() => { doneStatus.textContent = ''; }, 6000);
+      }
+    } catch (err) {
+      console.error(`Error subiendo Excel de ${sectionKey}:`, err);
+      status.style.color = 'var(--red)';
+      status.textContent = 'Error al procesar el archivo, intenta de nuevo.';
+    }
   }
 </script>
 </body>
