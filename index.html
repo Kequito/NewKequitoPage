@@ -2907,7 +2907,10 @@
       headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error(`Supabase insert error ${res.status}`);
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`Supabase insert error ${res.status}${detail ? ` — ${detail}` : ''}`);
+    }
     return res.json();
   }
 
@@ -4453,7 +4456,8 @@
     } catch (err) {
       console.error(`Error subiendo Excel de ${sectionKey}:`, err);
       status.style.color = 'var(--red)';
-      status.textContent = 'Error al procesar el archivo, intenta de nuevo.';
+      status.textContent = (err && err.message) ? err.message : 'Error al procesar el archivo, intenta de nuevo.';
+      status.title = status.textContent;
     }
   }
 </script>
