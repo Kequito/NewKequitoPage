@@ -1519,15 +1519,7 @@
       </div>
       <div class="tbl-wrap">
         <table id="tl-table" style="display:none">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Team Leader</th>
-              <th>Unique Orders</th>
-              <th>Approve</th>
-              <th>Approve %</th>
-            </tr>
-          </thead>
+          <thead id="tl-thead"></thead>
           <tbody id="tl-tbody"></tbody>
         </table>
       </div>
@@ -1535,6 +1527,40 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <p>Todavía no hay data de Team Leaders</p>
         <small>Un Supervisor puede subirla desde "Actualización de Data"</small>
+      </div>
+    </div>
+
+    <!-- Baneados (solo Supervisores) — Team Leaders excluidos del ranking/comparador, sin perder su data -->
+    <div class="panel" id="tl-banned-panel" style="display:none;margin-bottom:22px">
+      <div class="panel-head">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9A7.902 7.902 0 0 1 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1A7.902 7.902 0 0 1 20 12c0 4.42-3.58 8-8 8z"/></svg>
+          Team Leaders Baneados <span id="tl-banned-count" style="color:var(--text-light);font-weight:400">(0)</span>
+        </span>
+      </div>
+      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <small>No participan en el ranking ni en el comparador, ni para ti ni para los Team Leaders — pero su data se sigue guardando normal y puedes restaurarlos cuando quieras.</small>
+      </div>
+      <div class="tbl-wrap">
+        <table id="tl-banned-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Team Leader</th>
+              <th>Unique Orders</th>
+              <th>Approve</th>
+              <th>Approve %</th>
+              <th>Baneado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tl-banned-tbody"></tbody>
+        </table>
+      </div>
+      <div class="gd-state" id="tl-banned-empty" style="padding:30px 20px">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <p>No hay Team Leaders baneados</p>
+        <small>Usa el botón "Banear" en la fila de un Team Leader en la tabla de arriba</small>
       </div>
     </div>
 
@@ -4443,12 +4469,83 @@
   }
 
   let tlLoaded = false;
-  let tlCurrentRows  = [];   // [{teamLeader, uniqueOrders, approve, approvePct, deltaPct}], orden desc por approvePct
+  let tlCurrentRows  = [];   // [{teamLeader, uniqueOrders, approve, approvePct, deltaPct}], orden desc por approvePct — SIN filtrar por baneados
   let tlPrevSnapshot = null; // último snapshot guardado — deltas siempre se calculan contra este, se guarde o no ahora
   let tlHistory      = [];
   let tlDateFilter   = 'all'; // el reporte es mensual, "hoy" casi siempre saldría vacío
   let tlChartSeries  = new Set(); // nombres de Team Leader seleccionados para el comparador
   let tlChartInstance = null;
+  let tlBannedRows   = []; // [{team_leader, banned_by, banned_at}] — tal cual viene de dt_tl_banned
+  let tlBannedSet    = new Set(); // solo los nombres, para filtrar rápido tabla/comparador
+
+  async function tlFetchBanned() {
+    try {
+      return await sbFetch('dt_tl_banned', 'select=*&order=banned_at.desc');
+    } catch (err) {
+      console.error('Error cargando Team Leaders baneados:', err);
+      return [];
+    }
+  }
+
+  /* Ocultar del ranking y del comparador no borra nada — dt_tl_stats/dt_tl_history
+     siguen recibiendo y guardando su data con normalidad, esto es puramente de visibilidad. */
+  async function tlBanTeamLeader(name) {
+    if (!isSupervisor()) return;
+    if (!confirm(`¿Ocultar a "${name}" del ranking y del comparador?\n\nSu data se sigue guardando con normalidad — puedes restaurarlo cuando quieras desde la lista de Baneados.`)) return;
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+      await sbInsert('dt_tl_banned', [{ team_leader: name, banned_by: user ? user[0] : null }]);
+      await loadTlStats();
+    } catch (err) {
+      console.error('Error baneando Team Leader:', err);
+      alert('No se pudo excluir al Team Leader, intenta de nuevo.');
+    }
+  }
+
+  async function tlUnbanTeamLeader(name) {
+    if (!isSupervisor()) return;
+    try {
+      const res = await fetch(`${SB_URL}/rest/v1/dt_tl_banned?team_leader=eq.${encodeURIComponent(name)}`, {
+        method: 'DELETE',
+        headers: SB_HEADERS,
+      });
+      if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+      await loadTlStats();
+    } catch (err) {
+      console.error('Error restaurando Team Leader:', err);
+      alert('No se pudo restaurar al Team Leader, intenta de nuevo.');
+    }
+  }
+
+  function renderTlBannedPanel() {
+    document.getElementById('tl-banned-count').textContent = `(${tlBannedRows.length})`;
+    const table = document.getElementById('tl-banned-table');
+    const empty = document.getElementById('tl-banned-empty');
+    const tbody = document.getElementById('tl-banned-tbody');
+
+    if (tlBannedRows.length === 0) {
+      table.style.display = 'none';
+      empty.style.display = 'flex';
+      return;
+    }
+    empty.style.display = 'none';
+    table.style.display = 'table';
+
+    tbody.innerHTML = tlBannedRows.map(b => {
+      const stats = tlCurrentRows.find(r => r.teamLeader === b.team_leader);
+      const safeName = b.team_leader.replace(/'/g, "\\'");
+      const d = new Date(b.banned_at);
+      return `<tr>
+        <td>${recTlBadge(b.team_leader)}</td>
+        <td>${stats ? stats.uniqueOrders.toLocaleString('es-PE') : '—'}</td>
+        <td>${stats ? stats.approve.toLocaleString('es-PE') : '—'}</td>
+        <td>${stats ? stats.approvePct.toFixed(2) + '%' : '—'}</td>
+        <td style="color:var(--text-light);white-space:nowrap">${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${b.banned_by || '—'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="tlUnbanTeamLeader('${safeName}')">↩ Restaurar</button></td>
+      </tr>`;
+    }).join('');
+  }
 
   function tlComputeRanking(rawRows) {
     const rows = (rawRows || []).map(r => {
@@ -4474,16 +4571,23 @@
 
   async function loadTlStats() {
     tlLoaded = true;
-    document.getElementById('tl-save-wrap').style.display = isSupervisor() ? 'flex' : 'none';
+    const sup = isSupervisor();
+    document.getElementById('tl-save-wrap').style.display = sup ? 'flex' : 'none';
+    document.getElementById('tl-banned-panel').style.display = sup ? 'block' : 'none';
 
     try {
-      const [rawRows, lastUpload, prevSnap] = await Promise.all([
+      // tlFetchBanned() se pide siempre (no solo a Supervisores) — hace falta para FILTRAR la tabla/comparador
+      // en cualquier sesión; lo que sí queda exclusivo a Supervisor es el panel que lista y restaura baneados.
+      const [rawRows, lastUpload, prevSnap, bannedRows] = await Promise.all([
         sbFetch('dt_tl_stats', 'select=*'),
         tlFetchLastUpload(),
         tlFetchPrevSnapshot(),
+        tlFetchBanned(),
       ]);
       tlPrevSnapshot = prevSnap;
       tlCurrentRows = tlComputeRanking(rawRows);
+      tlBannedRows = bannedRows;
+      tlBannedSet = new Set(bannedRows.map(r => r.team_leader));
 
       // Deltas vs. el último snapshot guardado — independiente de si se guarda "ahora" o no
       const prevRows = prevSnap ? (prevSnap.rows || []) : [];
@@ -4501,6 +4605,7 @@
       }
 
       renderTlTable();
+      if (sup) renderTlBannedPanel();
     } catch (err) {
       console.error('Error cargando Top Team Leader:', err);
     }
@@ -4522,8 +4627,18 @@
   function renderTlTable() {
     const table = document.getElementById('tl-table');
     const empty = document.getElementById('tl-empty');
+    const thead = document.getElementById('tl-thead');
     const tbody = document.getElementById('tl-tbody');
-    const total = tlCurrentRows.length;
+    const sup = isSupervisor();
+
+    // Los baneados no existen para esta tabla — ni para Team Leaders ni para Supervisores.
+    // Su data sigue intacta en tlCurrentRows/dt_tl_stats, esto es puramente de visibilidad.
+    const visibleRows = tlCurrentRows.filter(r => !tlBannedSet.has(r.teamLeader));
+    const total = visibleRows.length;
+
+    thead.innerHTML = `<tr>
+      <th>#</th><th>Team Leader</th><th>Unique Orders</th><th>Approve</th><th>Approve %</th>${sup ? '<th>Acción</th>' : ''}
+    </tr>`;
 
     if (total === 0) {
       table.style.display = 'none';
@@ -4533,14 +4648,16 @@
     empty.style.display = 'none';
     table.style.display = 'table';
 
-    tbody.innerHTML = tlCurrentRows.map((r, i) => {
+    tbody.innerHTML = visibleRows.map((r, i) => {
       const cls = tlRankClass(i, total);
+      const safeName = r.teamLeader.replace(/'/g, "\\'");
       return `<tr>
         <td style="font-weight:700;color:var(--text-light)">${i + 1}</td>
         <td>${recTlBadge(r.teamLeader)}</td>
         <td>${r.uniqueOrders.toLocaleString('es-PE')}</td>
         <td>${r.approve.toLocaleString('es-PE')}</td>
         <td style="white-space:nowrap"><span class="rep-approve-badge ${cls}">${r.approvePct.toFixed(2)}%</span> ${repDeltaHTML(r.deltaPct)}</td>
+        ${sup ? `<td><button class="btn btn-ghost btn-sm" onclick="tlBanTeamLeader('${safeName}')" title="Excluir del ranking y del comparador">🚫 Banear</button></td>` : ''}
       </tr>`;
     }).join('');
   }
@@ -4630,9 +4747,9 @@
     tlHistory = await tlFetchSnapshotsForRange(tlDateFilter);
     document.getElementById('tl-snap-count').textContent = `${tlHistory.length} snapshot${tlHistory.length !== 1 ? 's' : ''} en este rango`;
 
-    // Si todavía no hay nada seleccionado, arranca mostrando el top 3 actual para que no salga vacío
+    // Si todavía no hay nada seleccionado, arranca mostrando el top 3 actual (sin baneados) para que no salga vacío
     if (tlChartSeries.size === 0 && tlCurrentRows.length > 0) {
-      tlCurrentRows.slice(0, 3).forEach(r => tlChartSeries.add(r.teamLeader));
+      tlCurrentRows.filter(r => !tlBannedSet.has(r.teamLeader)).slice(0, 3).forEach(r => tlChartSeries.add(r.teamLeader));
     }
 
     renderTlChips();
@@ -4640,11 +4757,14 @@
   }
 
   function renderTlChips() {
+    // Un baneado no debe quedar seleccionado en el comparador aunque lo haya estado antes de banearlo
+    tlBannedSet.forEach(name => tlChartSeries.delete(name));
+
     const wrap = document.getElementById('tl-chart-toggles');
     const allNames = [...new Set([
       ...tlCurrentRows.map(r => r.teamLeader),
       ...tlHistory.flatMap(h => (h.rows || []).map(r => r.teamLeader)),
-    ])].sort();
+    ])].filter(name => !tlBannedSet.has(name)).sort();
 
     if (allNames.length === 0) {
       wrap.innerHTML = '';
