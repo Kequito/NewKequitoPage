@@ -3189,15 +3189,17 @@
         .filter(o => otDisIndex[o.operator])
         .map(o => {
           const dis = otDisIndex[o.operator];
-          const prev = prevMap[o.operator];
+          // Sin snapshot previo (primera carga del día, u operador nuevo en el reparto) = se compara contra 0,
+          // así se ve de cuánto a cuánto va cada uno en vez de dejar el delta en blanco.
+          const prev = prevMap[o.operator] || { uniqueOrders: 0, approve: 0, reject: 0, trash: 0 };
           return {
             ...o,
             teamLeader: dis.teamLeader, asesor: dis.asesor, horario: dis.horario,
             approvePct: o.uniqueOrders > 0 ? (o.approve / o.uniqueOrders) * 100 : 0,
-            deltaUniqueOrders: prev ? o.uniqueOrders - prev.uniqueOrders : null,
-            deltaApprove: prev ? o.approve - prev.approve : null,
-            deltaReject: prev ? o.reject - prev.reject : null,
-            deltaTrash: prev ? o.trash - prev.trash : null,
+            deltaUniqueOrders: o.uniqueOrders - prev.uniqueOrders,
+            deltaApprove: o.approve - prev.approve,
+            deltaReject: o.reject - prev.reject,
+            deltaTrash: o.trash - prev.trash,
           };
         });
       otCurrentByOperator.sort((a, b) => b.approve - a.approve);
@@ -5639,6 +5641,7 @@
 
     const labels = tlHistory.map(h => tlFmtTimestamp(h.created_at));
 
+    // Barras agrupadas en vez de líneas — más fácil de leer de un vistazo para los Team Leaders
     const datasets = [...tlChartSeries].sort().map(name => {
       const color = (recColorForName(name) || {}).color || '#9ca8b5';
       const values = tlHistory.map(h => {
@@ -5646,9 +5649,8 @@
         return (found && found.approvePct !== undefined && found.approvePct !== null) ? Number(found.approvePct.toFixed(1)) : null;
       });
       return {
-        type: 'line', label: name, data: values,
-        borderColor: color, backgroundColor: color,
-        spanGaps: true, tension: .3, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2,
+        type: 'bar', label: name, data: values,
+        backgroundColor: color, borderRadius: 4, borderSkipped: false,
       };
     });
 
@@ -5658,7 +5660,7 @@
 
     if (tlChartInstance) tlChartInstance.destroy();
     tlChartInstance = new Chart(canvas, {
-      type: 'line',
+      type: 'bar',
       data: { labels, datasets },
       options: {
         responsive: true, maintainAspectRatio: false,
