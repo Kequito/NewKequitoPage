@@ -3069,9 +3069,25 @@
     }
   }
 
+  /* Medianoche GMT-5 de "hoy", como instante UTC real — fijo, sin importar la zona
+     horaria del navegador de quien esté viendo la página. */
+  function otTodayResetBoundaryUTC() {
+    const GMT_OFFSET_HOURS = -5;
+    const now = new Date();
+    const shifted = new Date(now.getTime() + GMT_OFFSET_HOURS * 3600000);
+    const y = shifted.getUTCFullYear(), m = shifted.getUTCMonth(), d = shifted.getUTCDate();
+    return new Date(Date.UTC(y, m, d, 0, 0, 0) - GMT_OFFSET_HOURS * 3600000);
+  }
+
+  /* Solo cuenta como "snapshot anterior" si es de HOY (GMT-5) — así cada día arranca
+     en blanco para efectos de comparación, sin borrar nada del historial real. */
   async function otFetchLastSnapshot() {
     try {
-      const rows = await sbFetch('dt_ops_today_history', 'select=created_at,rows&order=created_at.desc&limit=1');
+      const boundary = otTodayResetBoundaryUTC().toISOString();
+      const rows = await sbFetch(
+        'dt_ops_today_history',
+        `select=created_at,rows&created_at=gte.${encodeURIComponent(boundary)}&order=created_at.desc&limit=1`
+      );
       return (rows && rows.length > 0) ? rows[0] : null;
     } catch (err) {
       console.error('Error obteniendo snapshot anterior de Stats OPs Today:', err);
