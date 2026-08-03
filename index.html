@@ -834,7 +834,7 @@
 
   <div class="nav-item" id="nav-reportes" onclick="setNav(this, 'reportes')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    Reportes
+    Reporte
   </div>
   <div class="nav-item" onclick="setNav(this, 'recalls')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
@@ -1942,7 +1942,7 @@
     'goodday':       ['GoodDay — Distribución', 'Datos en vivo desde Supabase'],
     'ops':           ['Approve Stats', 'Rendimiento de operadores por país'],
     'opstoday':      ['Stats OPs Today', 'Avance de operadores a lo largo de la jornada'],
-    'reportes':      ['Reportes', 'Generación y consulta de reportes'],
+    'reportes':      ['Reporte', 'Generación y consulta de reportes'],
     'recalls':       ['Gestión de Recalls', 'Seguimiento de reasignación de órdenes'],
     'tl':            ['Top Team Leader', 'Ranking y evolución de % Approve por Team Leader'],
     'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
@@ -5666,7 +5666,16 @@
         responsive: true, maintainAspectRatio: false,
         plugins: {
           legend: { display: true, labels: { ...chartDefaults.font, boxWidth: 12 } },
-          datalabels: { display: false },
+          datalabels: {
+            display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null && ctx.dataset.data[ctx.dataIndex] !== undefined,
+            formatter: (value) => `${value}%`,
+            color: '#fff',
+            textStrokeColor: 'rgba(0,0,0,.55)',
+            textStrokeWidth: 3,
+            font: { family: "'Lexend', sans-serif", weight: '700', size: 11 },
+            anchor: 'center',
+            align: 'center',
+          },
         },
         scales: {
           x: { grid: { display: false }, ticks: { ...chartDefaults.font } },
@@ -5878,9 +5887,9 @@
   }
 
   const ACCT_PERMISSIONS = [
-    { label: 'Ver todas las secciones (Inicio, GoodDay, Approve Stats, Reportes, Recalls, Top Team Leader)', op: true,  tl: true,  sup: true },
+    { label: 'Ver todas las secciones (Inicio, GoodDay, Approve Stats, Reporte, Recalls, Top Team Leader)', op: true,  tl: true,  sup: true },
     { label: 'Subir Excel / actualizar data (Actualización de Data)', op: false, tl: false, sup: true },
-    { label: 'Guardar snapshot en Reportes', op: false, tl: false, sup: true },
+    { label: 'Guardar snapshot en Reporte', op: false, tl: false, sup: true },
     { label: 'Subir Excel y acciones masivas en Recalls', op: false, tl: false, sup: true },
     { label: 'Guardar avance / Banear-Restaurar en Top Team Leader', op: false, tl: false, sup: true },
     { label: 'Gestión de Cuentas (esta sección)', op: false, tl: false, sup: true },
