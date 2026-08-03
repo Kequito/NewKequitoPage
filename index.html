@@ -1231,7 +1231,7 @@
           <div id="ot-top-ops-progress" style="display:none;height:3px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:14px">
             <div id="ot-top-ops-progress-fill" style="height:100%;width:0%;background:var(--nav-accent);border-radius:99px"></div>
           </div>
-          <div id="ot-top-ops-slide"><div class="gd-state" style="padding:30px"><p>Cargando…</p></div></div>
+          <div id="ot-top-ops-slide" style="min-height:300px"><div class="gd-state" style="padding:30px"><p>Cargando…</p></div></div>
           <div id="ot-top-ops-dots" style="display:flex;gap:6px;justify-content:center;margin-top:14px"></div>
         </div>
       </div>
@@ -1247,7 +1247,7 @@
         <div class="panel-head"><span class="panel-title" style="font-size:12px">📉 Más Rejects desde la última actualización</span></div>
         <div class="panel-body" id="ot-hl-reject"><div class="gd-state" style="padding:16px"><p>Cargando…</p></div></div>
       </div>
-      <div class="panel" style="border-top:3px solid #f87171">
+      <div class="panel" style="border-top:3px solid var(--amber)">
         <div class="panel-head"><span class="panel-title" style="font-size:12px">🗑 Más Trash desde la última actualización</span></div>
         <div class="panel-body" id="ot-hl-trash"><div class="gd-state" style="padding:16px"><p>Cargando…</p></div></div>
       </div>
@@ -1277,10 +1277,10 @@
               <th></th>
               <th>Team Leader</th>
               <th>Operador</th>
+              <th>País</th>
               <th>Horario</th>
               <th>Órdenes Únicas</th>
               <th>Ventas (Approve)</th>
-              <th>Approve %</th>
               <th>Reject</th>
               <th>Trash</th>
             </tr>
@@ -3213,7 +3213,7 @@
         <thead><tr><th></th><th>Operador</th><th>Team Leader</th><th style="text-align:right">Ventas</th></tr></thead>
         <tbody>${top5.map((o, i) => `<tr>
           <td style="font-weight:700;color:var(--text-light)">${i + 1}</td>
-          <td style="font-weight:600">${o.asesor}<div style="font-size:10px;color:var(--text-light);font-weight:400">${o.operator}</div></td>
+          <td style="font-weight:600"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px" title="${o.asesor}">${o.asesor}</div><div style="font-size:10px;color:var(--text-light);font-weight:400">${o.operator}</div></td>
           <td>${recTlBadge(o.teamLeader)}</td>
           <td style="text-align:right;font-weight:800;color:var(--green)">${o.approve.toLocaleString('es-PE')}</td>
         </tr>`).join('')}</tbody>
@@ -3248,7 +3248,7 @@
     const color = REP_COUNTRY_COLORS[slide.country] || REP_FALLBACK_COLORS[otTopOpsIndex % REP_FALLBACK_COLORS.length];
     const rowsHtml = slide.rows.map((r, i) => `<tr>
       <td style="font-weight:700;color:var(--text-light)">${i + 1}</td>
-      <td style="font-weight:600">${r.asesor}<div style="font-size:10px;color:var(--text-light);font-weight:400">${r.operator}</div></td>
+      <td style="font-weight:600"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px" title="${r.asesor}">${r.asesor}</div><div style="font-size:10px;color:var(--text-light);font-weight:400">${r.operator}</div></td>
       <td>${recTlBadge(r.teamLeader)}</td>
       <td style="text-align:right;font-weight:800;color:var(--green)">${r.approve}</td>
     </tr>`).join('');
@@ -3339,6 +3339,11 @@
     return `<span style="font-size:10px;font-weight:700;color:${up ? '#4ade80' : '#f87171'}">${up ? '▲' : '▼'}${up ? '+' : ''}${delta}</span>`;
   }
 
+  /* Bandera(s) + país(es) que maneja el operador — una si solo trabaja una campaña, todas si trabaja varias */
+  function otCountryCellHTML(o) {
+    return o.byCountry.map(c => `${countryFlag(c.country)}${c.country}`).join(', ');
+  }
+
   function otToggleExpand(operator) {
     if (otExpandedOperators.has(operator)) otExpandedOperators.delete(operator);
     else otExpandedOperators.add(operator);
@@ -3369,16 +3374,15 @@
       const toggleCell = multi
         ? `<button class="btn btn-ghost btn-sm" onclick="otToggleExpand('${safeOp}')" style="padding:2px 8px">${expanded ? '▾' : '▸'}</button>`
         : '';
-      const ac = repApproveClass(o.approvePct);
 
       const mainRow = `<tr>
         <td>${toggleCell}</td>
         <td>${recTlBadge(o.teamLeader)}</td>
         <td>${o.asesor}<div style="font-size:10px;color:var(--text-light)">${o.operator}</div></td>
+        <td style="white-space:nowrap">${otCountryCellHTML(o)}</td>
         <td>${gdScheduleBadge(o.horario)}</td>
         <td style="white-space:nowrap">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders)}</td>
         <td style="white-space:nowrap;font-weight:700">${o.approve} ${otDeltaHTML(o.deltaApprove)}</td>
-        <td class="${ac}" style="font-weight:700">${o.approvePct.toFixed(1)}%</td>
         <td style="white-space:nowrap">${o.reject} ${otDeltaHTML(o.deltaReject)}</td>
         <td style="white-space:nowrap">${o.trash} ${otDeltaHTML(o.deltaTrash)}</td>
       </tr>`;
@@ -3386,14 +3390,14 @@
       if (!multi || !expanded) return mainRow;
 
       const subRows = o.byCountry.map(c => {
-        const cPct = c.uniqueOrders > 0 ? (c.approve / c.uniqueOrders) * 100 : 0;
         return `<tr style="background:rgba(255,255,255,.02)">
           <td></td>
           <td></td>
-          <td colspan="2" style="padding-left:28px;color:var(--text-light);font-size:12px">${countryFlag(c.country)}${c.country}</td>
+          <td></td>
+          <td style="color:var(--text-light);font-size:12px;white-space:nowrap">${countryFlag(c.country)}${c.country}</td>
+          <td></td>
           <td>${c.uniqueOrders}</td>
           <td style="font-weight:700">${c.approve}</td>
-          <td class="${repApproveClass(cPct)}">${cPct.toFixed(1)}%</td>
           <td>${c.reject}</td>
           <td>${c.trash}</td>
         </tr>`;
@@ -3410,12 +3414,15 @@
   let otHistorySnapshots  = [];
   let otHistoryChartInstance = null;
 
+  /* La lista sale de TODO GoodDay, no solo de quien tiene stats hoy — si el OP faltó o
+     descansó y no tiene data, su evolución simplemente se ve en blanco al seleccionarlo. */
   function otPopulateHistoryOperatorSelect() {
     const sel = document.getElementById('ot-hist-operator');
     const prev = sel.value;
-    const sorted = [...otCurrentByOperator].sort((a, b) => a.asesor.localeCompare(b.asesor));
+    const all = Object.keys(otDisIndex).map(perop => ({ operator: perop, asesor: otDisIndex[perop].asesor }));
+    all.sort((a, b) => a.asesor.localeCompare(b.asesor));
     sel.innerHTML = '<option value="">Selecciona un operador…</option>' +
-      sorted.map(o => `<option value="${o.operator}">${o.asesor} (${o.operator})</option>`).join('');
+      all.map(o => `<option value="${o.operator}">${o.asesor} (${o.operator})</option>`).join('');
     if (prev) sel.value = prev;
   }
 
@@ -3485,7 +3492,9 @@
     const operator = otHistoryOperator;
     const currentRow = operator ? otCurrentByOperator.find(o => o.operator === operator) : null;
 
-    if (!operator || (otHistorySnapshots.length === 0 && !currentRow)) {
+    // Solo se pide elegir un operador — si ya eligió uno pero no tiene data (faltó, descansó),
+    // el gráfico se muestra igual, simplemente en blanco (sin barras).
+    if (!operator) {
       emptyEl.style.display = 'flex';
       wrapEl.style.display = 'none';
       return;
