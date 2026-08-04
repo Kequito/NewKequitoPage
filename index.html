@@ -169,9 +169,11 @@
     .main {
       margin-left: var(--nav-width);
       flex: 1;
+      min-width: 0; /* deja que .main se achique con el viewport en vez de forzar scroll horizontal de toda la página */
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      max-width: 100%;
     }
 
     /* ─── Topbar ─── */
@@ -187,21 +189,6 @@
     .topbar-left h1 { font-size: 19px; font-weight: 700; color: var(--text-dark); }
 
     .topbar-right { display: flex; align-items: center; gap: 16px; }
-    .topbar-search {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--main-bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 7px 12px;
-      font-family: inherit; font-size: 12px; color: var(--text-mid);
-      width: 200px;
-    }
-    .topbar-search input {
-      border: none; background: transparent;
-      font-family: inherit; font-size: 12px; color: var(--text-dark);
-      outline: none; width: 100%;
-    }
-    .topbar-search svg { width: 14px; height: 14px; color: var(--text-light); flex-shrink: 0; }
 
     .icon-btn {
       width: 38px; height: 38px;
@@ -221,12 +208,12 @@
     }
 
     /* ─── Content ─── */
-    .content { padding: 30px 34px; flex: 1; }
+    .content { padding: 30px 34px; flex: 1; min-width: 0; }
 
     /* ─── KPI Cards ─── */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 18px;
       margin-bottom: 24px;
     }
@@ -258,9 +245,9 @@
     .kpi-sub { font-size: 11.5px; color: var(--text-light); }
 
     /* ─── Two-col layout ─── */
-    .row { display: grid; gap: 18px; margin-bottom: 24px; }
-    .row-2 { grid-template-columns: 2fr 1fr; }
-    .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .row { display: grid; gap: 18px; margin-bottom: 24px; min-width: 0; }
+    .row-2 { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+    .row-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
 
     /* ─── Panel / Card ─── */
     .panel {
@@ -699,15 +686,15 @@
 
     /* ─── Responsive ─── */
     @media (max-width: 1100px) {
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .row-2 { grid-template-columns: 1fr; }
-      .row-3 { grid-template-columns: 1fr 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .row-2 { grid-template-columns: minmax(0,1fr); }
+      .row-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
     }
     @media (max-width: 720px) {
       :root { --nav-width: 0px; }
       .sidebar { display: none; }
-      .kpi-grid { grid-template-columns: 1fr 1fr; }
-      .row-3 { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .row-3 { grid-template-columns: minmax(0,1fr); }
     }
   </style>
 </head>
@@ -953,7 +940,7 @@
       </div>
     </div>
 
-    <div class="row" style="grid-template-columns:1fr 1fr">
+    <div class="row" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
       <!-- Widget 3a: Conteo de OPs -->
       <div class="panel">
         <div class="panel-head">
@@ -1233,14 +1220,14 @@
           <div id="ot-top-ops-progress" style="display:none;height:3px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:14px">
             <div id="ot-top-ops-progress-fill" style="height:100%;width:0%;background:var(--nav-accent);border-radius:99px"></div>
           </div>
-          <div id="ot-top-ops-slide" style="min-height:300px"><div class="gd-state" style="padding:30px"><p>Cargando…</p></div></div>
+          <div id="ot-top-ops-slide" style="height:380px;overflow:hidden"><div class="gd-state" style="padding:30px"><p>Cargando…</p></div></div>
           <div id="ot-top-ops-dots" style="display:flex;gap:6px;justify-content:center;margin-top:14px"></div>
         </div>
       </div>
     </div>
 
     <!-- 4 cajas: mayor cambio desde la última actualización -->
-    <div class="row" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+    <div class="row" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:22px">
       <div class="panel" style="border-top:3px solid #4ade80">
         <div class="panel-head"><span class="panel-title" style="font-size:12px">📈 Más ventas desde la última actualización</span></div>
         <div class="panel-body" id="ot-hl-approve"><div class="gd-state" style="padding:16px"><p>Cargando…</p></div></div>
@@ -1380,7 +1367,7 @@
     </div>
 
     <!-- Summary KPIs -->
-    <div class="kpi-grid" id="rep-kpis" style="display:none;grid-template-columns:repeat(3,1fr);margin-bottom:22px"></div>
+    <div class="kpi-grid" id="rep-kpis" style="display:none;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:22px"></div>
 
     <!-- Country table -->
     <div class="panel" id="rep-table-panel" style="display:none;margin-bottom:22px">
@@ -1817,7 +1804,7 @@
           <button class="btn btn-ghost btn-sm" onclick="acctCloseForm()">✕ Cerrar</button>
         </div>
         <div class="panel-body">
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
             <div>
               <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:4px">Nombre completo</label>
               <input type="text" id="acct-f-nombre" style="width:100%;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:13px;padding:8px 12px;outline:none"/>
@@ -3238,7 +3225,7 @@
           <td style="font-weight:700;color:var(--text-light)">${i + 1}</td>
           <td style="font-weight:600"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px" title="${o.asesor}">${o.asesor}</div><div style="font-size:10px;color:var(--text-light);font-weight:400">${o.operator}</div></td>
           <td>${recTlBadge(o.teamLeader)}</td>
-          <td style="text-align:right;font-weight:800;color:var(--green)">${o.approve.toLocaleString('es-PE')}</td>
+          <td style="text-align:right;font-weight:800;font-size:19px;color:var(--green)">${o.approve.toLocaleString('es-PE')}</td>
         </tr>`).join('')}</tbody>
       </table>`;
   }
@@ -3273,7 +3260,7 @@
       <td style="font-weight:700;color:var(--text-light)">${i + 1}</td>
       <td style="font-weight:600"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px" title="${r.asesor}">${r.asesor}</div><div style="font-size:10px;color:var(--text-light);font-weight:400">${r.operator}</div></td>
       <td>${recTlBadge(r.teamLeader)}</td>
-      <td style="text-align:right;font-weight:800;color:var(--green)">${r.approve}</td>
+      <td style="text-align:right;font-weight:800;font-size:19px;color:var(--green)">${r.approve}</td>
     </tr>`).join('');
     wrap.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -3347,9 +3334,9 @@
         return;
       }
       el.innerHTML = leaders.map(o => `
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0">
-          <span style="font-size:12px;font-weight:600">${o.asesor}<span style="color:var(--text-light);font-weight:400;font-size:10px"> · ${o.operator}</span></span>
-          <span style="font-weight:800;white-space:nowrap">+${max}</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0">
+          <span style="font-size:13px;font-weight:600">${o.asesor}<span style="color:var(--text-light);font-weight:400;font-size:10.5px"> · ${o.operator}</span></span>
+          <span style="font-weight:800;font-size:24px;white-space:nowrap">+${max}</span>
         </div>`).join('');
     });
   }
@@ -3357,9 +3344,9 @@
   /* ── Parte 2: tabla de detalle, con sub-filas desplegables por campaña ── */
   function otDeltaHTML(delta) {
     if (delta === null || delta === undefined) return '';
-    if (delta === 0) return `<span style="font-size:10px;color:var(--text-light)">→ 0</span>`;
+    if (delta === 0) return `<span style="font-size:11px;color:var(--text-light)">→ 0</span>`;
     const up = delta > 0;
-    return `<span style="font-size:10px;font-weight:700;color:${up ? '#4ade80' : '#f87171'}">${up ? '▲' : '▼'}${up ? '+' : ''}${delta}</span>`;
+    return `<span style="font-size:12px;font-weight:700;color:${up ? '#4ade80' : '#f87171'}">${up ? '▲' : '▼'}${up ? '+' : ''}${delta}</span>`;
   }
 
   /* Bandera(s) + país(es) que maneja el operador — una si solo trabaja una campaña, todas si trabaja varias */
@@ -3404,10 +3391,10 @@
         <td>${o.asesor}<div style="font-size:10px;color:var(--text-light)">${o.operator}</div></td>
         <td style="white-space:nowrap">${otCountryCellHTML(o)}</td>
         <td>${gdScheduleBadge(o.horario)}</td>
-        <td style="white-space:nowrap">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders)}</td>
-        <td style="white-space:nowrap;font-weight:700">${o.approve} ${otDeltaHTML(o.deltaApprove)}</td>
-        <td style="white-space:nowrap">${o.reject} ${otDeltaHTML(o.deltaReject)}</td>
-        <td style="white-space:nowrap">${o.trash} ${otDeltaHTML(o.deltaTrash)}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders)}</td>
+        <td style="white-space:nowrap;font-size:17px;font-weight:800;color:var(--green)">${o.approve} ${otDeltaHTML(o.deltaApprove)}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700">${o.reject} ${otDeltaHTML(o.deltaReject)}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700">${o.trash} ${otDeltaHTML(o.deltaTrash)}</td>
       </tr>`;
 
       if (!multi || !expanded) return mainRow;
@@ -3552,7 +3539,19 @@
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, datalabels: { display: false } },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            display: (ctx) => ctx.dataset.data[ctx.dataIndex] !== null && ctx.dataset.data[ctx.dataIndex] !== undefined,
+            formatter: (value) => value,
+            color: '#fff',
+            textStrokeColor: 'rgba(0,0,0,.55)',
+            textStrokeWidth: 3,
+            font: { family: "'Lexend', sans-serif", weight: '700', size: 15 },
+            anchor: 'center',
+            align: 'center',
+          },
+        },
         scales: {
           x: { grid: { display: false }, ticks: { ...chartDefaults.font, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
           y: { grid: { color: CHART_GRID }, ticks: { ...chartDefaults.font }, beginAtZero: true },
