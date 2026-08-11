@@ -1609,8 +1609,8 @@
       <div class="gd-tbl-wrap" id="rec-alert-table-wrap">
         <table id="rec-alert-table" style="display:none">
           <thead><tr>
-            <th>Id in CC</th><th>Country</th><th>Operador: Antes → Ahora</th>
-            <th>Team Leader: Antes → Ahora</th><th>Asesor: Antes → Ahora</th>
+            <th>Id in CC</th><th>Country</th><th>Operador: Antes / Ahora</th>
+            <th>Team Leader: Antes / Ahora</th>
             <th>Detectado</th><th>Acción</th>
             <th style="width:40px;padding:12px 4px;text-align:center">Change</th><th style="width:40px;padding:12px 4px;text-align:center">View</th>
           </tr></thead>
@@ -4532,8 +4532,9 @@
     return `<span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;background:${c.bg};color:${c.color}">${v}</span>`;
   }
 
+  /* Antes arriba, ahora abajo (apilado vertical) */
   function recTlArrowHTML(oldVal, newVal) {
-    return `${recTlBadge(oldVal)} <span style="color:#f87171">→</span> ${recTlBadge(newVal)}`;
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">${recTlBadge(oldVal)}${recTlBadge(newVal)}</div>`;
   }
 
   /* Columnas rápidas hacia el panel externo (2wcall) usando el Id in CC */
@@ -4833,10 +4834,14 @@
     renderRecAlertTable();
   }
 
+  /* Antes arriba (atenuado), ahora abajo (resaltado) — apilado vertical */
   function recArrowHTML(oldVal, newVal) {
     const o = oldVal || '—';
     const n = newVal || '—';
-    return `<span style="color:var(--text-light)">${o}</span> <span style="color:#f87171">→</span> <span style="font-weight:700">${n}</span>`;
+    return `<div style="display:flex;flex-direction:column;gap:2px;line-height:1.3">
+      <span style="color:var(--text-light)">${o}</span>
+      <span style="font-weight:700;color:#fca5a5">${n}</span>
+    </div>`;
   }
 
   function renderRecAlertTable() {
@@ -4858,7 +4863,6 @@
         <td>${countryFlag(a.country)}${a.country || '—'}</td>
         <td style="white-space:nowrap">${recArrowHTML(a.old_operator, a.new_operator)}</td>
         <td style="white-space:nowrap">${recTlArrowHTML(a.old_team_leader, a.new_team_leader)}</td>
-        <td style="white-space:nowrap">${recArrowHTML(a.old_asesor, a.new_asesor)}</td>
         <td style="color:var(--text-light);white-space:nowrap">${repTimeAgo(a.detected_at)}</td>
         <td>${a.reviewed
           ? `<span class="badge badge-green">✓ Revisado</span>`
