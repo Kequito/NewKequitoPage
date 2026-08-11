@@ -251,7 +251,24 @@
 
     /* Recalls: tabla de órdenes (izq) + tabla de reasignaciones (der), lado a lado */
     .rec-split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 22px; align-items: start; margin-bottom: 22px; }
+    /* Al expandir una tabla, la otra se oculta y la elegida ocupa todo el ancho */
+    .rec-split.rec-mode-left, .rec-split.rec-mode-right { grid-template-columns: minmax(0,1fr); }
+    .rec-split.rec-mode-left  .rec-panel-right { display: none; }
+    .rec-split.rec-mode-right .rec-panel-left  { display: none; }
+    /* En modo dividido se ocultan las columnas secundarias para que quepan;
+       al expandir una tabla vuelven a aparecer completas */
+    .rec-mode-split .rc-col-cccomment,
+    .rec-mode-split .rc-col-asesor,
+    .rec-mode-split .rc-col-detected { display: none; }
     @media (max-width: 1400px) { .rec-split { grid-template-columns: minmax(0,1fr); } }
+    .rec-expand-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: var(--radius-sm);
+      background: var(--main-bg); border: 1px solid var(--border);
+      color: var(--text-mid); cursor: pointer; transition: all .18s; flex-shrink: 0;
+    }
+    .rec-expand-btn:hover { background: var(--border); color: var(--blue); }
+    .rec-expand-btn svg { width: 16px; height: 16px; }
 
     /* ─── Panel / Card ─── */
     .panel {
@@ -1483,11 +1500,14 @@
     </div>
 
     <!-- Tablas lado a lado: órdenes (izq) + reasignaciones (der) -->
-    <div class="rec-split">
+    <div class="rec-split rec-mode-split" id="rec-split">
 
     <!-- Tabla principal (estado actual) -->
-    <div class="panel" style="overflow:hidden">
+    <div class="panel rec-panel-left" style="overflow:hidden">
       <div class="gd-filters">
+        <button class="rec-expand-btn" id="rec-expand-left" onclick="recToggleSplit('left')" title="Expandir / minimizar esta tabla">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7V2H2v9h2V4zm16 16h-7v2h9v-9h-2v7zM20 2h-9v2h7v7h2V2zM4 13H2v9h9v-2H4v-7z"/></svg>
+        </button>
         <div class="gd-filter-pill" id="rec-pill-country">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           <span class="pill-label">Country</span>
@@ -1545,8 +1565,8 @@
         </div>
         <table id="rec-table" style="display:none">
           <thead><tr>
-            <th>Id in CC</th><th>Country</th><th>Substatus</th><th>CC comment</th>
-            <th>Team Leader</th><th>Asesor</th><th>Last call operator</th><th>Horario</th>
+            <th>Id in CC</th><th>Country</th><th>Substatus</th><th class="rc-col-cccomment">CC comment</th>
+            <th>Team Leader</th><th class="rc-col-asesor">Asesor</th><th>Last call operator</th><th>Horario</th>
             <th style="width:40px;padding:12px 4px;text-align:center">Change</th><th style="width:40px;padding:12px 4px;text-align:center">View</th>
           </tr></thead>
           <tbody id="rec-tbody"></tbody>
@@ -1563,8 +1583,11 @@
     </div>
 
     <!-- Tabla de alertas (reasignaciones detectadas) -->
-    <div class="panel" style="overflow:hidden;border-color:rgba(239,68,68,.35)">
+    <div class="panel rec-panel-right" style="overflow:hidden;border-color:rgba(239,68,68,.35)">
       <div class="gd-infobar" style="background:linear-gradient(90deg, #2a1214 0%, #3a1518 100%)">
+        <button class="rec-expand-btn" id="rec-expand-right" onclick="recToggleSplit('right')" title="Expandir / minimizar esta tabla" style="background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.15);color:#fca5a5">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7V2H2v9h2V4zm16 16h-7v2h9v-9h-2v7zM20 2h-9v2h7v7h2V2zM4 13H2v9h9v-2H4v-7z"/></svg>
+        </button>
         <div class="gd-infobar-title" style="color:#fca5a5">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
           Alertas — Órdenes Reasignadas a Otro Operador
@@ -1611,7 +1634,7 @@
           <thead><tr>
             <th>Id in CC</th><th>Country</th><th>Operador: Antes / Ahora</th>
             <th>Team Leader: Antes / Ahora</th>
-            <th>Detectado</th><th>Acción</th>
+            <th class="rc-col-detected">Detectado</th><th>Acción</th>
             <th style="width:40px;padding:12px 4px;text-align:center">Change</th><th style="width:40px;padding:12px 4px;text-align:center">View</th>
           </tr></thead>
           <tbody id="rec-alert-tbody"></tbody>
@@ -4395,6 +4418,15 @@
     }
   }
 
+  /* Modo de las dos tablas: 'split' (lado a lado, compactas) | 'left' | 'right' (una expandida a todo el ancho) */
+  let recSplitMode = 'split';
+  function recToggleSplit(side) {
+    recSplitMode = (recSplitMode === side) ? 'split' : side;
+    const el = document.getElementById('rec-split');
+    el.classList.remove('rec-mode-split', 'rec-mode-left', 'rec-mode-right');
+    el.classList.add('rec-mode-' + recSplitMode);
+  }
+
   async function recInitView() {
     recLoaded = true;
     document.getElementById('rec-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
@@ -4580,9 +4612,9 @@
         <td><strong>${r.id_in_cc || '—'}</strong></td>
         <td>${countryFlag(r.country)}${r.country || '—'}</td>
         <td>${r.substatus || '—'}</td>
-        <td style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
+        <td class="rc-col-cccomment" style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
         <td>${recTlBadge(r.team_leader)}</td>
-        <td>${r.asesor || '—'}</td>
+        <td class="rc-col-asesor">${r.asesor || '—'}</td>
         <td>${r.last_call_operator || '—'}</td>
         <td>${gdScheduleBadge(r.horario)}</td>
         ${recLinkCells(r.id_in_cc)}
@@ -4863,7 +4895,7 @@
         <td>${countryFlag(a.country)}${a.country || '—'}</td>
         <td style="white-space:nowrap">${recArrowHTML(a.old_operator, a.new_operator)}</td>
         <td style="white-space:nowrap">${recTlArrowHTML(a.old_team_leader, a.new_team_leader)}</td>
-        <td style="color:var(--text-light);white-space:nowrap">${repTimeAgo(a.detected_at)}</td>
+        <td class="rc-col-detected" style="color:var(--text-light);white-space:nowrap">${repTimeAgo(a.detected_at)}</td>
         <td>${a.reviewed
           ? `<span class="badge badge-green">✓ Revisado</span>`
           : (isSupervisor() ? `<button class="btn btn-ghost btn-sm" onclick="recMarkReviewed(${a.id})">Marcar revisado</button>` : `<span class="badge badge-red">Pendiente</span>`)
