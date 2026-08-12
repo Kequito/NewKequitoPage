@@ -254,8 +254,8 @@
     /* Expandir = esa tabla queda dominante y la otra se minimiza, pero AMBAS siguen visibles;
        el modo compacto (columnas ocultas) solo aplica en 'split', así que al expandir
        las dos muestran todas sus columnas */
-    .rec-split.rec-mode-left  { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
-    .rec-split.rec-mode-right { grid-template-columns: minmax(0,1fr) minmax(0,2fr); }
+    .rec-split.rec-mode-left  { grid-template-columns: minmax(0,1fr) 130px; }
+    .rec-split.rec-mode-right { grid-template-columns: 130px minmax(0,1fr); }
     .rec-mode-split .rc-col-cccomment,
     .rec-mode-split .rc-col-asesor,
     .rec-mode-split .rc-col-detected { display: none; }
@@ -266,7 +266,7 @@
     .rec-panel-left, .rec-panel-right { position: relative; }
     .rec-expand-btn {
       position: absolute; top: 50%; transform: translateY(-50%);
-      width: 22px; height: 60px; z-index: 6;
+      width: 30px; height: 68px; z-index: 6;
       display: inline-flex; align-items: center; justify-content: center;
       background: var(--card-bg-2); border: 1px solid var(--border);
       color: var(--text-mid); cursor: pointer; transition: all .18s;
@@ -1529,12 +1529,6 @@
           <select id="rec-f-tl" onchange="applyRecFilters()"><option value="">Todos</option></select>
           <span class="pill-clear" onclick="recClearPill('rec-f-tl', applyRecFilters)">✕</span>
         </div>
-        <div class="gd-filter-pill" id="rec-pill-asesor">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-          <span class="pill-label">Asesor</span>
-          <select id="rec-f-asesor" onchange="applyRecFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="recClearPill('rec-f-asesor', applyRecFilters)">✕</span>
-        </div>
         <div class="gd-filter-pill" id="rec-pill-hor">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
           <span class="pill-label">Horario</span>
@@ -1560,11 +1554,11 @@
       </div>
       <div id="rec-color-actions" style="display:none;padding:10px 20px;background:var(--main-bg);border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text-light)">Acciones masivas:</span>
-        <button class="btn btn-sm" style="background:rgba(240,178,62,.16);color:#f0b23e;border:1px solid rgba(240,178,62,.35)" onclick="recDeleteByStatusColor('yellow')">
-          Eliminar marcadas en amarillo
+        <button class="btn btn-sm" id="rec-del-yellow" style="background:rgba(240,178,62,.16);color:#f0b23e;border:1px solid rgba(240,178,62,.35)" onclick="recDeleteByStatusColor('yellow')">
+          Eliminar amarillas (0)
         </button>
-        <button class="btn btn-sm" style="background:rgba(239,68,68,.16);color:#f87171;border:1px solid rgba(239,68,68,.35)" onclick="recDeleteByStatusColor('red')">
-          Eliminar marcadas en rojo
+        <button class="btn btn-sm" id="rec-del-red" style="background:rgba(239,68,68,.16);color:#f87171;border:1px solid rgba(239,68,68,.35)" onclick="recDeleteByStatusColor('red')">
+          Eliminar rojas (0)
         </button>
       </div>
       <div class="gd-tbl-wrap" id="rec-table-wrap">
@@ -1606,7 +1600,7 @@
         </div>
         <button id="rec-delete-reviewed-btn" class="gd-clear-all" style="display:none" onclick="recDeleteReviewedAlerts()">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          Eliminar revisadas
+          Eliminar revisadas <span id="rec-reviewed-n">(0)</span>
         </button>
         <div class="gd-filter-pill" id="rec-pill-status" style="margin-left:auto">
           <span class="pill-label">Estado</span>
@@ -1637,6 +1631,23 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="text" id="rec-asearch" placeholder="Buscar Id in CC..." oninput="applyRecAlertFilters()"/>
         </div>
+        <div style="position:relative;display:inline-block">
+          <button class="btn btn-ghost btn-sm" id="rec-alert-copy-ids-btn" onclick="recToggleCopyMenu(event,'alert')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            <span id="rec-alert-copy-label">Copiar IDs</span>
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;margin-left:2px"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+          </button>
+          <div id="rec-alert-copy-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);min-width:230px;z-index:50;overflow:hidden"></div>
+        </div>
+      </div>
+      <div id="rec-alert-color-actions" style="display:none;padding:10px 20px;background:var(--main-bg);border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text-light)">Acciones masivas:</span>
+        <button class="btn btn-sm" style="background:rgba(240,178,62,.16);color:#f0b23e;border:1px solid rgba(240,178,62,.35)" onclick="recDeleteAlertsByStatusColor('yellow')" id="rec-alert-del-yellow">
+          Eliminar marcadas en amarillo
+        </button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,.16);color:#f87171;border:1px solid rgba(239,68,68,.35)" onclick="recDeleteAlertsByStatusColor('red')" id="rec-alert-del-red">
+          Eliminar marcadas en rojo
+        </button>
       </div>
       <div class="gd-tbl-wrap" id="rec-alert-table-wrap">
         <table id="rec-alert-table" style="display:none">
@@ -4455,6 +4466,7 @@
     document.getElementById('rec-delete-reviewed-btn').style.display = isSupervisor() ? 'flex' : 'none';
     document.getElementById('rec-status-paste-panel').style.display = isSupervisor() ? 'block' : 'none';
     document.getElementById('rec-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
+    document.getElementById('rec-alert-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
     await recLoadAll();
   }
 
@@ -4497,6 +4509,7 @@
     recPopulateFilters();
     applyRecFilters();
     applyRecAlertFilters();
+    recUpdateDeleteCounts();
 
     document.getElementById('rec-count').textContent = recCurrentRows.length;
     document.getElementById('rec-alert-count').textContent = recAlertRows.filter(a => !a.reviewed).length;
@@ -4517,7 +4530,6 @@
 
     fillSelect('rec-f-country', unique(recCurrentRows, 'country'));
     fillSelect('rec-f-tl',      unique(recCurrentRows, 'team_leader'));
-    fillSelect('rec-f-asesor',  unique(recCurrentRows, 'asesor'));
     fillSelect('rec-f-hor',     unique(recCurrentRows, 'horario'));
 
     fillSelect('rec-f-acountry', unique(recAlertRows, 'country'));
@@ -4533,14 +4545,12 @@
   function applyRecFilters() {
     const country = document.getElementById('rec-f-country').value;
     const tl       = document.getElementById('rec-f-tl').value;
-    const asesor   = document.getElementById('rec-f-asesor').value;
     const hor      = document.getElementById('rec-f-hor').value;
     const search   = document.getElementById('rec-search').value.toLowerCase();
 
     recCurrentFiltered = recCurrentRows.filter(r => {
       if (country && r.country !== country) return false;
       if (tl && r.team_leader !== tl) return false;
-      if (asesor && r.asesor !== asesor) return false;
       if (hor && r.horario !== hor) return false;
       if (search) {
         const hay = `${r.id_in_cc} ${r.cc_comment} ${r.last_call_operator} ${r.substatus}`.toLowerCase();
@@ -4549,7 +4559,7 @@
       return true;
     });
 
-    const pillMap = { 'rec-pill-country': country, 'rec-pill-tl': tl, 'rec-pill-asesor': asesor, 'rec-pill-hor': hor };
+    const pillMap = { 'rec-pill-country': country, 'rec-pill-tl': tl, 'rec-pill-hor': hor };
     let anyActive = search.length > 0;
     Object.entries(pillMap).forEach(([pillId, val]) => {
       document.getElementById(pillId)?.classList.toggle('active', !!val);
@@ -4563,7 +4573,7 @@
   }
 
   function clearRecFilters() {
-    ['rec-f-country', 'rec-f-tl', 'rec-f-asesor', 'rec-f-hor'].forEach(id => { document.getElementById(id).value = ''; });
+    ['rec-f-country', 'rec-f-tl', 'rec-f-hor'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('rec-search').value = '';
     applyRecFilters();
   }
@@ -4665,12 +4675,21 @@
   const REC_COPY_CHUNK_SIZE = 150;
   const REC_COPY_ORDINALS = ['primeros', 'segundos', 'terceros', 'cuartos', 'quintos', 'sextos', 'séptimos', 'octavos', 'novenos', 'décimos'];
 
-  function recToggleCopyMenu(evt) {
+  /* Config de copiar por tabla — 'main' (órdenes) y 'alert' (reasignaciones) */
+  const REC_COPY_CFG = {
+    main:  { menuId: 'rec-copy-menu',       btnId: 'rec-copy-ids-btn',       labelId: 'rec-copy-ids-label',   src: () => recCurrentFiltered },
+    alert: { menuId: 'rec-alert-copy-menu', btnId: 'rec-alert-copy-ids-btn', labelId: 'rec-alert-copy-label', src: () => recAlertFiltered },
+  };
+
+  function recToggleCopyMenu(evt, which = 'main') {
     evt.stopPropagation();
-    const menu = document.getElementById('rec-copy-menu');
+    const cfg = REC_COPY_CFG[which];
+    const menu = document.getElementById(cfg.menuId);
     const opening = menu.style.display === 'none';
+    // cerrar el otro menú de copiar si estaba abierto
+    Object.values(REC_COPY_CFG).forEach(c => { if (c.menuId !== cfg.menuId) document.getElementById(c.menuId).style.display = 'none'; });
     if (opening) {
-      recRenderCopyMenu();
+      recRenderCopyMenu(which);
       menu.style.display = 'block';
     } else {
       menu.style.display = 'none';
@@ -4678,16 +4697,17 @@
   }
 
   document.addEventListener('click', (e) => {
-    const menu = document.getElementById('rec-copy-menu');
-    if (!menu || menu.style.display === 'none') return;
-    if (!menu.contains(e.target) && !e.target.closest('#rec-copy-ids-btn')) {
-      menu.style.display = 'none';
-    }
+    Object.values(REC_COPY_CFG).forEach(cfg => {
+      const menu = document.getElementById(cfg.menuId);
+      if (!menu || menu.style.display === 'none') return;
+      if (!menu.contains(e.target) && !e.target.closest('#' + cfg.btnId)) menu.style.display = 'none';
+    });
   });
 
-  function recRenderCopyMenu() {
-    const menu = document.getElementById('rec-copy-menu');
-    const total = recCurrentFiltered.filter(r => r.id_in_cc).length;
+  function recRenderCopyMenu(which = 'main') {
+    const cfg = REC_COPY_CFG[which];
+    const menu = document.getElementById(cfg.menuId);
+    const total = cfg.src().filter(r => r.id_in_cc).length;
 
     if (total === 0) {
       menu.innerHTML = `<div class="rec-copy-menu-item" style="cursor:default;color:var(--text-light)">No hay IDs para copiar</div>`;
@@ -4700,25 +4720,26 @@
       const count = end - start;
       const groupIdx = start / REC_COPY_CHUNK_SIZE;
       const label = REC_COPY_ORDINALS[groupIdx] || `grupo ${groupIdx + 1}`;
-      items += `<div class="rec-copy-menu-item" onclick="recCopyIdsChunk(${start},${end})">
+      items += `<div class="rec-copy-menu-item" onclick="recCopyIdsChunk(${start},${end},'${which}')">
         <span>Copiar ${label} ${count} IDs</span>
         <span class="rec-copy-menu-range">${start + 1}–${end}</span>
       </div>`;
     }
     if (total > REC_COPY_CHUNK_SIZE) {
-      items += `<div class="rec-copy-menu-item all" onclick="recCopyIdsChunk(0,${total})">
+      items += `<div class="rec-copy-menu-item all" onclick="recCopyIdsChunk(0,${total},'${which}')">
         <span>Copiar todos (${total})</span>
       </div>`;
     }
     menu.innerHTML = items;
   }
 
-  async function recCopyIdsChunk(start, end) {
-    const ids = recCurrentFiltered.map(r => r.id_in_cc).filter(Boolean).slice(start, end);
-    document.getElementById('rec-copy-menu').style.display = 'none';
+  async function recCopyIdsChunk(start, end, which = 'main') {
+    const cfg = REC_COPY_CFG[which];
+    const ids = cfg.src().map(r => r.id_in_cc).filter(Boolean).slice(start, end);
+    document.getElementById(cfg.menuId).style.display = 'none';
     if (ids.length === 0) return;
     const text = ids.join(' ');
-    const label = document.getElementById('rec-copy-ids-label');
+    const label = document.getElementById(cfg.labelId);
     const original = label.textContent;
     try {
       if (navigator.clipboard && window.isSecureContext) {
@@ -4787,6 +4808,16 @@
     if (!res.ok) throw new Error(`Supabase update error ${res.status}`);
   }
 
+  async function recUpdateAlertStatusCheck(ids, statusValue) {
+    const idsParam = ids.map(id => encodeURIComponent(id)).join(',');
+    const res = await fetch(`${SB_URL}/rest/v1/dt_recalls_alerts?id_in_cc=in.(${idsParam})`, {
+      method: 'PATCH',
+      headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ status_check: statusValue }),
+    });
+    if (!res.ok) throw new Error(`Supabase update error ${res.status}`);
+  }
+
   async function recCompareStatus() {
     if (!isSupervisor()) return;
     const raw = document.getElementById('rec-status-raw-input').value;
@@ -4802,31 +4833,40 @@
       return;
     }
 
+    // Se compara contra AMBAS tablas: órdenes actuales y reasignaciones
     const currentIds = new Set(recCurrentRows.map(r => r.id_in_cc));
-    const matches = parsed.filter(p => currentIds.has(p.id));
-    if (matches.length === 0) {
+    const alertIds   = new Set(recAlertRows.map(a => a.id_in_cc));
+    const mainMatches  = parsed.filter(p => currentIds.has(p.id));
+    const alertMatches = parsed.filter(p => alertIds.has(p.id));
+    const totalMatched = new Set([...mainMatches, ...alertMatches].map(m => m.id)).size;
+
+    if (totalMatched === 0) {
       statusEl.style.color = 'var(--text-light)';
-      statusEl.textContent = 'Ningún Id in CC de lo pegado coincide con la tabla actual.';
+      statusEl.textContent = 'Ningún Id in CC de lo pegado coincide con las tablas actuales.';
       return;
     }
 
     statusEl.style.color = 'var(--text-light)';
-    statusEl.textContent = `Actualizando ${matches.length} orden(es)...`;
+    statusEl.textContent = `Actualizando ${totalMatched} orden(es)...`;
 
-    const byStatus = {};
-    matches.forEach(m => {
-      const key = m.status || '';
-      if (!byStatus[key]) byStatus[key] = [];
-      byStatus[key].push(m.id);
-    });
+    const groupByStatus = (arr) => {
+      const m = {};
+      arr.forEach(x => { const k = x.status || ''; (m[k] = m[k] || []).push(x.id); });
+      return m;
+    };
+    const byStatusMain  = groupByStatus(mainMatches);
+    const byStatusAlert = groupByStatus(alertMatches);
 
     try {
-      for (const [statusValue, ids] of Object.entries(byStatus)) {
+      for (const [statusValue, ids] of Object.entries(byStatusMain)) {
         await recUpdateStatusCheck(ids, statusValue);
+      }
+      for (const [statusValue, ids] of Object.entries(byStatusAlert)) {
+        await recUpdateAlertStatusCheck(ids, statusValue);
       }
       await recLoadAll();
       statusEl.style.color = 'var(--green)';
-      statusEl.textContent = `✓ ${matches.length} orden(es) actualizadas`;
+      statusEl.textContent = `✓ ${totalMatched} orden(es) actualizadas`;
       setTimeout(() => { statusEl.textContent = ''; }, 6000);
       recToggleStatusPaste();
     } catch (err) {
@@ -4883,6 +4923,39 @@
     }
   }
 
+  /* Elimina alertas (reasignaciones) marcadas por color tras comparar status */
+  async function recDeleteAlertsByStatusColor(color) {
+    if (!isSupervisor()) return;
+    const ids = recAlertRows.filter(a => recColorGroup(a) === color).map(a => a.id_in_cc);
+    if (ids.length === 0) return;
+    const label = color === 'yellow' ? 'amarillas' : 'rojas';
+    if (!confirm(`¿Eliminar ${ids.length} alerta(s) marcada(s) en ${label}?`)) return;
+
+    try {
+      const idsParam = ids.map(id => encodeURIComponent(id)).join(',');
+      const res = await fetch(`${SB_URL}/rest/v1/dt_recalls_alerts?id_in_cc=in.(${idsParam})`, {
+        method: 'DELETE',
+        headers: SB_HEADERS,
+      });
+      if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
+      await recLoadAll();
+    } catch (err) {
+      console.error('Error eliminando alertas por color:', err);
+      alert('No se pudo eliminar, intenta de nuevo.');
+    }
+  }
+
+  /* Actualiza el número que muestran los botones de eliminar (antes de presionarlos) */
+  function recUpdateDeleteCounts() {
+    const cnt = (rows, color) => rows.filter(r => recColorGroup(r) === color).length;
+    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    setTxt('rec-del-yellow', `Eliminar amarillas (${cnt(recCurrentRows, 'yellow')})`);
+    setTxt('rec-del-red',    `Eliminar rojas (${cnt(recCurrentRows, 'red')})`);
+    setTxt('rec-alert-del-yellow', `Eliminar amarillas (${cnt(recAlertRows, 'yellow')})`);
+    setTxt('rec-alert-del-red',    `Eliminar rojas (${cnt(recAlertRows, 'red')})`);
+    setTxt('rec-reviewed-n', `(${recAlertRows.filter(a => a.reviewed).length})`);
+  }
+
   function applyRecAlertFilters() {
     const status  = document.getElementById('rec-f-status').value;
     const country = document.getElementById('rec-f-acountry').value;
@@ -4928,7 +5001,7 @@
     table.style.display = 'table';
 
     tbody.innerHTML = recAlertFiltered.map(a => `
-      <tr style="${a.reviewed ? 'opacity:.5' : ''}">
+      <tr class="${recStatusColorClass(a.status_check)}" style="${a.reviewed ? 'opacity:.5' : ''}">
         <td><strong>${a.id_in_cc || '—'}</strong></td>
         <td>${countryFlag(a.country)}${a.country || '—'}</td>
         <td style="white-space:nowrap">${recArrowHTML(a.old_operator, a.new_operator)}</td>
