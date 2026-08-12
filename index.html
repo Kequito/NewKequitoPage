@@ -279,6 +279,17 @@
     .rec-link-item { display: block; padding: 9px 16px; font-size: 13px; color: var(--text-dark); text-decoration: none; white-space: nowrap; cursor: pointer; transition: background .15s; }
     .rec-link-item:hover { background: var(--blue-soft); }
 
+    /* "Spine": lo que se ve cuando una tabla queda minimizada — solo su nombre, en vertical */
+    .rec-spine { display: none; align-items: center; justify-content: center; min-height: 420px; cursor: pointer; transition: background .18s; }
+    .rec-spine:hover { background: var(--nav-hover); }
+    .rec-spine span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 14px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text-mid); white-space: nowrap; }
+    .rec-spine-alert span { color: #fca5a5; }
+    /* Tabla minimizada: se oculta su contenido normal y aparece el spine */
+    .rec-mode-right .rec-panel-left  > *:not(.rec-expand-btn):not(.rec-spine) { display: none; }
+    .rec-mode-right .rec-panel-left  .rec-spine { display: flex; }
+    .rec-mode-left  .rec-panel-right > *:not(.rec-expand-btn):not(.rec-spine) { display: none; }
+    .rec-mode-left  .rec-panel-right .rec-spine { display: flex; }
+
     /* ─── Panel / Card ─── */
     .panel {
       background: var(--card-bg);
@@ -1487,6 +1498,15 @@
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
       </div>
+      <!-- Última actualización de la data (grande y resaltada) -->
+      <div id="rec-lastupd-box" style="display:none;align-items:center;gap:18px;margin:0 20px 20px;padding:16px 24px;background:var(--blue-soft);border:1px solid rgba(76,141,255,.35);border-radius:var(--radius)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:34px;height:34px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
+          <div id="rec-lastupd-name" style="font-size:30px;font-weight:800;color:#fff;line-height:1.15">—</div>
+          <div id="rec-lastupd-time" style="font-size:12px;color:var(--text-mid)">—</div>
+        </div>
+      </div>
     </div>
 
     <!-- Comparar Status (solo Supervisor) -->
@@ -1516,6 +1536,14 @@
       <button class="rec-expand-btn" id="rec-expand-left" onclick="recToggleSplit('left')" title="Expandir / minimizar esta tabla">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
       </button>
+      <div class="rec-spine" onclick="recToggleSplit('left')" title="Expandir esta tabla"><span>ÓRDENES ACTUALES</span></div>
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          Órdenes Actuales
+        </div>
+        <div class="gd-stat-chip">Total: <span id="rec-count-2">—</span></div>
+      </div>
       <div class="gd-filters">
         <div class="gd-filter-pill" id="rec-pill-country">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
@@ -1590,6 +1618,7 @@
       <button class="rec-expand-btn" id="rec-expand-right" onclick="recToggleSplit('right')" title="Expandir / minimizar esta tabla">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L10.83 12l4.58 4.59L14 18l-6-6 6-6z"/></svg>
       </button>
+      <div class="rec-spine rec-spine-alert" onclick="recToggleSplit('right')" title="Expandir esta tabla"><span>ÓRDENES REASIGNADAS</span></div>
       <div class="gd-infobar" style="background:linear-gradient(90deg, #2a1214 0%, #3a1518 100%)">
         <div class="gd-infobar-title" style="color:#fca5a5">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
@@ -4427,6 +4456,7 @@
         asesor: r.asesor,
         horario: r.horario,
         uploaded_by: user ? user[0] : null,
+        uploaded_at: new Date().toISOString(),
       }));
       await bulkInsert('dt_recalls', toInsert);
 
@@ -4510,8 +4540,10 @@
     applyRecFilters();
     applyRecAlertFilters();
     recUpdateDeleteCounts();
+    recRenderLastUpdate();
 
     document.getElementById('rec-count').textContent = recCurrentRows.length;
+    document.getElementById('rec-count-2').textContent = recCurrentRows.length;
     document.getElementById('rec-alert-count').textContent = recAlertRows.filter(a => !a.reviewed).length;
 
     const now = new Date();
@@ -4805,7 +4837,7 @@
       headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({ status_check: statusValue }),
     });
-    if (!res.ok) throw new Error(`Supabase update error ${res.status}`);
+    if (!res.ok) throw new Error(`Supabase update error ${await acctErrorDetail(res)}`);
   }
 
   async function recUpdateAlertStatusCheck(ids, statusValue) {
@@ -4815,7 +4847,7 @@
       headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       body: JSON.stringify({ status_check: statusValue }),
     });
-    if (!res.ok) throw new Error(`Supabase update error ${res.status}`);
+    if (!res.ok) throw new Error(`Supabase update error (alertas) ${await acctErrorDetail(res)}`);
   }
 
   async function recCompareStatus() {
@@ -4872,7 +4904,7 @@
     } catch (err) {
       console.error('Error comparando status:', err);
       statusEl.style.color = 'var(--red)';
-      statusEl.textContent = 'Error al actualizar, intenta de nuevo.';
+      statusEl.textContent = (err && err.message) ? err.message : 'Error al actualizar, intenta de nuevo.';
     }
   }
 
@@ -4943,6 +4975,19 @@
       console.error('Error eliminando alertas por color:', err);
       alert('No se pudo eliminar, intenta de nuevo.');
     }
+  }
+
+  /* Caja azul: quién y cuándo hizo la última carga de data (todas las filas comparten estos valores) */
+  function recRenderLastUpdate() {
+    const box = document.getElementById('rec-lastupd-box');
+    const first = recCurrentRows[0];
+    if (!first || !first.uploaded_by) { box.style.display = 'none'; return; }
+    box.style.display = 'flex';
+    document.getElementById('rec-lastupd-name').textContent = first.uploaded_by;
+    const t = first.uploaded_at ? new Date(first.uploaded_at) : null;
+    document.getElementById('rec-lastupd-time').textContent = t
+      ? `${t.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${t.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`
+      : '';
   }
 
   /* Actualiza el número que muestran los botones de eliminar (antes de presionarlos) */
