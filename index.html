@@ -251,24 +251,33 @@
 
     /* Recalls: tabla de órdenes (izq) + tabla de reasignaciones (der), lado a lado */
     .rec-split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 22px; align-items: start; margin-bottom: 22px; }
-    /* Al expandir una tabla, la otra se oculta y la elegida ocupa todo el ancho */
-    .rec-split.rec-mode-left, .rec-split.rec-mode-right { grid-template-columns: minmax(0,1fr); }
-    .rec-split.rec-mode-left  .rec-panel-right { display: none; }
-    .rec-split.rec-mode-right .rec-panel-left  { display: none; }
-    /* En modo dividido se ocultan las columnas secundarias para que quepan;
-       al expandir una tabla vuelven a aparecer completas */
+    /* Expandir = esa tabla queda dominante y la otra se minimiza, pero AMBAS siguen visibles;
+       el modo compacto (columnas ocultas) solo aplica en 'split', así que al expandir
+       las dos muestran todas sus columnas */
+    .rec-split.rec-mode-left  { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+    .rec-split.rec-mode-right { grid-template-columns: minmax(0,1fr) minmax(0,2fr); }
     .rec-mode-split .rc-col-cccomment,
     .rec-mode-split .rc-col-asesor,
     .rec-mode-split .rc-col-detected { display: none; }
-    @media (max-width: 1400px) { .rec-split { grid-template-columns: minmax(0,1fr); } }
-    .rec-expand-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 30px; height: 30px; border-radius: var(--radius-sm);
-      background: var(--main-bg); border: 1px solid var(--border);
-      color: var(--text-mid); cursor: pointer; transition: all .18s; flex-shrink: 0;
+    @media (max-width: 1400px) {
+      .rec-split, .rec-split.rec-mode-left, .rec-split.rec-mode-right { grid-template-columns: minmax(0,1fr); }
     }
-    .rec-expand-btn:hover { background: var(--border); color: var(--blue); }
-    .rec-expand-btn svg { width: 16px; height: 16px; }
+    /* Botón lateral de expandir/minimizar, pegado al borde interno de cada panel */
+    .rec-panel-left, .rec-panel-right { position: relative; }
+    .rec-expand-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 22px; height: 60px; z-index: 6;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--card-bg-2); border: 1px solid var(--border);
+      color: var(--text-mid); cursor: pointer; transition: all .18s;
+    }
+    .rec-panel-left  .rec-expand-btn { right: 0; border-radius: 8px 0 0 8px; }
+    .rec-panel-right .rec-expand-btn { left: 0;  border-radius: 0 8px 8px 0; }
+    .rec-expand-btn:hover { background: var(--blue); color: #fff; }
+    .rec-expand-btn svg { width: 15px; height: 15px; }
+    /* Menú flotante de enlaces (Change / View) */
+    .rec-link-item { display: block; padding: 9px 16px; font-size: 13px; color: var(--text-dark); text-decoration: none; white-space: nowrap; cursor: pointer; transition: background .15s; }
+    .rec-link-item:hover { background: var(--blue-soft); }
 
     /* ─── Panel / Card ─── */
     .panel {
@@ -1504,10 +1513,10 @@
 
     <!-- Tabla principal (estado actual) -->
     <div class="panel rec-panel-left" style="overflow:hidden">
+      <button class="rec-expand-btn" id="rec-expand-left" onclick="recToggleSplit('left')" title="Expandir / minimizar esta tabla">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+      </button>
       <div class="gd-filters">
-        <button class="rec-expand-btn" id="rec-expand-left" onclick="recToggleSplit('left')" title="Expandir / minimizar esta tabla">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7V2H2v9h2V4zm16 16h-7v2h9v-9h-2v7zM20 2h-9v2h7v7h2V2zM4 13H2v9h9v-2H4v-7z"/></svg>
-        </button>
         <div class="gd-filter-pill" id="rec-pill-country">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           <span class="pill-label">Country</span>
@@ -1567,7 +1576,7 @@
           <thead><tr>
             <th>Id in CC</th><th>Country</th><th>Substatus</th><th class="rc-col-cccomment">CC comment</th>
             <th>Team Leader</th><th class="rc-col-asesor">Asesor</th><th>Last call operator</th><th>Horario</th>
-            <th style="width:40px;padding:12px 4px;text-align:center">Change</th><th style="width:40px;padding:12px 4px;text-align:center">View</th>
+            <th style="width:52px;padding:12px 4px;text-align:center">Enlaces</th>
           </tr></thead>
           <tbody id="rec-tbody"></tbody>
         </table>
@@ -1584,10 +1593,10 @@
 
     <!-- Tabla de alertas (reasignaciones detectadas) -->
     <div class="panel rec-panel-right" style="overflow:hidden;border-color:rgba(239,68,68,.35)">
+      <button class="rec-expand-btn" id="rec-expand-right" onclick="recToggleSplit('right')" title="Expandir / minimizar esta tabla">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L10.83 12l4.58 4.59L14 18l-6-6 6-6z"/></svg>
+      </button>
       <div class="gd-infobar" style="background:linear-gradient(90deg, #2a1214 0%, #3a1518 100%)">
-        <button class="rec-expand-btn" id="rec-expand-right" onclick="recToggleSplit('right')" title="Expandir / minimizar esta tabla" style="background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.15);color:#fca5a5">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h7V2H2v9h2V4zm16 16h-7v2h9v-9h-2v7zM20 2h-9v2h7v7h2V2zM4 13H2v9h9v-2H4v-7z"/></svg>
-        </button>
         <div class="gd-infobar-title" style="color:#fca5a5">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
           Alertas — Órdenes Reasignadas a Otro Operador
@@ -1635,7 +1644,7 @@
             <th>Id in CC</th><th>Country</th><th>Operador: Antes / Ahora</th>
             <th>Team Leader: Antes / Ahora</th>
             <th class="rc-col-detected">Detectado</th><th>Acción</th>
-            <th style="width:40px;padding:12px 4px;text-align:center">Change</th><th style="width:40px;padding:12px 4px;text-align:center">View</th>
+            <th style="width:52px;padding:12px 4px;text-align:center">Enlaces</th>
           </tr></thead>
           <tbody id="rec-alert-tbody"></tbody>
         </table>
@@ -1648,6 +1657,9 @@
     </div>
 
     </div><!-- /rec-split -->
+
+    <!-- Menú flotante Change/View (uno solo, se posiciona junto al botón que lo abre) -->
+    <div id="rec-link-menu" style="display:none;position:fixed;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);z-index:200;overflow:hidden;min-width:130px"></div>
 
   </div>
 
@@ -4418,13 +4430,22 @@
     }
   }
 
-  /* Modo de las dos tablas: 'split' (lado a lado, compactas) | 'left' | 'right' (una expandida a todo el ancho) */
+  /* Modo de las dos tablas: 'split' (lado a lado, compactas) | 'left' | 'right' (una dominante) */
   let recSplitMode = 'split';
+  const REC_CHEV_R = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>';
+  const REC_CHEV_L = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L10.83 12l4.58 4.59L14 18l-6-6 6-6z"/></svg>';
   function recToggleSplit(side) {
     recSplitMode = (recSplitMode === side) ? 'split' : side;
+    recApplySplitMode();
+  }
+  function recApplySplitMode() {
     const el = document.getElementById('rec-split');
+    if (!el) return;
     el.classList.remove('rec-mode-split', 'rec-mode-left', 'rec-mode-right');
     el.classList.add('rec-mode-' + recSplitMode);
+    // Flecha hacia afuera = expandir; hacia adentro = volver
+    document.getElementById('rec-expand-left').innerHTML  = (recSplitMode === 'left')  ? REC_CHEV_L : REC_CHEV_R;
+    document.getElementById('rec-expand-right').innerHTML = (recSplitMode === 'right') ? REC_CHEV_R : REC_CHEV_L;
   }
 
   async function recInitView() {
@@ -4569,23 +4590,40 @@
     return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">${recTlBadge(oldVal)}${recTlBadge(newVal)}</div>`;
   }
 
-  /* Columnas rápidas hacia el panel externo (2wcall) usando el Id in CC */
+  /* Una sola columna "Enlaces": un botón que abre un menú con Change / View */
   function recLinkCells(idInCc) {
-    if (!idInCc) return '<td></td><td></td>';
-    const changeUrl = `https://panel.2wcall.com/order/change/${encodeURIComponent(idInCc)}`;
-    const viewUrl   = `https://panel.2wcall.com/order/index/view/${encodeURIComponent(idInCc)}`;
+    if (!idInCc) return '<td></td>';
+    const safe = idInCc.replace(/'/g, "\\'");
     return `
       <td style="text-align:center;padding:5px 4px">
-        <a href="${changeUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" title="Abrir en Change" style="padding:4px 5px">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-        </a>
-      </td>
-      <td style="text-align:center;padding:5px 4px">
-        <a href="${viewUrl}" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" title="Abrir en View" style="padding:4px 5px">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-        </a>
+        <button class="btn btn-ghost btn-sm rec-link-trigger" title="Abrir Change / View" onclick="recOpenLinkMenu(event,'${safe}')" style="padding:4px 6px">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:10px;height:10px;margin-left:1px"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </button>
       </td>`;
   }
+
+  /* Menú flotante compartido — se posiciona junto al botón que lo abre */
+  function recOpenLinkMenu(evt, idInCc) {
+    evt.stopPropagation();
+    const menu = document.getElementById('rec-link-menu');
+    const changeUrl = `https://panel.2wcall.com/order/change/${encodeURIComponent(idInCc)}`;
+    const viewUrl   = `https://panel.2wcall.com/order/index/view/${encodeURIComponent(idInCc)}`;
+    menu.innerHTML =
+      `<a href="${changeUrl}" target="_blank" rel="noopener" class="rec-link-item">✎ Change</a>` +
+      `<a href="${viewUrl}" target="_blank" rel="noopener" class="rec-link-item">👁 View</a>`;
+    menu.style.display = 'block';
+    const rect = evt.currentTarget.getBoundingClientRect();
+    const mw = menu.offsetWidth || 140;
+    menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - mw - 8)) + 'px';
+    menu.style.top  = (rect.bottom + 4) + 'px';
+  }
+
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('rec-link-menu');
+    if (!menu || menu.style.display === 'none') return;
+    if (!menu.contains(e.target) && !e.target.closest('.rec-link-trigger')) menu.style.display = 'none';
+  });
 
   function renderRecTable() {
     const tbody   = document.getElementById('rec-tbody');
