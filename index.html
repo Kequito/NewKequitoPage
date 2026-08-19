@@ -661,33 +661,33 @@
       background: var(--nav-bg);
       color: #fff;
       text-align: center;
-      font-size: 10px; font-weight: 700;
+      font-size: 12px; font-weight: 700;
       letter-spacing: .3px;
       border-left: 2px solid rgba(255,255,255,.1);
-      padding: 4px 3px;
+      padding: 8px 6px;
     }
     .ops-tbl-wrap thead tr.sub-header th {
       background: var(--nav-bg2);
       color: var(--nav-muted);
-      font-size: 8px; font-weight: 600;
+      font-size: 10.5px; font-weight: 600;
       text-transform: uppercase; letter-spacing: .3px;
       border-left: 1px solid rgba(255,255,255,.06);
       text-align: center;
-      padding: 3px 2px;
+      padding: 6px 4px;
     }
     .ops-tbl-wrap tbody td.metric-cell {
       text-align: center;
-      font-size: 10px;
+      font-size: 13px;
       border-left: 1px solid var(--border);
-      padding: 3px 2px;
-      min-width: 42px;
+      padding: 8px 6px;
+      min-width: 56px;
     }
     .ops-tbl-wrap tbody td.country-start { border-left: 2px solid var(--border); }
     .ops-identity-cell { min-width: 260px; white-space: nowrap; }
-    .ops-name-inline { font-size: 11px; font-weight: 700; color: var(--text-dark); }
-    .ops-code-inline  { font-size: 10px; color: var(--text-light); margin-left: 6px; }
+    .ops-name-inline { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+    .ops-code-inline  { font-size: 11.5px; color: var(--text-light); margin-left: 6px; }
     /* Approve % colored cells — reutiliza el semáforo de .rep-approve-* (rojo/neutro/verde) */
-    .ops-empty-cell   { color: var(--border); font-size: 11px; text-align:center; }
+    .ops-empty-cell   { color: var(--border); font-size: 13px; text-align:center; }
 
     /* ─── Approve Stats — tarjetas de selección ─── */
     .ops-pick-card {
@@ -1108,13 +1108,16 @@
           <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
           Approve Stats — Rendimiento por País
         </div>
-        <div class="gd-stat-chip">Operadores: <span id="ops-count">—</span></div>
-        <div class="gd-stat-chip">Países: <span id="ops-countries">—</span></div>
-        <span id="ops-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
       </div>
-      <div id="ops-tl-note" class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-        <small>Esta data se actualiza desde <strong>Actualización de Data</strong> (solo Supervisores).</small>
+
+      <!-- Última actualización de la data (grande y resaltada, mismo formato que Recalls/Reporte) -->
+      <div id="ops-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 0;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(76,141,255,.35);border-radius:var(--radius)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
+          <div id="ops-lastupd-time" style="font-size:19px;font-weight:800;color:#fff;line-height:1.3">—</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-mid)">Reporte BI-04 · Actualización de Data (solo Supervisores)</div>
+        </div>
       </div>
 
       <!-- Ventana de datos (BI-04, últimos 90 días) -->
@@ -1123,13 +1126,14 @@
         <span id="ops-window-text"></span>
       </div>
 
-      <!-- Pantalla de entrada: 8 países + Team Leader -->
-      <div id="ops-picker" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:20px"></div>
-
-      <!-- Lista de Team Leaders -->
-      <div id="ops-tl-list" style="display:none;padding:20px">
-        <button class="btn btn-ghost btn-sm" onclick="opsShowPicker()" style="margin-bottom:14px">← Volver</button>
-        <div id="ops-tl-chips" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <!-- Pantalla de entrada: países (3x3) a la izquierda, Team Leaders a la derecha -->
+      <div id="ops-picker" style="display:flex;align-items:stretch;gap:26px;padding:20px;overflow-x:auto">
+        <div id="ops-picker-countries" style="display:grid;grid-template-columns:repeat(3,132px);grid-auto-rows:100px;gap:12px;flex-shrink:0"></div>
+        <div style="width:1px;background:var(--border);flex-shrink:0"></div>
+        <div style="flex:1;min-width:280px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:10px">Team Leaders</div>
+          <div id="ops-picker-tls" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px"></div>
+        </div>
       </div>
 
       <!-- Tabla matriz por Team Leader -->
@@ -2798,18 +2802,16 @@
 
       opsCountries = [...new Set(opsData.map(r=>(r.Country||'').trim()).filter(Boolean))].sort();
       window._opsIdx = opsIdx;
-
-      // Stats chips
-      document.getElementById('ops-count').textContent     = Object.keys(opsDisData).length;
-      document.getElementById('ops-countries').textContent = opsCountries.length;
       opsLoaded = true;
 
+      const box = document.getElementById('ops-lastupd-box');
       if (lastUpload) {
         const d = new Date(lastUpload);
-        document.getElementById('ops-last-update').textContent =
-          `Última carga: ${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+        document.getElementById('ops-lastupd-time').textContent =
+          `${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+        box.style.display = 'flex';
       } else {
-        document.getElementById('ops-last-update').textContent = '';
+        box.style.display = 'none';
       }
       opsUpdateWindowBanner(lastUpload);
 
@@ -2824,50 +2826,41 @@
     opsShowPicker();
   }
 
+  /* Países en cuadrado 3x3 a la izquierda + Team Leaders individuales a la derecha —
+     ambos entran directo al detalle (mismas funciones de siempre), solo cambia la presentación. */
   function opsRenderPickerCards() {
-    const picker = document.getElementById('ops-picker');
-    const countryCards = OPS_STATS_COUNTRIES.map((c, i) => {
+    const countryWrap = document.getElementById('ops-picker-countries');
+    countryWrap.innerHTML = OPS_STATS_COUNTRIES.map((c, i) => {
       const color = REP_COUNTRY_COLORS[c] || REP_FALLBACK_COLORS[i % REP_FALLBACK_COLORS.length];
       return `<div class="ops-pick-card" style="border-color:${color}55" onclick="opsShowCountryDetail('${c}')">
         ${countryFlag(c)}
         <div class="ops-pick-label" style="color:${color}">${c}</div>
       </div>`;
     }).join('');
-    const tlCard = `<div class="ops-pick-card" style="border-color:var(--nav-accent)" onclick="opsShowTlList()">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width:26px;height:26px;color:var(--nav-accent)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-      <div class="ops-pick-label" style="color:var(--nav-accent)">Team Leader</div>
-    </div>`;
-    picker.innerHTML = countryCards + tlCard;
+
+    const tlWrap = document.getElementById('ops-picker-tls');
+    const tls = [...new Set(Object.values(opsDisData).map(d => d.TEAMLEADER).filter(v => v && v !== '—'))].sort();
+    if (tls.length === 0) {
+      tlWrap.innerHTML = `<span style="color:var(--text-light);font-size:12px">No hay Team Leaders cargados todavía — revisa GoodDay.</span>`;
+      return;
+    }
+    tlWrap.innerHTML = tls.map(tl => {
+      const safe = tl.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `<div class="ops-pick-card" style="border-color:var(--nav-accent)55" onclick="opsSelectTeamLeader('${safe}')">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:22px;height:22px;color:var(--nav-accent)"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div class="ops-pick-label" style="color:var(--nav-accent);text-align:center">${tl}</div>
+      </div>`;
+    }).join('');
   }
 
   function opsShowPicker() {
-    document.getElementById('ops-picker').style.display = 'grid';
-    document.getElementById('ops-tl-list').style.display = 'none';
+    document.getElementById('ops-picker').style.display = 'flex';
     document.getElementById('ops-tl-detail').style.display = 'none';
     document.getElementById('ops-country-detail').style.display = 'none';
-  }
-
-  function opsShowTlList() {
-    document.getElementById('ops-picker').style.display = 'none';
-    document.getElementById('ops-tl-detail').style.display = 'none';
-    document.getElementById('ops-country-detail').style.display = 'none';
-    document.getElementById('ops-tl-list').style.display = 'block';
-
-    const tls = [...new Set(Object.values(opsDisData).map(d => d.TEAMLEADER).filter(v => v && v !== '—'))].sort();
-    const chips = document.getElementById('ops-tl-chips');
-    if (tls.length === 0) {
-      chips.innerHTML = `<span style="color:var(--text-light);font-size:12px">No hay Team Leaders cargados todavía — revisa GoodDay.</span>`;
-      return;
-    }
-    chips.innerHTML = tls.map(tl => {
-      const safe = tl.replace(/'/g, "\\'");
-      return `<div class="rep-toggle-chip" style="border-color:var(--nav-accent);color:var(--nav-accent)" onclick="opsSelectTeamLeader('${safe}')">${tl}</div>`;
-    }).join('');
   }
 
   function opsSelectTeamLeader(tl) {
     document.getElementById('ops-picker').style.display = 'none';
-    document.getElementById('ops-tl-list').style.display = 'none';
     document.getElementById('ops-country-detail').style.display = 'none';
     document.getElementById('ops-tl-detail').style.display = 'block';
 
@@ -2902,7 +2895,7 @@
     const mLabels = ['Total', 'Approve %'];
 
     // THEAD — compact sizing
-    let h1 = `<tr><th rowspan="2" class="ops-identity-cell" style="position:sticky;left:0;z-index:3;background:var(--nav-bg);color:#fff;text-align:left;padding:6px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid rgba(255,255,255,.1)">Operador</th>`;
+    let h1 = `<tr><th rowspan="2" class="ops-identity-cell" style="position:sticky;left:0;z-index:3;background:var(--nav-bg);color:#fff;text-align:left;padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid rgba(255,255,255,.1)">Operador</th>`;
     visibleCountries.forEach(co => {
       h1 += `<th colspan="${M}" class="country-group">${countryFlag(co)}${co}</th>`;
     });
@@ -2918,7 +2911,7 @@
       const dis  = opsDisData[op] || {};
       const name = dis.ASESORES || '—';
 
-      let row = `<tr><td class="ops-identity-cell" style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:4px 12px;border-bottom:1px solid var(--border)">
+      let row = `<tr><td class="ops-identity-cell" style="position:sticky;left:0;background:var(--card-bg);z-index:1;padding:8px 14px;border-bottom:1px solid var(--border)">
         <span class="ops-name-inline">${name}</span><span class="ops-code-inline">${op}</span>
       </td>`;
 
@@ -2988,7 +2981,6 @@
 
   function opsShowCountryDetail(country) {
     document.getElementById('ops-picker').style.display = 'none';
-    document.getElementById('ops-tl-list').style.display = 'none';
     document.getElementById('ops-tl-detail').style.display = 'none';
     document.getElementById('ops-country-detail').style.display = 'block';
 
