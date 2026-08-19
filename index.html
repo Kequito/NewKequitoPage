@@ -1484,9 +1484,13 @@
         </div>
         <div class="gd-stat-chip">Órdenes actuales: <span id="rec-count">—</span></div>
         <div class="gd-stat-chip">Alertas pendientes: <span id="rec-alert-count">—</span></div>
-        <span id="rec-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
         <div id="rec-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
           <span id="rec-upload-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
+          <a id="rec-data-link-btn" class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noopener" style="cursor:pointer;margin:0;text-decoration:none" onclick="return recOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
+            Data
+          </a>
+          <button id="rec-data-edit-btn" class="btn btn-ghost btn-sm" type="button" style="display:none;cursor:pointer;margin:0" onclick="recEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
           <label class="btn btn-primary btn-sm" for="rec-file-input" style="cursor:pointer;margin:0">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Subir Excel
@@ -3767,6 +3771,19 @@
     } catch { return false; }
   }
 
+  /* Gestión de Recalls: Supervisor y Team Leader pueden actualizar (subir Excel,
+     comparar status, eliminar, marcar revisado) — solo el link de "Data" queda
+     restringido a Supervisor (ver isSupervisor() en recEditDataLink). */
+  function canEditRecalls() {
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    if (!stored) return false;
+    try {
+      const u = JSON.parse(stored);
+      const role = (u[2] || '').trim().toLowerCase();
+      return role === 'supervisor' || role === 'team leader';
+    } catch { return false; }
+  }
+
   async function repGenerate() {
     const raw = document.getElementById('rep-raw-input').value;
     const errBox = document.getElementById('rep-parse-error');
@@ -4409,7 +4426,7 @@
   async function recOnFileSelected(event) {
     const file = event.target.files[0];
     event.target.value = ''; // permite volver a elegir el mismo archivo si hace falta reintentar
-    if (!file || !isSupervisor()) return;
+    if (!file || !canEditRecalls()) return;
 
     const status = document.getElementById('rec-upload-status');
     status.style.color = 'var(--text-light)';
@@ -4491,17 +4508,59 @@
 
   async function recInitView() {
     recLoaded = true;
-    document.getElementById('rec-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
-    document.getElementById('rec-tl-note').style.display = isSupervisor() ? 'none' : 'flex';
-    document.getElementById('rec-delete-reviewed-btn').style.display = isSupervisor() ? 'flex' : 'none';
-    document.getElementById('rec-status-paste-panel').style.display = isSupervisor() ? 'block' : 'none';
-    document.getElementById('rec-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
-    document.getElementById('rec-alert-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
+    document.getElementById('rec-upload-wrap').style.display = canEditRecalls() ? 'flex' : 'none';
+    document.getElementById('rec-tl-note').style.display = canEditRecalls() ? 'none' : 'flex';
+    document.getElementById('rec-delete-reviewed-btn').style.display = canEditRecalls() ? 'flex' : 'none';
+    document.getElementById('rec-status-paste-panel').style.display = canEditRecalls() ? 'block' : 'none';
+    document.getElementById('rec-color-actions').style.display = canEditRecalls() ? 'flex' : 'none';
+    document.getElementById('rec-alert-color-actions').style.display = canEditRecalls() ? 'flex' : 'none';
+    await recFetchDataLink();
+    recRenderDataLinkBtn();
     await recLoadAll();
   }
 
-  async function recDeleteReviewedAlerts() {
+  /* Link de "Data" — a dónde manda el botón que abre la fuente de datos en pestaña nueva.
+     Se guarda en dt_data_links (misma tabla que usa "Actualización de Data") bajo section_key='recalls'.
+     Cualquiera con acceso a Recalls puede abrirlo; solo Supervisor puede cambiarlo. */
+  async function recFetchDataLink() {
+    try {
+      const rows = await sbFetch('dt_data_links', 'select=*&section_key=eq.recalls');
+      if (rows && rows[0]) dataLinksMap['recalls'] = rows[0];
+      else delete dataLinksMap['recalls'];
+    } catch (err) {
+      console.error('Error cargando link de Data de Recalls:', err);
+    }
+  }
+
+  function recRenderDataLinkBtn() {
+    const btn = document.getElementById('rec-data-link-btn');
+    const editBtn = document.getElementById('rec-data-edit-btn');
+    if (!btn || !editBtn) return;
+    const link = dataLinksMap['recalls'];
+    btn.href = (link && link.url) ? link.url : '#';
+    editBtn.style.display = isSupervisor() ? 'inline-flex' : 'none';
+  }
+
+  function recOpenDataLink(event) {
+    const link = dataLinksMap['recalls'];
+    if (link && link.url) return true; // deja que el <a target="_blank"> abra el link normalmente
+    event.preventDefault();
+    if (isSupervisor()) {
+      recEditDataLink();
+    } else {
+      alert('Aún no se ha configurado el link de Data — pide a un Supervisor que lo configure.');
+    }
+    return false;
+  }
+
+  async function recEditDataLink() {
     if (!isSupervisor()) return;
+    await dataLinkEdit('recalls', 'Gestión de Recalls');
+    recRenderDataLinkBtn();
+  }
+
+  async function recDeleteReviewedAlerts() {
+    if (!canEditRecalls()) return;
     const reviewedCount = recAlertRows.filter(a => a.reviewed).length;
     if (reviewedCount === 0) return;
     if (!confirm(`¿Eliminar ${reviewedCount} alerta(s) marcada(s) como revisada(s)? Esta acción no se puede deshacer.`)) return;
@@ -4545,10 +4604,6 @@
     document.getElementById('rec-count').textContent = recCurrentRows.length;
     document.getElementById('rec-count-2').textContent = recCurrentRows.length;
     document.getElementById('rec-alert-count').textContent = recAlertRows.filter(a => !a.reviewed).length;
-
-    const now = new Date();
-    document.getElementById('rec-last-update').textContent =
-      `Actualizado: ${now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit', second:'2-digit' })}`;
   }
 
   function recPopulateFilters() {
@@ -4851,7 +4906,7 @@
   }
 
   async function recCompareStatus() {
-    if (!isSupervisor()) return;
+    if (!canEditRecalls()) return;
     const raw = document.getElementById('rec-status-raw-input').value;
     const errBox = document.getElementById('rec-status-parse-error');
     const statusEl = document.getElementById('rec-status-compare-status');
@@ -4927,7 +4982,7 @@
   }
 
   async function recDeleteByStatusColor(color) {
-    if (!isSupervisor()) return;
+    if (!canEditRecalls()) return;
     const ids = recCurrentRows.filter(r => recColorGroup(r) === color).map(r => r.id_in_cc);
     if (ids.length === 0) return;
     const label = color === 'yellow' ? 'amarillas' : 'rojas';
@@ -4957,7 +5012,7 @@
 
   /* Elimina alertas (reasignaciones) marcadas por color tras comparar status */
   async function recDeleteAlertsByStatusColor(color) {
-    if (!isSupervisor()) return;
+    if (!canEditRecalls()) return;
     const ids = recAlertRows.filter(a => recColorGroup(a) === color).map(a => a.id_in_cc);
     if (ids.length === 0) return;
     const label = color === 'yellow' ? 'amarillas' : 'rojas';
@@ -5054,14 +5109,14 @@
         <td class="rc-col-detected" style="color:var(--text-light);white-space:nowrap">${repTimeAgo(a.detected_at)}</td>
         <td>${a.reviewed
           ? `<span class="badge badge-green">✓ Revisado</span>`
-          : (isSupervisor() ? `<button class="btn btn-ghost btn-sm" onclick="recMarkReviewed(${a.id})">Marcar revisado</button>` : `<span class="badge badge-red">Pendiente</span>`)
+          : (canEditRecalls() ? `<button class="btn btn-ghost btn-sm" onclick="recMarkReviewed(${a.id})">Marcar revisado</button>` : `<span class="badge badge-red">Pendiente</span>`)
         }</td>
         ${recLinkCells(a.id_in_cc)}
       </tr>`).join('');
   }
 
   async function recMarkReviewed(id) {
-    if (!isSupervisor()) return;
+    if (!canEditRecalls()) return;
     const stored = sessionStorage.getItem(SESSION_KEY);
     const user = stored ? JSON.parse(stored) : null;
     try {
@@ -6005,18 +6060,19 @@
   }
 
   /* Guarda/reemplaza el link de referencia de una sección — confirma antes de pisar uno existente */
-  async function dataLinkEdit(sectionKey) {
+  async function dataLinkEdit(sectionKey, customLabel) {
     if (!isSupervisor()) return;
     const section = DATA_SECTIONS.find(s => s.key === sectionKey);
+    const label = customLabel || (section && section.label) || sectionKey;
     const current = (dataLinksMap[sectionKey] && dataLinksMap[sectionKey].url) || '';
 
-    const next = prompt(`Pega el link de datos para "${section.label}":`, current);
+    const next = prompt(`Pega el link de datos para "${label}":`, current);
     if (next === null) return;
     const trimmed = next.trim();
     if (!trimmed) return;
 
     if (current && current !== trimmed) {
-      const ok = confirm(`Ya hay un link guardado para "${section.label}".\n\nActual: ${current}\nNuevo: ${trimmed}\n\n¿Deseas reemplazarlo por este nuevo link?`);
+      const ok = confirm(`Ya hay un link guardado para "${label}".\n\nActual: ${current}\nNuevo: ${trimmed}\n\n¿Deseas reemplazarlo por este nuevo link?`);
       if (!ok) return;
     }
 
