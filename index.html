@@ -872,10 +872,6 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
     Top Team Leader
   </div>
-  <div class="nav-item" onclick="setNav(this, 'estadisticas')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-    Estadísticas
-  </div>
 
   <div class="sidebar-section-label">Sistema</div>
 
@@ -887,11 +883,6 @@
   <div class="nav-item" id="nav-accounts" onclick="setNav(this, 'accounts')" style="display:none">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
     Gestión de Cuentas
-  </div>
-
-  <div class="nav-item" onclick="setNav(this, 'configuracion')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
-    Configuración
   </div>
 
   <div class="sidebar-bottom">
@@ -1395,6 +1386,16 @@
       <small>Solo un Supervisor puede actualizar este reporte — tú puedes ver la información aquí en cualquier momento.</small>
     </div>
 
+    <!-- Última actualización del reporte (grande y resaltada, mismo formato que Recalls) -->
+    <div id="rep-lastupd-box" style="display:none;align-items:center;gap:14px;margin-bottom:22px;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(76,141,255,.35);border-radius:var(--radius)">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización del reporte</div>
+        <div id="rep-lastupd-name" style="font-size:19px;font-weight:800;color:#fff;line-height:1.3">—</div>
+        <div id="rep-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
+      </div>
+    </div>
+
     <!-- Empty state antes del primer reporte guardado -->
     <div class="gd-state" id="rep-empty-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
@@ -1417,7 +1418,6 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
           Reporte por País
         </span>
-        <span id="rep-generated-at" style="font-size:14px;font-weight:700;color:var(--nav-accent)"></span>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -1503,12 +1503,12 @@
         <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
       </div>
       <!-- Última actualización de la data (grande y resaltada) -->
-      <div id="rec-lastupd-box" style="display:none;align-items:center;gap:18px;margin:0 20px 20px;padding:16px 24px;background:var(--blue-soft);border:1px solid rgba(76,141,255,.35);border-radius:var(--radius)">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:34px;height:34px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <div id="rec-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 20px;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(76,141,255,.35);border-radius:var(--radius)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         <div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
-          <div id="rec-lastupd-name" style="font-size:24px;font-weight:800;color:#fff;line-height:1.2">—</div>
-          <div id="rec-lastupd-time" style="font-size:15px;font-weight:600;color:var(--text-mid)">—</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
+          <div id="rec-lastupd-name" style="font-size:19px;font-weight:800;color:#fff;line-height:1.3">—</div>
+          <div id="rec-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
         </div>
       </div>
     </div>
@@ -1820,14 +1820,6 @@
 
   </div><!-- /view-tl -->
 
-  <!-- ══ VIEW: ESTADÍSTICAS ══ -->
-  <div class="view" id="view-estadisticas">
-    <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-      <p>Sección Estadísticas</p><small>Próximamente</small>
-    </div>
-  </div>
-
   <!-- ══ VIEW: ACTUALIZACIÓN DE DATA (solo Supervisores) ══ -->
   <div class="view" id="view-actualizacion">
     <div class="panel" style="overflow:hidden">
@@ -1983,14 +1975,6 @@
 
   </div><!-- /view-accounts -->
 
-  <!-- ══ VIEW: CONFIGURACIÓN ══ -->
-  <div class="view" id="view-configuracion">
-    <div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-      <p>Configuración del Sistema</p><small>Próximamente</small>
-    </div>
-  </div>
-
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -2007,10 +1991,8 @@
     'reportes':      'view-reportes',
     'recalls':       'view-recalls',
     'tl':            'view-tl',
-    'estadisticas':  'view-estadisticas',
     'actualizacion': 'view-actualizacion',
     'accounts':      'view-accounts',
-    'configuracion': 'view-configuracion',
   };
   const titleMap = {
     'dashboard':     ['Inicio', 'Resumen general de la operación'],
@@ -2020,10 +2002,8 @@
     'reportes':      ['Reporte', 'Generación y consulta de reportes'],
     'recalls':       ['Gestión de Recalls', 'Seguimiento de reasignación de órdenes'],
     'tl':            ['Top Team Leader', 'Ranking y evolución de % Approve por Team Leader'],
-    'estadisticas':  ['Estadísticas', 'Análisis estadístico operativo'],
     'actualizacion': ['Actualización de Data', 'Centraliza la carga de información de todas las secciones'],
     'accounts':      ['Gestión de Cuentas', 'Cuentas, contraseñas y permisos por cargo'],
-    'configuracion': ['Configuración', 'Ajustes del sistema'],
   };
 
   function setNav(el, page) {
@@ -3771,9 +3751,9 @@
     } catch { return false; }
   }
 
-  /* Gestión de Recalls: Supervisor y Team Leader pueden actualizar (subir Excel,
-     comparar status, eliminar, marcar revisado) — solo el link de "Data" queda
-     restringido a Supervisor (ver isSupervisor() en recEditDataLink). */
+  /* Gestión de Recalls: Supervisor y Team Leader pueden subir Excel y marcar/eliminar
+     alertas revisadas. "Comparar Status" y sus "Acciones masivas" derivadas (eliminar
+     por color) y el link de "Data" quedan restringidos solo a Supervisor (isSupervisor()). */
   function canEditRecalls() {
     const stored = sessionStorage.getItem(SESSION_KEY);
     if (!stored) return false;
@@ -3831,8 +3811,10 @@
     repByCountry.forEach(c => {
       const prev = prevByCountry.find(p => p.country === c.country);
       c.deltaPct = prev ? c.approvePct - prev.approvePct : null;
+      c.prevApprovePct = prev ? prev.approvePct : null;
     });
     repGlobal.deltaPct = repPrevSnapshot ? repGlobal.approvePct - repPrevSnapshot.global.approvePct : null;
+    repGlobal.prevApprovePct = repPrevSnapshot ? repPrevSnapshot.global.approvePct : null;
 
     repRenderSummary(todaySnapshots);
     repRenderKPIs();
@@ -3843,13 +3825,24 @@
     repUpdateLastUpdatedLabel(null);
   }
 
-  /* Etiqueta grande de "última actualización" — usa la fecha del snapshot guardado,
-     o "ahora" cuando es una vista previa recién generada en este navegador */
-  function repUpdateLastUpdatedLabel(iso) {
+  /* Caja azul grande de "última actualización" (mismo formato que Recalls) — usa la fecha
+     y el autor del snapshot guardado, o el usuario actual cuando es una vista previa recién
+     generada en este navegador (iso=null todavía no se ha guardado). */
+  function repUpdateLastUpdatedLabel(iso, name) {
+    const box = document.getElementById('rep-lastupd-box');
+    let finalName = name;
+    if (!iso && !finalName) {
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+      finalName = user ? user[0] : null;
+    }
+    if (!finalName) { box.style.display = 'none'; return; }
+    box.style.display = 'flex';
     const d = iso ? new Date(iso) : new Date();
     const fecha = d.toLocaleDateString('es-ES', { day:'2-digit', month:'2-digit', year:'numeric' });
     const hora = d.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
-    document.getElementById('rep-generated-at').textContent = `Última actualización: ${fecha} ${hora}`;
+    document.getElementById('rep-lastupd-name').textContent = finalName;
+    document.getElementById('rep-lastupd-time').textContent = `${fecha} · ${hora}`;
   }
 
   function repDeltaHTML(delta) {
@@ -3923,6 +3916,7 @@
         <div class="kpi-header"><span class="kpi-label">% Approve Global</span></div>
         <div class="kpi-value" style="color:${gColor}">${repFmtPct(repGlobal.approvePct)}</div>
         ${deltaHtml ? `<div class="kpi-footer">${deltaHtml}<span class="kpi-sub">vs. snapshot anterior</span></div>` : ''}
+        ${repGlobal.prevApprovePct != null ? `<div class="kpi-sub" style="color:var(--text-light);margin-top:2px">ayer: ${repFmtPct(repGlobal.prevApprovePct)}</div>` : ''}
       </div>`;
     kpiWrap.style.display = 'grid';
   }
@@ -3938,7 +3932,10 @@
         <td style="color:var(--text-light)">${c.recall}</td>
         <td style="color:var(--text-light)">${c.noAnswer}</td>
         <td>${c.approved}</td>
-        <td style="white-space:nowrap"><span class="rep-approve-badge ${cls}">${repFmtPct(c.approvePct)}</span> ${repDeltaHTML(c.deltaPct)}</td>
+        <td style="white-space:nowrap">
+          <span class="rep-approve-badge ${cls}">${repFmtPct(c.approvePct)}</span> ${repDeltaHTML(c.deltaPct)}
+          ${c.prevApprovePct != null ? `<div style="color:var(--text-light);font-size:11px;font-weight:600;margin-top:2px">ayer: ${repFmtPct(c.prevApprovePct)}</div>` : ''}
+        </td>
         <td style="color:var(--text-light)">${c.reject}</td>
         <td style="color:var(--text-light)">${c.trash}</td>
       </tr>`;
@@ -4273,7 +4270,7 @@
   /* Trae los últimos 2 snapshots guardados (el actual + el anterior, para deltas) */
   async function repFetchLatestTwo() {
     try {
-      return await sbFetch('dt_reportes_ventas', 'select=created_at,by_country,global&order=created_at.desc&limit=2');
+      return await sbFetch('dt_reportes_ventas', 'select=created_at,created_by,by_country,global&order=created_at.desc&limit=2');
     } catch (err) {
       console.error('Error cargando últimos snapshots:', err);
       return [];
@@ -4294,8 +4291,10 @@
     repByCountry.forEach(c => {
       const p = prevByCountry.find(x => x.country === c.country);
       c.deltaPct = p ? c.approvePct - p.approvePct : null;
+      c.prevApprovePct = p ? p.approvePct : null;
     });
     repGlobal.deltaPct = repPrevSnapshot ? repGlobal.approvePct - repPrevSnapshot.global.approvePct : null;
+    repGlobal.prevApprovePct = repPrevSnapshot ? repPrevSnapshot.global.approvePct : null;
 
     document.getElementById('rep-empty-state').style.display = 'none';
 
@@ -4306,7 +4305,7 @@
     repRenderTfoot();
 
     document.getElementById('rep-table-panel').style.display = 'block';
-    repUpdateLastUpdatedLabel(latest.created_at);
+    repUpdateLastUpdatedLabel(latest.created_at, latest.created_by);
   }
 
   /* ══════════════════════════════
@@ -4511,9 +4510,9 @@
     document.getElementById('rec-upload-wrap').style.display = canEditRecalls() ? 'flex' : 'none';
     document.getElementById('rec-tl-note').style.display = canEditRecalls() ? 'none' : 'flex';
     document.getElementById('rec-delete-reviewed-btn').style.display = canEditRecalls() ? 'flex' : 'none';
-    document.getElementById('rec-status-paste-panel').style.display = canEditRecalls() ? 'block' : 'none';
-    document.getElementById('rec-color-actions').style.display = canEditRecalls() ? 'flex' : 'none';
-    document.getElementById('rec-alert-color-actions').style.display = canEditRecalls() ? 'flex' : 'none';
+    document.getElementById('rec-status-paste-panel').style.display = isSupervisor() ? 'block' : 'none';
+    document.getElementById('rec-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
+    document.getElementById('rec-alert-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
     await recFetchDataLink();
     recRenderDataLinkBtn();
     await recLoadAll();
@@ -4906,7 +4905,7 @@
   }
 
   async function recCompareStatus() {
-    if (!canEditRecalls()) return;
+    if (!isSupervisor()) return;
     const raw = document.getElementById('rec-status-raw-input').value;
     const errBox = document.getElementById('rec-status-parse-error');
     const statusEl = document.getElementById('rec-status-compare-status');
@@ -4982,7 +4981,7 @@
   }
 
   async function recDeleteByStatusColor(color) {
-    if (!canEditRecalls()) return;
+    if (!isSupervisor()) return;
     const ids = recCurrentRows.filter(r => recColorGroup(r) === color).map(r => r.id_in_cc);
     if (ids.length === 0) return;
     const label = color === 'yellow' ? 'amarillas' : 'rojas';
@@ -5012,7 +5011,7 @@
 
   /* Elimina alertas (reasignaciones) marcadas por color tras comparar status */
   async function recDeleteAlertsByStatusColor(color) {
-    if (!canEditRecalls()) return;
+    if (!isSupervisor()) return;
     const ids = recAlertRows.filter(a => recColorGroup(a) === color).map(a => a.id_in_cc);
     if (ids.length === 0) return;
     const label = color === 'yellow' ? 'amarillas' : 'rojas';
