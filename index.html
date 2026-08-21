@@ -1209,9 +1209,13 @@
           <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           Stats OPs Today
         </div>
-        <span id="ot-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
         <div id="ot-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
           <span id="ot-upload-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
+          <a id="ot-data-link-btn" class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noopener" style="cursor:pointer;margin:0;text-decoration:none" onclick="return otOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
+            Data
+          </a>
+          <button id="ot-data-edit-btn" class="btn btn-ghost btn-sm" type="button" style="display:none;cursor:pointer;margin:0" onclick="otEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
           <label class="btn btn-primary btn-sm" for="ot-file-input" style="cursor:pointer;margin:0">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Subir Excel
@@ -1219,7 +1223,18 @@
           <input type="file" id="ot-file-input" accept=".xlsx,.xls,.csv,.tsv" style="display:none" onchange="otOnFileSelected(event)"/>
         </div>
       </div>
-      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+
+      <!-- Última actualización de la data (grande y resaltada, mismo formato que Recalls/Reporte/Approve Stats) -->
+      <div id="ot-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 0;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(76,141,255,.35);border-radius:var(--radius)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
+          <div id="ot-lastupd-name" style="font-size:19px;font-weight:800;color:#fff;line-height:1.3">—</div>
+          <div id="ot-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
+        </div>
+      </div>
+
+      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left;margin-top:16px">
         <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Esta sección se actualiza subiendo el Excel aquí mismo, varias veces al día — cada carga guarda automáticamente el estado anterior para poder comparar "desde la última actualización" y armar la evolución de abajo.</small>
       </div>
@@ -3113,8 +3128,8 @@
 
   async function otFetchLastUpload() {
     try {
-      const rows = await sbFetch('dt_ops_today', 'select=uploaded_at&order=uploaded_at.desc&limit=1');
-      return (rows && rows.length > 0) ? rows[0].uploaded_at : null;
+      const rows = await sbFetch('dt_ops_today', 'select=uploaded_at,uploaded_by&order=uploaded_at.desc&limit=1');
+      return (rows && rows.length > 0) ? rows[0] : null;
     } catch (err) {
       console.error('Error obteniendo fecha de carga de dt_ops_today:', err);
       return null;
@@ -3165,7 +3180,7 @@
   async function otOnFileSelected(event) {
     const file = event.target.files[0];
     event.target.value = '';
-    if (!file || !isSupervisor()) return;
+    if (!file || !canEditOpsToday()) return;
 
     const status = document.getElementById('ot-upload-status');
     status.style.color = 'var(--text-light)';
@@ -3184,9 +3199,14 @@
       status.textContent = 'Guardando el estado anterior como snapshot...';
       await otArchiveCurrentAsSnapshot();
 
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+      const uploadedAt = new Date().toISOString();
+      const stamped = parsed.map(r => ({ ...r, uploaded_by: user ? user[0] : null, uploaded_at: uploadedAt }));
+
       status.textContent = `Guardando ${parsed.length} filas...`;
       await otDeleteAllCurrent();
-      await bulkInsert('dt_ops_today', parsed);
+      await bulkInsert('dt_ops_today', stamped);
 
       await loadOpsToday();
       status.style.color = 'var(--green)';
@@ -3200,16 +3220,61 @@
     }
   }
 
-  function otUpdateLastUploadLabel(iso) {
-    const el = document.getElementById('ot-last-update');
-    if (!iso) { el.textContent = ''; return; }
-    const d = new Date(iso);
-    el.textContent = `Última carga: ${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+  /* Caja azul de "última actualización" (mismo formato que Recalls/Reporte/Approve Stats) */
+  function otUpdateLastUploadLabel(row) {
+    const box = document.getElementById('ot-lastupd-box');
+    if (!row || !row.uploaded_by) { box.style.display = 'none'; return; }
+    box.style.display = 'flex';
+    document.getElementById('ot-lastupd-name').textContent = row.uploaded_by;
+    const d = new Date(row.uploaded_at);
+    document.getElementById('ot-lastupd-time').textContent =
+      `${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+  }
+
+  /* Link de "Data" de Stats OPs Today — mismo mecanismo que Recalls (dt_data_links,
+     section_key='opstoday'). Cualquiera con acceso puede abrirlo; solo Supervisor lo cambia. */
+  async function otFetchDataLink() {
+    try {
+      const rows = await sbFetch('dt_data_links', 'select=*&section_key=eq.opstoday');
+      if (rows && rows[0]) dataLinksMap['opstoday'] = rows[0];
+      else delete dataLinksMap['opstoday'];
+    } catch (err) {
+      console.error('Error cargando link de Data de Stats OPs Today:', err);
+    }
+  }
+
+  function otRenderDataLinkBtn() {
+    const btn = document.getElementById('ot-data-link-btn');
+    const editBtn = document.getElementById('ot-data-edit-btn');
+    if (!btn || !editBtn) return;
+    const link = dataLinksMap['opstoday'];
+    btn.href = (link && link.url) ? link.url : '#';
+    editBtn.style.display = isSupervisor() ? 'inline-flex' : 'none';
+  }
+
+  function otOpenDataLink(event) {
+    const link = dataLinksMap['opstoday'];
+    if (link && link.url) return true;
+    event.preventDefault();
+    if (isSupervisor()) {
+      otEditDataLink();
+    } else {
+      alert('Aún no se ha configurado el link de Data — pide a un Supervisor que lo configure.');
+    }
+    return false;
+  }
+
+  async function otEditDataLink() {
+    if (!isSupervisor()) return;
+    await dataLinkEdit('opstoday', 'Stats OPs Today');
+    otRenderDataLinkBtn();
   }
 
   async function loadOpsToday() {
     otLoaded = true;
-    document.getElementById('ot-upload-wrap').style.display = isSupervisor() ? 'flex' : 'none';
+    document.getElementById('ot-upload-wrap').style.display = canEditOpsToday() ? 'flex' : 'none';
+    await otFetchDataLink();
+    otRenderDataLinkBtn();
 
     try {
       const [rawRows, disRows, lastSnap, lastUpload] = await Promise.all([
@@ -3445,6 +3510,16 @@
     otRenderDetailTable();
   }
 
+  /* Fondo degradado según el valor dentro del rango visible: el más alto queda con el
+     tono más fuerte y va aclarando hacia el más bajo. Alpha moderado + texto claro del
+     tema oscuro (--text-dark) para que el número siempre se distinga sin problema. */
+  function otHeatBg(value, min, max, rgb) {
+    if (!isFinite(value) || max <= min) return '';
+    const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    const alpha = (0.07 + t * 0.30).toFixed(3);
+    return `background:rgba(${rgb},${alpha});`;
+  }
+
   function otRenderDetailTable() {
     const table = document.getElementById('ot-table');
     const empty = document.getElementById('ot-detail-empty');
@@ -3462,6 +3537,15 @@
     empty.style.display = 'none';
     table.style.display = 'table';
 
+    const uoVals = filtered.map(o => o.uniqueOrders);
+    const apVals = filtered.map(o => o.approve);
+    const rjVals = filtered.map(o => o.reject);
+    const trVals = filtered.map(o => o.trash);
+    const uoMin = Math.min(...uoVals), uoMax = Math.max(...uoVals);
+    const apMin = Math.min(...apVals), apMax = Math.max(...apVals);
+    const rjMin = Math.min(...rjVals), rjMax = Math.max(...rjVals);
+    const trMin = Math.min(...trVals), trMax = Math.max(...trVals);
+
     tbody.innerHTML = filtered.map(o => {
       const multi = o.byCountry.length > 1;
       const expanded = otExpandedOperators.has(o.operator);
@@ -3476,10 +3560,10 @@
         <td>${o.asesor}<div style="font-size:10px;color:var(--text-light)">${o.operator}</div></td>
         <td style="white-space:nowrap">${otCountryCellHTML(o)}</td>
         <td>${gdScheduleBadge(o.horario)}</td>
-        <td style="white-space:nowrap;font-size:16px;font-weight:700">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders, 'uniqueOrders')}</td>
-        <td style="white-space:nowrap;font-size:17px;font-weight:800;color:var(--green)">${o.approve} ${otDeltaHTML(o.deltaApprove, 'approve')}</td>
-        <td style="white-space:nowrap;font-size:16px;font-weight:700">${o.reject} ${otDeltaHTML(o.deltaReject, 'reject')}</td>
-        <td style="white-space:nowrap;font-size:16px;font-weight:700">${o.trash} ${otDeltaHTML(o.deltaTrash, 'trash')}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.uniqueOrders, uoMin, uoMax, '156,168,181')}">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders, 'uniqueOrders')}</td>
+        <td style="white-space:nowrap;font-size:17px;font-weight:800;color:var(--green);${otHeatBg(o.approve, apMin, apMax, '34,197,94')}">${o.approve} ${otDeltaHTML(o.deltaApprove, 'approve')}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.reject, rjMin, rjMax, '240,96,92')}">${o.reject} ${otDeltaHTML(o.deltaReject, 'reject')}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.trash, trMin, trMax, '240,178,62')}">${o.trash} ${otDeltaHTML(o.deltaTrash, 'trash')}</td>
       </tr>`;
 
       if (!multi || !expanded) return mainRow;
@@ -3747,6 +3831,18 @@
      alertas revisadas. "Comparar Status" y sus "Acciones masivas" derivadas (eliminar
      por color) y el link de "Data" quedan restringidos solo a Supervisor (isSupervisor()). */
   function canEditRecalls() {
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    if (!stored) return false;
+    try {
+      const u = JSON.parse(stored);
+      const role = (u[2] || '').trim().toLowerCase();
+      return role === 'supervisor' || role === 'team leader';
+    } catch { return false; }
+  }
+
+  /* Stats OPs Today: Supervisor y Team Leader pueden subir Excel — solo el link de
+     "Data" queda restringido a Supervisor (ver isSupervisor() en otEditDataLink). */
+  function canEditOpsToday() {
     const stored = sessionStorage.getItem(SESSION_KEY);
     if (!stored) return false;
     try {
