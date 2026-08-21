@@ -1240,6 +1240,16 @@
       </div>
     </div>
 
+    <!-- Switch de tipo de campaña: se diferencian solo por el horario de turno.
+         Post-Sale = 09:00-18:00, todo lo demás = Campaña Normal (Aray, Adcombo). -->
+    <div class="panel" style="margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px">
+        <span style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Tipo de campaña</span>
+        <button class="btn btn-sm btn-primary ot-campaign-btn" data-mode="normal" onclick="otSetCampaignMode('normal')">Campaña Normal (Aray, Adcombo)</button>
+        <button class="btn btn-sm btn-ghost ot-campaign-btn" data-mode="postsale" onclick="otSetCampaignMode('postsale')">Post-Sale (09:00-18:00)</button>
+      </div>
+    </div>
+
     <!-- ── Parte 1: Resumen del día ── -->
     <div class="row row-2">
       <!-- Top 5 general -->
@@ -1247,7 +1257,7 @@
         <div class="panel-head">
           <span class="panel-title">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
-            Top 7 Operadores (todas las campañas)
+            Top 7 Operadores <span id="ot-top5-scope" style="color:var(--text-light);font-weight:400"></span>
           </span>
         </div>
         <div class="panel-body">
@@ -1315,14 +1325,14 @@
           <thead>
             <tr>
               <th></th>
-              <th>Team Leader</th>
-              <th>Operador</th>
+              <th onclick="otSortTable(1)">Team Leader <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(2)">Operador <span class="sort-icon">↕</span></th>
               <th>País</th>
-              <th>Horario</th>
-              <th>Órdenes Únicas</th>
-              <th>Ventas (Approve)</th>
-              <th>Reject</th>
-              <th>Trash</th>
+              <th onclick="otSortTable(4)">Horario <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(5)">Órdenes Únicas <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(6)">Ventas (Approve) <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(7)">Reject <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(8)">Trash <span class="sort-icon">↕</span></th>
             </tr>
           </thead>
           <tbody id="ot-tbody"></tbody>
@@ -3081,6 +3091,14 @@
   let otCountryIndex = {};        // country -> [{operator, teamLeader, asesor, horario, uniqueOrders, approve, reject, trash}] desc por approve
   let otCurrentByOperator = [];   // suma por operador (todas sus campañas) + deltas vs último snapshot, solo los que están en GoodDay
   let otExpandedOperators = new Set();
+  let otRawRowsToday = [];        // dt_ops_today sin filtrar por campaña, para poder alternar el switch sin recargar
+  let otPrevMap = {};             // operator -> snapshot anterior (deltas), independiente de la campaña
+  let otCampaignMode = 'normal';  // 'normal' (Aray, Adcombo) | 'postsale' — se distinguen solo por el horario
+
+  /* El único horario de Post-Sale es 09:00-18:00 (mismo criterio parcial que gdScheduleBadge/SCHEDULE_COLORS) */
+  function otIsPostSaleHorario(horario) {
+    return (horario || '').includes('09:00');
+  }
 
   /* Suma por operador a través de sus campañas — se usa tanto para la vista actual
      como para armar el snapshot que se archiva antes de cada carga nueva. */
@@ -3291,41 +3309,68 @@
         otDisIndex[p] = { teamLeader: r.TEAMLEADER || '—', asesor: r.ASESORES || '—', horario: r.HORARIO || '—' };
       });
 
-      otCountryIndex = otBuildCountryIndex(rawRows);
-
-      const prevMap = {};
-      if (lastSnap) (lastSnap.rows || []).forEach(r => { prevMap[r.operator] = r; });
-
-      // Solo los que están en GoodDay Y tienen data en el Excel (intersección)
-      otCurrentByOperator = otAggregateByOperator(rawRows)
-        .filter(o => otDisIndex[o.operator])
-        .map(o => {
-          const dis = otDisIndex[o.operator];
-          // Sin snapshot previo (primera carga del día, u operador nuevo en el reparto) = se compara contra 0,
-          // así se ve de cuánto a cuánto va cada uno en vez de dejar el delta en blanco.
-          const prev = prevMap[o.operator] || { uniqueOrders: 0, approve: 0, reject: 0, trash: 0 };
-          return {
-            ...o,
-            teamLeader: dis.teamLeader, asesor: dis.asesor, horario: dis.horario,
-            approvePct: o.uniqueOrders > 0 ? (o.approve / o.uniqueOrders) * 100 : 0,
-            deltaUniqueOrders: o.uniqueOrders - prev.uniqueOrders,
-            deltaApprove: o.approve - prev.approve,
-            deltaReject: o.reject - prev.reject,
-            deltaTrash: o.trash - prev.trash,
-          };
-        });
-      otCurrentByOperator.sort((a, b) => b.approve - a.approve);
+      otRawRowsToday = rawRows;
+      otPrevMap = {};
+      if (lastSnap) (lastSnap.rows || []).forEach(r => { otPrevMap[r.operator] = r; });
 
       otUpdateLastUploadLabel(lastUpload);
-      otRenderTeamLeaderFilter();
-      otRenderTop5();
-      otBuildCountryCarousel();
-      otRenderHighlightBoxes();
-      otRenderDetailTable();
-      otPopulateHistoryOperatorSelect();
+      otApplyCampaignFilter();
     } catch (err) {
       console.error('Error cargando Stats OPs Today:', err);
     }
+  }
+
+  /* Recalcula todo (índices + las 5 vistas dependientes) a partir de otRawRowsToday
+     filtrado por campaña — sin volver a pedir nada a Supabase, así el switch es instantáneo. */
+  function otApplyCampaignFilter() {
+    const wantPostSale = otCampaignMode === 'postsale';
+    const rows = (otRawRowsToday || []).filter(r => {
+      const operator = (r.Operator || '').trim();
+      const dis = otDisIndex[operator];
+      if (!dis) return false; // debe estar en GoodDay
+      return otIsPostSaleHorario(dis.horario) === wantPostSale;
+    });
+
+    otCountryIndex = otBuildCountryIndex(rows);
+
+    otCurrentByOperator = otAggregateByOperator(rows).map(o => {
+      const dis = otDisIndex[o.operator];
+      // Sin snapshot previo (primera carga del día, u operador nuevo en el reparto) = se compara contra 0,
+      // así se ve de cuánto a cuánto va cada uno en vez de dejar el delta en blanco.
+      const prev = otPrevMap[o.operator] || { uniqueOrders: 0, approve: 0, reject: 0, trash: 0 };
+      return {
+        ...o,
+        teamLeader: dis.teamLeader, asesor: dis.asesor, horario: dis.horario,
+        approvePct: o.uniqueOrders > 0 ? (o.approve / o.uniqueOrders) * 100 : 0,
+        deltaUniqueOrders: o.uniqueOrders - prev.uniqueOrders,
+        deltaApprove: o.approve - prev.approve,
+        deltaReject: o.reject - prev.reject,
+        deltaTrash: o.trash - prev.trash,
+      };
+    });
+    otCurrentByOperator.sort((a, b) => b.approve - a.approve);
+
+    const scopeEl = document.getElementById('ot-top5-scope');
+    if (scopeEl) scopeEl.textContent = wantPostSale ? '(Post-Sale)' : '(Campaña Normal)';
+
+    otRenderTeamLeaderFilter();
+    otRenderTop5();
+    otBuildCountryCarousel();
+    otRenderHighlightBoxes();
+    otRenderDetailTable();
+    otPopulateHistoryOperatorSelect();
+  }
+
+  function otSetCampaignMode(mode) {
+    if (otCampaignMode === mode) return;
+    otCampaignMode = mode;
+    document.querySelectorAll('.ot-campaign-btn').forEach(b => {
+      const active = b.dataset.mode === mode;
+      b.classList.toggle('btn-primary', active);
+      b.classList.toggle('btn-ghost', !active);
+    });
+    otExpandedOperators.clear();
+    otApplyCampaignFilter();
   }
 
   function otRenderTeamLeaderFilter() {
@@ -3510,14 +3555,48 @@
     otRenderDetailTable();
   }
 
-  /* Fondo degradado según el valor dentro del rango visible: el más alto queda con el
-     tono más fuerte y va aclarando hacia el más bajo. Alpha moderado + texto claro del
-     tema oscuro (--text-dark) para que el número siempre se distinga sin problema. */
-  function otHeatBg(value, min, max, rgb) {
-    if (!isFinite(value) || max <= min) return '';
-    const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
-    const alpha = (0.07 + t * 0.30).toFixed(3);
+  /* Fondo degradado por RANKING de valores distintos (no por posición lineal entre min y
+     max) — así el primer lugar siempre se ve claramente más fuerte que el resto, incluso
+     cuando varios operadores tienen valores parecidos agrupados hacia arriba. Alpha amplio
+     + texto claro del tema oscuro (--text-dark) para que el número se distinga siempre. */
+  function otBuildRankMap(vals) {
+    const uniqueSorted = [...new Set(vals)].sort((a, b) => a - b);
+    const map = new Map();
+    const n = uniqueSorted.length;
+    uniqueSorted.forEach((v, i) => map.set(v, n > 1 ? i / (n - 1) : 1));
+    return map;
+  }
+  function otHeatBg(value, rankMap, rgb) {
+    if (!isFinite(value) || !rankMap || rankMap.size <= 1) return '';
+    const t = rankMap.get(value);
+    if (t === undefined) return '';
+    const alpha = (0.06 + t * 0.42).toFixed(3);
     return `background:rgba(${rgb},${alpha});`;
+  }
+
+  /* Orden de columnas en #ot-table — null = no ordenable (toggle expandir, País es multi-valor) */
+  const OT_SORT_KEYS = [null, 'teamLeader', 'asesor', null, 'horario', 'uniqueOrders', 'approve', 'reject', 'trash'];
+  let otSortCol = null;
+  let otSortDir = {};
+
+  function otSortTable(col) {
+    const key = OT_SORT_KEYS[col];
+    if (!key) return;
+    otSortDir[col] = !otSortDir[col];
+    otSortCol = col;
+    otCurrentByOperator.sort((a, b) => {
+      const va = a[key], vb = b[key];
+      if (typeof va === 'string') {
+        return otSortDir[col] ? va.localeCompare(vb) : vb.localeCompare(va);
+      }
+      return otSortDir[col] ? va - vb : vb - va;
+    });
+    document.querySelectorAll('#ot-table thead th').forEach((th, i) => {
+      th.classList.toggle('sorted', i === col);
+      const icon = th.querySelector('.sort-icon');
+      if (icon) icon.textContent = i === col ? (otSortDir[col] ? '↑' : '↓') : '↕';
+    });
+    otRenderDetailTable();
   }
 
   function otRenderDetailTable() {
@@ -3537,14 +3616,10 @@
     empty.style.display = 'none';
     table.style.display = 'table';
 
-    const uoVals = filtered.map(o => o.uniqueOrders);
-    const apVals = filtered.map(o => o.approve);
-    const rjVals = filtered.map(o => o.reject);
-    const trVals = filtered.map(o => o.trash);
-    const uoMin = Math.min(...uoVals), uoMax = Math.max(...uoVals);
-    const apMin = Math.min(...apVals), apMax = Math.max(...apVals);
-    const rjMin = Math.min(...rjVals), rjMax = Math.max(...rjVals);
-    const trMin = Math.min(...trVals), trMax = Math.max(...trVals);
+    const uoRank = otBuildRankMap(filtered.map(o => o.uniqueOrders));
+    const apRank = otBuildRankMap(filtered.map(o => o.approve));
+    const rjRank = otBuildRankMap(filtered.map(o => o.reject));
+    const trRank = otBuildRankMap(filtered.map(o => o.trash));
 
     tbody.innerHTML = filtered.map(o => {
       const multi = o.byCountry.length > 1;
@@ -3560,10 +3635,10 @@
         <td>${o.asesor}<div style="font-size:10px;color:var(--text-light)">${o.operator}</div></td>
         <td style="white-space:nowrap">${otCountryCellHTML(o)}</td>
         <td>${gdScheduleBadge(o.horario)}</td>
-        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.uniqueOrders, uoMin, uoMax, '156,168,181')}">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders, 'uniqueOrders')}</td>
-        <td style="white-space:nowrap;font-size:17px;font-weight:800;color:var(--green);${otHeatBg(o.approve, apMin, apMax, '34,197,94')}">${o.approve} ${otDeltaHTML(o.deltaApprove, 'approve')}</td>
-        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.reject, rjMin, rjMax, '240,96,92')}">${o.reject} ${otDeltaHTML(o.deltaReject, 'reject')}</td>
-        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.trash, trMin, trMax, '240,178,62')}">${o.trash} ${otDeltaHTML(o.deltaTrash, 'trash')}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.uniqueOrders, uoRank, '156,168,181')}">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders, 'uniqueOrders')}</td>
+        <td style="white-space:nowrap;font-size:17px;font-weight:800;color:var(--green);${otHeatBg(o.approve, apRank, '34,197,94')}">${o.approve} ${otDeltaHTML(o.deltaApprove, 'approve')}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.reject, rjRank, '240,96,92')}">${o.reject} ${otDeltaHTML(o.deltaReject, 'reject')}</td>
+        <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.trash, trRank, '240,178,62')}">${o.trash} ${otDeltaHTML(o.deltaTrash, 'trash')}</td>
       </tr>`;
 
       if (!multi || !expanded) return mainRow;
@@ -3598,11 +3673,19 @@
   function otPopulateHistoryOperatorSelect() {
     const sel = document.getElementById('ot-hist-operator');
     const prev = sel.value;
-    const all = Object.keys(otDisIndex).map(perop => ({ operator: perop, asesor: otDisIndex[perop].asesor }));
+    const wantPostSale = otCampaignMode === 'postsale';
+    const all = Object.keys(otDisIndex)
+      .filter(perop => otIsPostSaleHorario(otDisIndex[perop].horario) === wantPostSale)
+      .map(perop => ({ operator: perop, asesor: otDisIndex[perop].asesor }));
     all.sort((a, b) => a.asesor.localeCompare(b.asesor));
     sel.innerHTML = '<option value="">Selecciona un operador…</option>' +
       all.map(o => `<option value="${o.operator}">${o.asesor} (${o.operator})</option>`).join('');
-    if (prev) sel.value = prev;
+    if (prev && all.some(o => o.operator === prev)) {
+      sel.value = prev;
+    } else if (sel.value) {
+      sel.value = '';
+      otLoadHistoryChart();
+    }
   }
 
   function otHistLocalDayStart(offsetDays) {
