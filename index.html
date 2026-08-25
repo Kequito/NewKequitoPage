@@ -6160,7 +6160,6 @@
 
     if (!hasData) return;
     leadsRenderCurrentMode();
-    leadsRenderAlerts(row);
   }
 
   /* Convierte la lista de Post-Sale (una fila por país) a la misma forma que by_country
@@ -6196,6 +6195,7 @@
 
     leadsRenderKPIs(global, wantPostSale);
     leadsRenderCountryCards(countries);
+    leadsRenderAlerts(leadsLatest, leadsCampaignMode);
   }
 
   function leadsRenderLastUpdate(row) {
@@ -6233,6 +6233,10 @@
       grid.innerHTML = `<div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)"><p>Sin datos para este tipo de campaña</p></div>`;
       return;
     }
+    // Todas las tarjetas rellenan hasta el mismo número de filas — así el "Total" de abajo
+    // queda alineado entre países aunque a alguno le falte una cola (ej. Colombia sin 5-2).
+    const maxQueues = Math.max(...countries.map(c => c.queues.length), 0);
+
     grid.innerHTML = countries.map((c, i) => {
       const color = REP_COUNTRY_COLORS[c.country] || REP_FALLBACK_COLORS[i % REP_FALLBACK_COLORS.length];
       const rows = c.queues.map(q => `
@@ -6242,6 +6246,9 @@
           <td style="padding:10px 8px;text-align:right;font-weight:800;color:${leadsOrdersColor(q.orders)}">${q.orders}</td>
           <td style="padding:10px 8px;text-align:right;color:var(--text-light)">${q.totalOrders}</td>
         </tr>`).join('');
+      const fillerRows = Array.from({ length: maxQueues - c.queues.length })
+        .map(() => `<tr><td style="padding:10px 8px">&nbsp;</td><td></td><td></td><td></td></tr>`)
+        .join('');
       return `
       <div class="panel" style="overflow:hidden;border-top:3px solid ${color}">
         <div class="panel-head" style="background:${color}22">
@@ -6250,7 +6257,7 @@
         <div style="overflow-x:auto">
           <table style="min-width:290px">
             <thead><tr><th style="padding:10px 8px;white-space:nowrap">Cola</th><th style="text-align:center;padding:10px 4px;white-space:nowrap">OPs</th><th style="text-align:right;padding:10px 8px;white-space:nowrap">Orders</th><th style="text-align:right;padding:10px 8px;white-space:nowrap">Total</th></tr></thead>
-            <tbody>${rows}</tbody>
+            <tbody>${rows}${fillerRows}</tbody>
             <tfoot><tr style="font-weight:800"><td colspan="2" style="padding:10px 8px;white-space:nowrap">Total</td><td style="text-align:right;padding:10px 8px;color:${leadsOrdersColor(c.sumOrders)}">${c.sumOrders}</td><td style="text-align:right;padding:10px 8px">${c.sumTotalOrders}</td></tr></tfoot>
           </table>
         </div>
@@ -6258,20 +6265,38 @@
     }).join('');
   }
 
-  /* ── Alertas: siempre calculadas sobre TODO (normal + post sale), sin importar el switch ── */
-  function leadsComputeAlerts(row) {
-    const countries = row.by_country || [];
-    // Etiqueta "(Post-Sale)" para no confundirla con la campaña normal del mismo país —
-    // son campañas distintas y pueden tener problemas distintos al mismo tiempo.
-    const postSaleAsCountries = (row.post_sale || []).map(c => ({ country: `${c.country} (Post-Sale)`, queues: [{ ops: c.ops, orders: c.orders }], sumOrders: c.orders }));
-    const all = [...countries, ...postSaleAsCountries];
+  /* ── Alertas: solo del tipo de campaña que se está viendo en ese momento (switch) ──
+     "Sin leads disponibles" ahora exige que TODAS las filas de esa campaña estén en rojo
+     (< LEADS_LOW_ORDERS_THRESHOLD) — quedar en 1 o 2 sigue siendo, en la práctica, quedarse
+     sin nada en segundos, así que cuenta igual que un 0 total. */
+  function leadsComputeAlerts(row, mode) {
+    if (mode === 'postsale') {
+      const postSale = row.post_sale || [];
+      const noOps = postSale.filter(c => c.ops === 0).map(c => c.country);
+      const noLeads = postSale.filter(c => c.orders < LEADS_LOW_ORDERS_THRESHOLD).map(c => c.country);
 
-    const noOps = all.filter(c => c.queues.reduce((s, q) => s + q.ops, 0) === 0).map(c => c.country);
-    const noLeads = all.filter(c => c.sumOrders === 0).map(c => c.country);
-    // "Por quedarse sin leads": las primeras 3 colas ya en 0, pero el total todavía no está en 0
-    // (si ya está en 0 esa campaña, cae directo en la alerta crítica de arriba, no hace falta repetirla)
+      const alerts = [];
+      if (noOps.length > 0) {
+        alerts.push({ level: 'critical', title: 'Sin operadores conectados',
+          text: `${noOps.length} campaña${noOps.length > 1 ? 's' : ''} Post-Sale sin ningún operador conectado: ${noOps.join(', ')}.` });
+      }
+      if (noLeads.length > 0) {
+        alerts.push({ level: 'critical', title: 'Sin leads disponibles',
+          text: `${noLeads.length} campaña${noLeads.length > 1 ? 's' : ''} Post-Sale sin leads disponibles: ${noLeads.join(', ')}.` });
+      }
+      return alerts;
+    }
+
+    const countries = row.by_country || [];
+    const noOps = countries.filter(c => c.queues.reduce((s, q) => s + q.ops, 0) === 0).map(c => c.country);
+    // "Sin leads disponibles": TODAS las filas de la campaña quedaron en rojo (no hace falta que sea 0 exacto)
+    const noLeads = countries
+      .filter(c => c.queues.length > 0 && c.queues.every(q => q.orders < LEADS_LOW_ORDERS_THRESHOLD))
+      .map(c => c.country);
+    // "Por quedarse sin leads": las primeras 3 colas ya en 0, pero la campaña todavía no califica
+    // como "sin leads disponibles" de arriba (si ya calificó, no hace falta repetirla como warning)
     const nearEmpty = countries
-      .filter(c => c.sumOrders > 0 && c.queues.slice(0, 3).length > 0 && c.queues.slice(0, 3).every(q => q.orders === 0))
+      .filter(c => !noLeads.includes(c.country) && c.queues.slice(0, 3).length > 0 && c.queues.slice(0, 3).every(q => q.orders === 0))
       .map(c => c.country);
 
     const alerts = [];
@@ -6281,7 +6306,7 @@
     }
     if (noLeads.length > 0) {
       alerts.push({ level: 'critical', title: 'Sin leads disponibles',
-        text: `${noLeads.length} campaña${noLeads.length > 1 ? 's' : ''} sin leads disponibles: ${noLeads.join(', ')}.` });
+        text: `${noLeads.length} campaña${noLeads.length > 1 ? 's' : ''} con todas sus colas sin leads disponibles: ${noLeads.join(', ')}.` });
     }
     if (nearEmpty.length > 0) {
       alerts.push({ level: 'warning', title: 'Por quedarse sin leads',
@@ -6290,9 +6315,9 @@
     return alerts;
   }
 
-  function leadsRenderAlerts(row) {
+  function leadsRenderAlerts(row, mode) {
     const body = document.getElementById('leads-alerts-body');
-    const alerts = leadsComputeAlerts(row);
+    const alerts = leadsComputeAlerts(row, mode);
     if (alerts.length === 0) {
       body.innerHTML = `<div style="text-align:center;color:var(--text-light);font-size:12px;padding:24px 10px">
         <div style="font-size:24px;margin-bottom:8px">✓</div>
