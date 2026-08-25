@@ -1821,7 +1821,7 @@
         <div class="kpi-grid" id="leads-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:22px"></div>
 
         <!-- Cuadrícula de tarjetas por país -->
-        <div id="leads-country-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+        <div id="leads-country-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px"></div>
       </div>
 
       <!-- Cuadro de alertas -->
@@ -6026,6 +6026,15 @@
     return isNaN(n) ? 0 : n;
   }
 
+  /* Ops conectados: en "Number of operators" (ej. "23 | 6") el que cuenta es el lado DERECHO */
+  function leadsRightOf(val, sep) {
+    if (!val) return 0;
+    const parts = String(val).split(sep);
+    const part = parts.length > 1 ? parts[1] : parts[0];
+    const n = parseInt(part.replace(/[^\d-]/g, ''), 10);
+    return isNaN(n) ? 0 : n;
+  }
+
   /* Cola "principal" de una campaña: termina en N-N (ej. "Mexico 1-1", "Chile 5-2") y no
      es una variante (Priority Call, Overflow, Vitaflex, Special, PS-1/2/3/Auto, WM...). */
   function leadsIsMainQueue(name) {
@@ -6074,7 +6083,7 @@
       rows.push({
         name,
         country: leadsNormalizeCountry(get(idx.country) || ''),
-        ops: idx.ops !== -1 ? leadsLeftOf(get(idx.ops), '|') : 0,
+        ops: idx.ops !== -1 ? leadsRightOf(get(idx.ops), '|') : 0,
         orders: leadsLeftOf(get(idx.capacity), '->'),
         totalOrders: leadsLeftOf(get(idx.orders), '|'),
       });
@@ -6228,21 +6237,23 @@
       const color = REP_COUNTRY_COLORS[c.country] || REP_FALLBACK_COLORS[i % REP_FALLBACK_COLORS.length];
       const rows = c.queues.map(q => `
         <tr style="${q.orders < LEADS_LOW_ORDERS_THRESHOLD ? 'background:rgba(239,68,68,.14)' : ''}">
-          <td style="white-space:nowrap">${q.name}</td>
-          <td style="text-align:center">${q.ops}</td>
-          <td style="text-align:right;font-weight:800;color:${leadsOrdersColor(q.orders)}">${q.orders}</td>
-          <td style="text-align:right;color:var(--text-light)">${q.totalOrders}</td>
+          <td style="padding:10px 8px;white-space:nowrap">${q.name}</td>
+          <td style="padding:10px 4px;text-align:center">${q.ops}</td>
+          <td style="padding:10px 8px;text-align:right;font-weight:800;color:${leadsOrdersColor(q.orders)}">${q.orders}</td>
+          <td style="padding:10px 8px;text-align:right;color:var(--text-light)">${q.totalOrders}</td>
         </tr>`).join('');
       return `
       <div class="panel" style="overflow:hidden;border-top:3px solid ${color}">
         <div class="panel-head" style="background:${color}22">
           <span class="panel-title" style="color:${color}">${countryFlag(c.country)}${c.country}</span>
         </div>
-        <table>
-          <thead><tr><th>Cola</th><th style="text-align:center">OPs</th><th style="text-align:right">Orders</th><th style="text-align:right">Total</th></tr></thead>
-          <tbody>${rows}</tbody>
-          <tfoot><tr style="font-weight:800"><td colspan="2">Total</td><td style="text-align:right;color:${leadsOrdersColor(c.sumOrders)}">${c.sumOrders}</td><td style="text-align:right">${c.sumTotalOrders}</td></tr></tfoot>
-        </table>
+        <div style="overflow-x:auto">
+          <table style="min-width:290px">
+            <thead><tr><th style="padding:10px 8px;white-space:nowrap">Cola</th><th style="text-align:center;padding:10px 4px;white-space:nowrap">OPs</th><th style="text-align:right;padding:10px 8px;white-space:nowrap">Orders</th><th style="text-align:right;padding:10px 8px;white-space:nowrap">Total</th></tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr style="font-weight:800"><td colspan="2" style="padding:10px 8px;white-space:nowrap">Total</td><td style="text-align:right;padding:10px 8px;color:${leadsOrdersColor(c.sumOrders)}">${c.sumOrders}</td><td style="text-align:right;padding:10px 8px">${c.sumTotalOrders}</td></tr></tfoot>
+          </table>
+        </div>
       </div>`;
     }).join('');
   }
@@ -6250,7 +6261,9 @@
   /* ── Alertas: siempre calculadas sobre TODO (normal + post sale), sin importar el switch ── */
   function leadsComputeAlerts(row) {
     const countries = row.by_country || [];
-    const postSaleAsCountries = (row.post_sale || []).map(c => ({ country: c.country, queues: [{ ops: c.ops, orders: c.orders }], sumOrders: c.orders }));
+    // Etiqueta "(Post-Sale)" para no confundirla con la campaña normal del mismo país —
+    // son campañas distintas y pueden tener problemas distintos al mismo tiempo.
+    const postSaleAsCountries = (row.post_sale || []).map(c => ({ country: `${c.country} (Post-Sale)`, queues: [{ ops: c.ops, orders: c.orders }], sumOrders: c.orders }));
     const all = [...countries, ...postSaleAsCountries];
 
     const noOps = all.filter(c => c.queues.reduce((s, q) => s + q.ops, 0) === 0).map(c => c.country);
@@ -6291,9 +6304,9 @@
       const critical = a.level === 'critical';
       const color = critical ? 'var(--red)' : 'var(--amber)';
       const bg = critical ? 'var(--red-soft)' : 'var(--amber-soft)';
-      return `<div style="padding:12px;border-radius:var(--radius-sm);background:${bg};border:1px solid ${color};margin-bottom:10px">
-        <div style="font-size:12px;font-weight:800;color:${color};margin-bottom:3px">${critical ? '🔴' : '🟡'} ${a.title}</div>
-        <div style="font-size:11.5px;color:var(--text-mid);line-height:1.4">${a.text}</div>
+      return `<div style="padding:16px;border-radius:var(--radius);background:${bg};border:1.5px solid ${color};margin-bottom:14px">
+        <div style="font-size:15px;font-weight:800;color:${color};margin-bottom:6px;display:flex;align-items:center;gap:6px"><span style="font-size:18px">${critical ? '🔴' : '🟡'}</span> ${a.title}</div>
+        <div style="font-size:13.5px;color:var(--text-dark);line-height:1.5">${a.text}</div>
       </div>`;
     }).join('');
   }
