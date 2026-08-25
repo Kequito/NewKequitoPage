@@ -1329,10 +1329,11 @@
               <th onclick="otSortTable(2)">Operador <span class="sort-icon">↕</span></th>
               <th>País</th>
               <th onclick="otSortTable(4)">Horario <span class="sort-icon">↕</span></th>
-              <th onclick="otSortTable(5)">Órdenes Únicas <span class="sort-icon">↕</span></th>
-              <th onclick="otSortTable(6)">Ventas (Approve) <span class="sort-icon">↕</span></th>
-              <th onclick="otSortTable(7)">Reject <span class="sort-icon">↕</span></th>
-              <th onclick="otSortTable(8)">Trash <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(5)">Recalls <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(6)">Órdenes Únicas <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(7)">Ventas (Approve) <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(8)">Reject <span class="sort-icon">↕</span></th>
+              <th onclick="otSortTable(9)">Trash <span class="sort-icon">↕</span></th>
             </tr>
           </thead>
           <tbody id="ot-tbody"></tbody>
@@ -1344,6 +1345,9 @@
         <small>Sube el Excel del día desde el botón de arriba</small>
       </div>
     </div>
+
+    <!-- Mini menú flotante con los Recalls de un operador (contenido dinámico, se posiciona junto al botón que lo abrió) -->
+    <div id="ot-recalls-popup" style="display:none;position:fixed;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);z-index:200;min-width:280px;max-width:360px;max-height:380px;overflow-y:auto"></div>
 
     <!-- ── Evolución por operador ── -->
     <div class="panel">
@@ -3094,6 +3098,8 @@
   let otRawRowsToday = [];        // dt_ops_today sin filtrar por campaña, para poder alternar el switch sin recargar
   let otPrevMap = {};             // operator -> snapshot anterior (deltas), independiente de la campaña
   let otCampaignMode = 'normal';  // 'normal' (Aray, Adcombo) | 'postsale' — se distinguen solo por el horario
+  let otRecallsByOperator = {};   // PEROP1AM -> [fila de dt_recalls] — directo de "Órdenes Actuales" en Gestión de Recalls
+  let otRecallsPopupOperator = null; // operador cuyo mini menú de Recalls está abierto (null = cerrado)
 
   /* El único horario de Post-Sale es 09:00-18:00 (mismo criterio parcial que gdScheduleBadge/SCHEDULE_COLORS) */
   function otIsPostSaleHorario(horario) {
@@ -3154,6 +3160,17 @@
     }
   }
 
+  /* Recalls de "Órdenes Actuales" (dt_recalls, la tabla de la izquierda en Gestión de
+     Recalls) — directo, sin depender de que esa sección ya se haya visitado en la sesión. */
+  async function otFetchRecalls() {
+    try {
+      return await sbFetch('dt_recalls', 'select=id_in_cc,country,substatus,cc_comment,status_check,last_call_operator');
+    } catch (err) {
+      console.error('Error cargando Recalls para Stats OPs Today:', err);
+      return [];
+    }
+  }
+
   /* Medianoche GMT-5 de "hoy", como instante UTC real — fijo, sin importar la zona
      horaria del navegador de quien esté viendo la página. */
   function otTodayResetBoundaryUTC() {
@@ -3164,16 +3181,35 @@
     return new Date(Date.UTC(y, m, d, 0, 0, 0) - GMT_OFFSET_HOURS * 3600000);
   }
 
-  /* Solo cuenta como "snapshot anterior" si es de HOY (GMT-5) — así cada día arranca
-     en blanco para efectos de comparación, sin borrar nada del historial real. */
-  async function otFetchLastSnapshot() {
+  /* Clave de "hora calendario" en GMT-5 (año-mes-día-hora) — dos timestamps con la misma
+     clave cayeron dentro de la misma hora en punto, sin importar los minutos. */
+  function otHourBucketKey(iso) {
+    const GMT_OFFSET_HOURS = -5;
+    const d = new Date(new Date(iso).getTime() + GMT_OFFSET_HOURS * 3600000);
+    return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}-${d.getUTCHours()}`;
+  }
+
+  /* La comparación ya no es "contra la carga inmediatamente anterior" sino "contra la
+     última carga de la hora previa": si dos cargas caen dentro de la MISMA hora en punto
+     (ej. 8:10 y 8:30) no se comparan entre sí — se sigue comparando contra la última carga
+     de la hora anterior (ej. la de las 7:xx), hasta que se cruce a una hora distinta.
+     Solo cuenta lo de HOY (GMT-5) — cada día arranca en blanco, sin borrar el historial real. */
+  async function otFetchLastSnapshot(currentUploadedAtIso) {
     try {
       const boundary = otTodayResetBoundaryUTC().toISOString();
       const rows = await sbFetch(
         'dt_ops_today_history',
-        `select=created_at,rows&created_at=gte.${encodeURIComponent(boundary)}&order=created_at.desc&limit=1`
+        `select=created_at,snapshot_uploaded_at,rows&created_at=gte.${encodeURIComponent(boundary)}&order=created_at.desc&limit=200`
       );
-      return (rows && rows.length > 0) ? rows[0] : null;
+      if (!rows || rows.length === 0) return null;
+      if (!currentUploadedAtIso) return rows[0]; // sin referencia horaria, se usa el más reciente
+
+      const currentBucket = otHourBucketKey(currentUploadedAtIso);
+      const withTime = rows.map(r => ({ ...r, _effTime: r.snapshot_uploaded_at || r.created_at }));
+      const earlier = withTime
+        .filter(r => otHourBucketKey(r._effTime) !== currentBucket)
+        .sort((a, b) => new Date(b._effTime) - new Date(a._effTime));
+      return earlier.length > 0 ? earlier[0] : null;
     } catch (err) {
       console.error('Error obteniendo snapshot anterior de Stats OPs Today:', err);
       return null;
@@ -3187,12 +3223,16 @@
     if (!res.ok) throw new Error(`Supabase delete error ${await acctErrorDetail(res)}`);
   }
 
-  /* Guarda el estado ACTUAL (antes de sobreescribirlo) como un punto de historial */
+  /* Guarda el estado ACTUAL (antes de sobreescribirlo) como un punto de historial —
+     guarda también su propia hora de carga (snapshot_uploaded_at), porque created_at
+     acá solo dice cuándo se archivó (o sea, cuándo llegó la carga SIGUIENTE), no cuándo
+     esta data en particular quedó vigente. Esa hora es la que se usa para agrupar por hora. */
   async function otArchiveCurrentAsSnapshot() {
     const current = await sbFetch('dt_ops_today', 'select=*');
     if (!current || current.length === 0) return; // nada que archivar en la primera carga del día
     const rows = otAggregateByOperator(current);
-    await sbInsert('dt_ops_today_history', [{ rows }]);
+    const snapshotUploadedAt = (current[0] && current[0].uploaded_at) || new Date().toISOString();
+    await sbInsert('dt_ops_today_history', [{ rows, snapshot_uploaded_at: snapshotUploadedAt }]);
   }
 
   async function otOnFileSelected(event) {
@@ -3295,18 +3335,28 @@
     otRenderDataLinkBtn();
 
     try {
-      const [rawRows, disRows, lastSnap, lastUpload] = await Promise.all([
+      const [rawRows, disRows, lastUpload, recallsRows] = await Promise.all([
         sbFetch('dt_ops_today', 'select=*'),
         sbFetch('dt_dis', 'select=PEROP1AM,ASESORES,TEAMLEADER,HORARIO'),
-        otFetchLastSnapshot(),
         otFetchLastUpload(),
+        otFetchRecalls(),
       ]);
+      // La comparación por hora necesita saber a qué hora quedó la data ACTUAL antes de
+      // buscar el snapshot anterior — por eso este fetch va después, no en el Promise.all.
+      const lastSnap = await otFetchLastSnapshot(lastUpload ? lastUpload.uploaded_at : null);
 
       otDisIndex = {};
       disRows.forEach(r => {
         const p = (r.PEROP1AM || '').trim();
         if (!p) return;
         otDisIndex[p] = { teamLeader: r.TEAMLEADER || '—', asesor: r.ASESORES || '—', horario: r.HORARIO || '—' };
+      });
+
+      otRecallsByOperator = {};
+      recallsRows.forEach(r => {
+        const op = (r.last_call_operator || '').trim();
+        if (!op) return;
+        (otRecallsByOperator[op] = otRecallsByOperator[op] || []).push(r);
       });
 
       otRawRowsToday = rawRows;
@@ -3346,6 +3396,7 @@
         deltaApprove: o.approve - prev.approve,
         deltaReject: o.reject - prev.reject,
         deltaTrash: o.trash - prev.trash,
+        recallsCount: (otRecallsByOperator[o.operator] || []).length,
       };
     });
     otCurrentByOperator.sort((a, b) => b.approve - a.approve);
@@ -3555,6 +3606,64 @@
     otRenderDetailTable();
   }
 
+  /* Mini menú flotante con los Recalls de un operador — un solo elemento reusado para
+     toda la tabla (no uno por fila), posicionado junto al botón que lo abrió. La lista
+     sale directo de "Órdenes Actuales" (dt_recalls) vía otRecallsByOperator. */
+  function otShowRecallsPopup(event, operator) {
+    event.stopPropagation();
+    const popup = document.getElementById('ot-recalls-popup');
+    if (otRecallsPopupOperator === operator && popup.style.display === 'block') {
+      otHideRecallsPopup();
+      return;
+    }
+    const rows = otRecallsByOperator[operator] || [];
+    const dis = otDisIndex[operator] || {};
+    const itemsHtml = rows.map(r => {
+      const cls = recStatusColorClass(r.status_check);
+      const dot = cls === 'rec-status-red' ? 'var(--red)' : cls === 'rec-status-yellow' ? 'var(--amber)' : 'var(--border)';
+      return `<div style="padding:9px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start">
+        <span style="width:7px;height:7px;border-radius:50%;background:${dot};flex-shrink:0;margin-top:5px"></span>
+        <div style="min-width:0">
+          <div style="font-size:12.5px;font-weight:700;white-space:nowrap">${r.id_in_cc || '—'} <span style="font-weight:400;color:var(--text-light)">${countryFlag(r.country)}${r.country || ''}</span></div>
+          <div style="font-size:11px;color:var(--text-mid)">${r.substatus || '—'}</div>
+          ${r.cc_comment ? `<div style="font-size:10.5px;color:var(--text-light);margin-top:2px">${r.cc_comment}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('') || `<div style="padding:16px;text-align:center;color:var(--text-light);font-size:12px">Sin recalls</div>`;
+
+    popup.innerHTML = `
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);background:var(--main-bg);position:sticky;top:0">
+        <div style="font-size:13px;font-weight:700">${dis.asesor || operator}</div>
+        <div style="font-size:10px;color:var(--text-light)">${operator} · ${rows.length} recall${rows.length === 1 ? '' : 's'}</div>
+      </div>
+      <div>${itemsHtml}</div>
+    `;
+
+    popup.style.display = 'block';
+    const btn = event.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const popupWidth = popup.offsetWidth || 300;
+    let left = rect.left;
+    if (left + popupWidth > window.innerWidth - 12) left = window.innerWidth - popupWidth - 12;
+    popup.style.left = `${Math.max(8, left)}px`;
+    popup.style.top = `${rect.bottom + 6}px`;
+
+    otRecallsPopupOperator = operator;
+  }
+
+  function otHideRecallsPopup() {
+    const popup = document.getElementById('ot-recalls-popup');
+    if (popup) popup.style.display = 'none';
+    otRecallsPopupOperator = null;
+  }
+
+  document.addEventListener('click', (e) => {
+    const popup = document.getElementById('ot-recalls-popup');
+    if (!popup || popup.style.display === 'none' || popup.contains(e.target)) return;
+    otHideRecallsPopup();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') otHideRecallsPopup(); });
+
   /* Fondo degradado por RANKING de valores distintos (no por posición lineal entre min y
      max) — así el primer lugar siempre se ve claramente más fuerte que el resto, incluso
      cuando varios operadores tienen valores parecidos agrupados hacia arriba. Alpha amplio
@@ -3575,7 +3684,7 @@
   }
 
   /* Orden de columnas en #ot-table — null = no ordenable (toggle expandir, País es multi-valor) */
-  const OT_SORT_KEYS = [null, 'teamLeader', 'asesor', null, 'horario', 'uniqueOrders', 'approve', 'reject', 'trash'];
+  const OT_SORT_KEYS = [null, 'teamLeader', 'asesor', null, 'horario', 'recallsCount', 'uniqueOrders', 'approve', 'reject', 'trash'];
   let otSortCol = null;
   let otSortDir = {};
 
@@ -3600,6 +3709,7 @@
   }
 
   function otRenderDetailTable() {
+    otHideRecallsPopup(); // el tbody se reconstruye entero — un popup abierto quedaría apuntando a un botón que ya no existe
     const table = document.getElementById('ot-table');
     const empty = document.getElementById('ot-detail-empty');
     const tbody = document.getElementById('ot-tbody');
@@ -3629,12 +3739,18 @@
         ? `<button class="btn btn-ghost btn-sm" onclick="otToggleExpand('${safeOp}')" style="padding:2px 8px">${expanded ? '▾' : '▸'}</button>`
         : '';
 
+      const recallsCount = o.recallsCount || 0;
+      const recallsCell = recallsCount > 0
+        ? `<button class="btn btn-ghost btn-sm" onclick="otShowRecallsPopup(event,'${safeOp}')" style="white-space:nowrap;font-weight:700;color:var(--nav-accent)">🔁 ${recallsCount}</button>`
+        : `<span style="color:var(--text-light);font-size:12px">—</span>`;
+
       const mainRow = `<tr>
         <td>${toggleCell}</td>
         <td>${recTlBadge(o.teamLeader)}</td>
         <td>${o.asesor}<div style="font-size:10px;color:var(--text-light)">${o.operator}</div></td>
         <td style="white-space:nowrap">${otCountryCellHTML(o)}</td>
         <td>${gdScheduleBadge(o.horario)}</td>
+        <td>${recallsCell}</td>
         <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.uniqueOrders, uoRank, '156,168,181')}">${o.uniqueOrders} ${otDeltaHTML(o.deltaUniqueOrders, 'uniqueOrders')}</td>
         <td style="white-space:nowrap;font-size:17px;font-weight:800;color:var(--green);${otHeatBg(o.approve, apRank, '34,197,94')}">${o.approve} ${otDeltaHTML(o.deltaApprove, 'approve')}</td>
         <td style="white-space:nowrap;font-size:16px;font-weight:700;${otHeatBg(o.reject, rjRank, '240,96,92')}">${o.reject} ${otDeltaHTML(o.deltaReject, 'reject')}</td>
@@ -3649,6 +3765,7 @@
           <td></td>
           <td></td>
           <td style="color:var(--text-light);font-size:12px;white-space:nowrap">${countryFlag(c.country)}${c.country}</td>
+          <td></td>
           <td></td>
           <td>${c.uniqueOrders}</td>
           <td style="font-weight:700">${c.approve}</td>
