@@ -1805,28 +1805,34 @@
       <p>Aún no hay ninguna actualización guardada</p><small>Pega el bloque de colas copiado del panel y presiona "Actualizar" para que aparezca aquí para todos</small>
     </div>
 
-    <!-- KPIs globales -->
-    <div class="kpi-grid" id="leads-kpis" style="display:none;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:22px"></div>
-
-    <!-- Cuadrícula de tarjetas por país -->
-    <div id="leads-country-grid" style="display:none;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:22px"></div>
-
-    <!-- Post Sale -->
-    <div class="panel" id="leads-postsale-panel" style="display:none;margin-bottom:22px;overflow:hidden">
-      <div class="panel-head">
-        <span class="panel-title">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-          Post Sale
-        </span>
+    <!-- Switch de tipo de campaña — mismo mecanismo que Stats OPs Today -->
+    <div class="panel" id="leads-campaign-switch" style="display:none;margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px">
+        <span style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Tipo de campaña</span>
+        <button class="btn btn-sm btn-primary leads-campaign-btn" data-mode="normal" onclick="leadsSetCampaignMode('normal')">Campaña Normal (Aray, Adcombo)</button>
+        <button class="btn btn-sm btn-ghost leads-campaign-btn" data-mode="postsale" onclick="leadsSetCampaignMode('postsale')">Post-Sale</button>
       </div>
-      <div class="tbl-wrap">
-        <table>
-          <thead>
-            <tr><th>País</th><th>Orders</th><th>Total orders</th></tr>
-          </thead>
-          <tbody id="leads-postsale-tbody"></tbody>
-          <tfoot id="leads-postsale-tfoot"></tfoot>
-        </table>
+    </div>
+
+    <!-- Contenido + panel de alertas a la derecha -->
+    <div id="leads-content-wrap" style="display:none;gap:20px;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <!-- KPIs globales -->
+        <div class="kpi-grid" id="leads-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:22px"></div>
+
+        <!-- Cuadrícula de tarjetas por país -->
+        <div id="leads-country-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px"></div>
+      </div>
+
+      <!-- Cuadro de alertas -->
+      <div class="panel" style="width:320px;flex-shrink:0;overflow:hidden">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--amber)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            Alertas
+          </span>
+        </div>
+        <div class="panel-body" id="leads-alerts-body" style="max-height:640px;overflow-y:auto"></div>
       </div>
     </div>
 
@@ -5993,7 +5999,9 @@
   let leadsLoaded = false;
   let leadsLatest = null;          // última fila guardada en dt_leads_campana (o null)
   let leadsCooldownTimer = null;
+  let leadsCampaignMode = 'normal'; // 'normal' (Aray, Adcombo) | 'postsale' — igual que Stats OPs Today
   const LEADS_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutos
+  const LEADS_LOW_ORDERS_THRESHOLD = 3; // "fila" en rojo cuando quedan menos de 3 leads disponibles
 
   function canEditLeads() {
     const stored = sessionStorage.getItem(SESSION_KEY);
@@ -6138,14 +6146,47 @@
 
     const hasData = !!(row && row.by_country && row.by_country.length > 0);
     document.getElementById('leads-empty-state').style.display = hasData ? 'none' : 'flex';
-    document.getElementById('leads-kpis').style.display = hasData ? 'grid' : 'none';
-    document.getElementById('leads-country-grid').style.display = hasData ? 'grid' : 'none';
-    document.getElementById('leads-postsale-panel').style.display = hasData ? 'block' : 'none';
+    document.getElementById('leads-campaign-switch').style.display = hasData ? 'block' : 'none';
+    document.getElementById('leads-content-wrap').style.display = hasData ? 'flex' : 'none';
 
     if (!hasData) return;
-    leadsRenderKPIs(row.global || { orders: 0, totalOrders: 0 });
-    leadsRenderCountryCards(row.by_country || []);
-    leadsRenderPostSale(row.post_sale || []);
+    leadsRenderCurrentMode();
+    leadsRenderAlerts(row);
+  }
+
+  /* Convierte la lista de Post-Sale (una fila por país) a la misma forma que by_country
+     (país -> queues[]), así se puede reusar exactamente el mismo render de tarjetas. */
+  function leadsPostSaleAsCards(list) {
+    return (list || []).map(c => ({
+      country: c.country,
+      queues: [{ name: `${c.country}-PS-Auto`, ops: c.ops, orders: c.orders, totalOrders: c.totalOrders }],
+      sumOrders: c.orders,
+      sumTotalOrders: c.totalOrders,
+    }));
+  }
+
+  function leadsSetCampaignMode(mode) {
+    if (leadsCampaignMode === mode) return;
+    leadsCampaignMode = mode;
+    document.querySelectorAll('.leads-campaign-btn').forEach(b => {
+      const active = b.dataset.mode === mode;
+      b.classList.toggle('btn-primary', active);
+      b.classList.toggle('btn-ghost', !active);
+    });
+    leadsRenderCurrentMode();
+  }
+
+  /* Redibuja KPIs + tarjetas según el modo activo — sin volver a pedir nada a Supabase */
+  function leadsRenderCurrentMode() {
+    if (!leadsLatest) return;
+    const wantPostSale = leadsCampaignMode === 'postsale';
+    const countries = wantPostSale ? leadsPostSaleAsCards(leadsLatest.post_sale) : (leadsLatest.by_country || []);
+    const global = wantPostSale
+      ? { orders: countries.reduce((s, c) => s + c.sumOrders, 0), totalOrders: countries.reduce((s, c) => s + c.sumTotalOrders, 0) }
+      : (leadsLatest.global || { orders: 0, totalOrders: 0 });
+
+    leadsRenderKPIs(global, wantPostSale);
+    leadsRenderCountryCards(countries);
   }
 
   function leadsRenderLastUpdate(row) {
@@ -6158,28 +6199,38 @@
       `${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
   }
 
-  function leadsRenderKPIs(global) {
+  function leadsRenderKPIs(global, isPostSale) {
     const wrap = document.getElementById('leads-kpis');
+    const scope = isPostSale ? '(Post-Sale)' : '(Campaña Normal)';
     wrap.innerHTML = `
       <div class="kpi-card">
-        <div class="kpi-header"><span class="kpi-label">Leads Disponibles (todas las campañas)</span></div>
-        <div class="kpi-value" style="color:${global.orders > 0 ? 'var(--green)' : 'var(--red)'}">${global.orders.toLocaleString('es-PE')}</div>
+        <div class="kpi-header"><span class="kpi-label">Leads Disponibles ${scope}</span></div>
+        <div class="kpi-value" style="color:${global.orders >= LEADS_LOW_ORDERS_THRESHOLD ? 'var(--green)' : 'var(--red)'}">${global.orders.toLocaleString('es-PE')}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-header"><span class="kpi-label">Leads Totales (todas las campañas)</span></div>
+        <div class="kpi-header"><span class="kpi-label">Leads Totales ${scope}</span></div>
         <div class="kpi-value">${global.totalOrders.toLocaleString('es-PE')}</div>
       </div>`;
   }
 
+  /* Fila en rojo cuando quedan menos de LEADS_LOW_ORDERS_THRESHOLD leads disponibles */
+  function leadsOrdersColor(orders) {
+    return orders >= LEADS_LOW_ORDERS_THRESHOLD ? 'var(--green)' : 'var(--red)';
+  }
+
   function leadsRenderCountryCards(countries) {
     const grid = document.getElementById('leads-country-grid');
+    if (countries.length === 0) {
+      grid.innerHTML = `<div class="gd-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)"><p>Sin datos para este tipo de campaña</p></div>`;
+      return;
+    }
     grid.innerHTML = countries.map((c, i) => {
       const color = REP_COUNTRY_COLORS[c.country] || REP_FALLBACK_COLORS[i % REP_FALLBACK_COLORS.length];
       const rows = c.queues.map(q => `
-        <tr>
+        <tr style="${q.orders < LEADS_LOW_ORDERS_THRESHOLD ? 'background:rgba(239,68,68,.14)' : ''}">
           <td style="white-space:nowrap">${q.name}</td>
           <td style="text-align:center">${q.ops}</td>
-          <td style="text-align:right;font-weight:800;color:${q.orders > 0 ? 'var(--green)' : 'var(--red)'}">${q.orders}</td>
+          <td style="text-align:right;font-weight:800;color:${leadsOrdersColor(q.orders)}">${q.orders}</td>
           <td style="text-align:right;color:var(--text-light)">${q.totalOrders}</td>
         </tr>`).join('');
       return `
@@ -6190,24 +6241,61 @@
         <table>
           <thead><tr><th>Cola</th><th style="text-align:center">OPs</th><th style="text-align:right">Orders</th><th style="text-align:right">Total</th></tr></thead>
           <tbody>${rows}</tbody>
-          <tfoot><tr style="font-weight:800"><td colspan="2">Total</td><td style="text-align:right;color:${c.sumOrders > 0 ? 'var(--green)' : 'var(--red)'}">${c.sumOrders}</td><td style="text-align:right">${c.sumTotalOrders}</td></tr></tfoot>
+          <tfoot><tr style="font-weight:800"><td colspan="2">Total</td><td style="text-align:right;color:${leadsOrdersColor(c.sumOrders)}">${c.sumOrders}</td><td style="text-align:right">${c.sumTotalOrders}</td></tr></tfoot>
         </table>
       </div>`;
     }).join('');
   }
 
-  function leadsRenderPostSale(list) {
-    const tbody = document.getElementById('leads-postsale-tbody');
-    const tfoot = document.getElementById('leads-postsale-tfoot');
-    tbody.innerHTML = list.map(c => `
-      <tr>
-        <td style="white-space:nowrap">${countryFlag(c.country)}${c.country}</td>
-        <td style="text-align:right;font-weight:800;color:${c.orders > 0 ? 'var(--green)' : 'var(--red)'}">${c.orders}</td>
-        <td style="text-align:right;color:var(--text-light)">${c.totalOrders}</td>
-      </tr>`).join('');
-    const sumOrders = list.reduce((s, c) => s + c.orders, 0);
-    const sumTotalOrders = list.reduce((s, c) => s + c.totalOrders, 0);
-    tfoot.innerHTML = `<tr style="font-weight:800"><td>Total</td><td style="text-align:right">${sumOrders}</td><td style="text-align:right">${sumTotalOrders}</td></tr>`;
+  /* ── Alertas: siempre calculadas sobre TODO (normal + post sale), sin importar el switch ── */
+  function leadsComputeAlerts(row) {
+    const countries = row.by_country || [];
+    const postSaleAsCountries = (row.post_sale || []).map(c => ({ country: c.country, queues: [{ ops: c.ops, orders: c.orders }], sumOrders: c.orders }));
+    const all = [...countries, ...postSaleAsCountries];
+
+    const noOps = all.filter(c => c.queues.reduce((s, q) => s + q.ops, 0) === 0).map(c => c.country);
+    const noLeads = all.filter(c => c.sumOrders === 0).map(c => c.country);
+    // "Por quedarse sin leads": las primeras 3 colas ya en 0, pero el total todavía no está en 0
+    // (si ya está en 0 esa campaña, cae directo en la alerta crítica de arriba, no hace falta repetirla)
+    const nearEmpty = countries
+      .filter(c => c.sumOrders > 0 && c.queues.slice(0, 3).length > 0 && c.queues.slice(0, 3).every(q => q.orders === 0))
+      .map(c => c.country);
+
+    const alerts = [];
+    if (noOps.length > 0) {
+      alerts.push({ level: 'critical', title: 'Sin operadores conectados',
+        text: `${noOps.length} campaña${noOps.length > 1 ? 's' : ''} sin ningún operador conectado: ${noOps.join(', ')}.` });
+    }
+    if (noLeads.length > 0) {
+      alerts.push({ level: 'critical', title: 'Sin leads disponibles',
+        text: `${noLeads.length} campaña${noLeads.length > 1 ? 's' : ''} sin leads disponibles: ${noLeads.join(', ')}.` });
+    }
+    if (nearEmpty.length > 0) {
+      alerts.push({ level: 'warning', title: 'Por quedarse sin leads',
+        text: `${nearEmpty.length} campaña${nearEmpty.length > 1 ? 's' : ''} con las primeras 3 colas ya en 0 — cerca de agotarse por completo: ${nearEmpty.join(', ')}.` });
+    }
+    return alerts;
+  }
+
+  function leadsRenderAlerts(row) {
+    const body = document.getElementById('leads-alerts-body');
+    const alerts = leadsComputeAlerts(row);
+    if (alerts.length === 0) {
+      body.innerHTML = `<div style="text-align:center;color:var(--text-light);font-size:12px;padding:24px 10px">
+        <div style="font-size:24px;margin-bottom:8px">✓</div>
+        Todo en orden — sin alertas por ahora
+      </div>`;
+      return;
+    }
+    body.innerHTML = alerts.map(a => {
+      const critical = a.level === 'critical';
+      const color = critical ? 'var(--red)' : 'var(--amber)';
+      const bg = critical ? 'var(--red-soft)' : 'var(--amber-soft)';
+      return `<div style="padding:12px;border-radius:var(--radius-sm);background:${bg};border:1px solid ${color};margin-bottom:10px">
+        <div style="font-size:12px;font-weight:800;color:${color};margin-bottom:3px">${critical ? '🔴' : '🟡'} ${a.title}</div>
+        <div style="font-size:11.5px;color:var(--text-mid);line-height:1.4">${a.text}</div>
+      </div>`;
+    }).join('');
   }
 
   function leadsTogglePaste() {
