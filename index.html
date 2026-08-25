@@ -6294,7 +6294,8 @@
     } catch (err) {
       console.error('Error guardando Leads por Campaña:', err);
       status.style.color = 'var(--red)';
-      status.textContent = 'No se pudo guardar, intenta de nuevo.';
+      status.textContent = (err && err.message) ? err.message : 'No se pudo guardar, intenta de nuevo.';
+      status.title = status.textContent;
       btn.disabled = false;
     }
   }
