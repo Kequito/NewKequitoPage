@@ -6053,14 +6053,22 @@
     const rows = [];
     for (let i = 1; i < lines.length; i++) {
       const cells = lines[i].split('\t');
-      const name = (cells[idx.name] || '').trim();
+      if (cells.length < 2) continue; // líneas sueltas (ej. el ícono ☰ de arrastre) sin data real
+
+      // El panel a veces no repite en cada fila la primera columna vacía (checkbox/drag-handle)
+      // que sí aparece en el encabezado — si a esta fila le falta exactamente esa celda,
+      // todo lo demás se corrió un puesto a la izquierda. Se detecta comparando el largo.
+      const offset = (headerCells.length - cells.length === 1) ? 1 : 0;
+      const get = (colIdx) => cells[colIdx - offset];
+
+      const name = (get(idx.name) || '').trim();
       if (!name) continue;
       rows.push({
         name,
-        country: leadsNormalizeCountry(cells[idx.country] || ''),
-        ops: idx.ops !== -1 ? leadsLeftOf(cells[idx.ops], '|') : 0,
-        orders: leadsLeftOf(cells[idx.capacity], '->'),
-        totalOrders: leadsLeftOf(cells[idx.orders], '|'),
+        country: leadsNormalizeCountry(get(idx.country) || ''),
+        ops: idx.ops !== -1 ? leadsLeftOf(get(idx.ops), '|') : 0,
+        orders: leadsLeftOf(get(idx.capacity), '->'),
+        totalOrders: leadsLeftOf(get(idx.orders), '|'),
       });
     }
     return rows;
