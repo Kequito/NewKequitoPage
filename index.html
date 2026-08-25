@@ -868,6 +868,10 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
     Gestión de Recalls
   </div>
+  <div class="nav-item" onclick="setNav(this, 'leads')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>
+    Leads por Campaña
+  </div>
   <div class="nav-item" onclick="setNav(this, 'tl')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
     Top Team Leader
@@ -1737,6 +1741,97 @@
 
   </div>
 
+  <!-- ══ VIEW: LEADS POR CAMPAÑA ══ -->
+  <div class="view" id="view-leads">
+
+    <!-- Header bar -->
+    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>
+          Leads por Campaña
+        </div>
+        <div id="leads-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
+          <a id="leads-data-link-btn" class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noopener" style="cursor:pointer;margin:0;text-decoration:none" onclick="return leadsOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
+            Data
+          </a>
+          <button id="leads-data-edit-btn" class="btn btn-ghost btn-sm" type="button" style="display:none;cursor:pointer;margin:0" onclick="leadsEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
+        </div>
+      </div>
+
+      <!-- Última actualización de la data -->
+      <div id="leads-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 0;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(76,141,255,.35);border-radius:var(--radius)">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
+          <div id="leads-lastupd-name" style="font-size:19px;font-weight:800;color:#fff;line-height:1.3">—</div>
+          <div id="leads-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
+        </div>
+      </div>
+
+      <div style="padding:12px 20px 16px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left" class="gd-state">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <small>Cualquier Team Leader o Supervisor puede pegar los datos y actualizar — después de cada actualización hay un bloqueo de 3 minutos antes de poder volver a actualizar, para evitar choques entre varias personas a la vez.</small>
+      </div>
+    </div>
+
+    <!-- Paste box -->
+    <div class="panel" id="leads-paste-panel" style="display:none;margin-bottom:22px">
+      <div class="panel-head" style="cursor:pointer" onclick="leadsTogglePaste()">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/></svg>
+          Pegar datos del Panel de Colas
+        </span>
+        <svg id="leads-paste-chevron" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:var(--text-light);transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+      </div>
+      <div class="panel-body" id="leads-paste-body">
+        <textarea id="leads-raw-input" placeholder="Pega aquí el bloque completo copiado del Panel de colas (incluye el encabezado: Country, Name, Number of operators, Capacity, Orders...)" style="width:100%;min-height:150px;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-mid);font-family:inherit;font-size:12px;padding:14px;resize:vertical;outline:none"></textarea>
+        <div id="leads-parse-error" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:12px;margin-top:10px"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="leads-update-btn" onclick="leadsSave()">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            Actualizar
+          </button>
+          <span id="leads-save-status" style="font-size:12px;font-weight:600"></span>
+          <span id="leads-cooldown-text" style="font-size:11.5px;color:var(--text-light)"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state antes de la primera actualización guardada -->
+    <div class="gd-state" id="leads-empty-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>
+      <p>Aún no hay ninguna actualización guardada</p><small>Pega el bloque de colas copiado del panel y presiona "Actualizar" para que aparezca aquí para todos</small>
+    </div>
+
+    <!-- KPIs globales -->
+    <div class="kpi-grid" id="leads-kpis" style="display:none;grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:22px"></div>
+
+    <!-- Cuadrícula de tarjetas por país -->
+    <div id="leads-country-grid" style="display:none;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:22px"></div>
+
+    <!-- Post Sale -->
+    <div class="panel" id="leads-postsale-panel" style="display:none;margin-bottom:22px;overflow:hidden">
+      <div class="panel-head">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          Post Sale
+        </span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr><th>País</th><th>Orders</th><th>Total orders</th></tr>
+          </thead>
+          <tbody id="leads-postsale-tbody"></tbody>
+          <tfoot id="leads-postsale-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /view-leads -->
+
   <!-- ══ VIEW: TOP TEAM LEADER ══ -->
   <div class="view" id="view-tl">
 
@@ -2024,6 +2119,7 @@
     'opstoday':      'view-opstoday',
     'reportes':      'view-reportes',
     'recalls':       'view-recalls',
+    'leads':         'view-leads',
     'tl':            'view-tl',
     'actualizacion': 'view-actualizacion',
     'accounts':      'view-accounts',
@@ -2035,6 +2131,7 @@
     'opstoday':      ['Stats OPs Today', 'Avance de operadores a lo largo de la jornada'],
     'reportes':      ['Reporte', 'Generación y consulta de reportes'],
     'recalls':       ['Gestión de Recalls', 'Seguimiento de reasignación de órdenes'],
+    'leads':         ['Leads por Campaña', 'OPs conectados y leads disponibles por cola'],
     'tl':            ['Top Team Leader', 'Ranking y evolución de % Approve por Team Leader'],
     'actualizacion': ['Actualización de Data', 'Centraliza la carga de información de todas las secciones'],
     'accounts':      ['Gestión de Cuentas', 'Cuentas, contraseñas y permisos por cargo'],
@@ -2067,6 +2164,8 @@
     if (page === 'reportes' && !repLoaded) repInitView();
     // auto-load Recalls on first visit
     if (page === 'recalls' && !recLoaded) recInitView();
+    // auto-load Leads por Campaña on first visit
+    if (page === 'leads' && !leadsLoaded) leadsInitView();
     // auto-load Top Team Leader on first visit
     if (page === 'tl' && !tlLoaded) loadTlStats();
     // auto-load Inicio (normalmente ya se cargó en enterDashboard, esto es solo respaldo)
@@ -2103,6 +2202,8 @@
         await recLoadAll(true);
       } else if (currentPage === 'opstoday' && otLoaded && !otBusy) {
         await loadOpsToday(true);
+      } else if (currentPage === 'leads' && leadsLoaded) {
+        await leadsLoadLatest(true);
       }
     } catch (err) {
       console.error('Error en auto-refresh:', err);
@@ -5880,6 +5981,361 @@
         </tbody>
         <tfoot><tr><td style="font-weight:700">Total</td><td style="text-align:right;font-weight:700">${total}</td></tr></tfoot>
       </table>`;
+  }
+
+  /* ══════════════════════════════
+     LEADS POR CAMPAÑA — OPs conectados + leads disponibles por cola, pegado desde el
+     panel de colas (mismo mecanismo copy-paste que Reporte). Cualquier Team Leader o
+     Supervisor puede actualizar; solo el link de "Data" queda restringido a Supervisor.
+     Cooldown de 3 min compartido (basado en el created_at guardado, no en estado local)
+     para que no se pisen actualizaciones entre varias personas.
+  ══════════════════════════════ */
+  let leadsLoaded = false;
+  let leadsLatest = null;          // última fila guardada en dt_leads_campana (o null)
+  let leadsCooldownTimer = null;
+  const LEADS_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutos
+
+  function canEditLeads() {
+    const stored = sessionStorage.getItem(SESSION_KEY);
+    if (!stored) return false;
+    try {
+      const u = JSON.parse(stored);
+      const role = (u[2] || '').trim().toLowerCase();
+      return role === 'supervisor' || role === 'team leader';
+    } catch { return false; }
+  }
+
+  /* "3. Mexico" -> "Mexico" */
+  function leadsNormalizeCountry(raw) {
+    return (raw || '').replace(/^\s*\d+\.\s*/, '').trim();
+  }
+
+  /* Toma el lado izquierdo de un valor tipo "23 | 6" o "0 -> 3" */
+  function leadsLeftOf(val, sep) {
+    if (!val) return 0;
+    const part = String(val).split(sep)[0];
+    const n = parseInt(part.replace(/[^\d-]/g, ''), 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  /* Cola "principal" de una campaña: termina en N-N (ej. "Mexico 1-1", "Chile 5-2") y no
+     es una variante (Priority Call, Overflow, Vitaflex, Special, PS-1/2/3/Auto, WM...). */
+  function leadsIsMainQueue(name) {
+    const n = (name || '').trim();
+    if (!/\d+-\d+$/.test(n)) return false;
+    if (/priority call/i.test(n)) return false;
+    if (/overflow/i.test(n)) return false;
+    if (/vitaflex/i.test(n)) return false;
+    if (/special/i.test(n)) return false;
+    if (/\bWM\b/i.test(n)) return false;
+    if (/-PS-/i.test(n)) return false;
+    return true;
+  }
+
+  /* Cola de Post Sale que sí contamos: la final "-PS-Auto" (agrega el resto del pipeline PS) */
+  function leadsIsPostSaleAuto(name) {
+    return /-PS-Auto\s*$/i.test((name || '').trim());
+  }
+
+  function leadsParsePaste(raw) {
+    const lines = (raw || '').split('\n').map(l => l.replace(/\r$/, '')).filter(l => l.trim() !== '');
+    if (lines.length < 2) return [];
+    const headerCells = lines[0].split('\t').map(h => h.trim().toLowerCase());
+    const idx = {
+      country:  headerCells.findIndex(h => h === 'country'),
+      name:     headerCells.findIndex(h => h === 'name'),
+      ops:      headerCells.findIndex(h => h === 'number of operators'),
+      capacity: headerCells.findIndex(h => h === 'capacity'),
+      orders:   headerCells.findIndex(h => h === 'orders'),
+    };
+    if (idx.country === -1 || idx.name === -1 || idx.capacity === -1 || idx.orders === -1) return [];
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split('\t');
+      const name = (cells[idx.name] || '').trim();
+      if (!name) continue;
+      rows.push({
+        name,
+        country: leadsNormalizeCountry(cells[idx.country] || ''),
+        ops: idx.ops !== -1 ? leadsLeftOf(cells[idx.ops], '|') : 0,
+        orders: leadsLeftOf(cells[idx.capacity], '->'),
+        totalOrders: leadsLeftOf(cells[idx.orders], '|'),
+      });
+    }
+    return rows;
+  }
+
+  /* Orden natural por el sufijo N-N de la cola (1-1, 2-2, ... 5-2) */
+  function leadsQueueSortKey(name) {
+    const m = (name || '').match(/(\d+)-(\d+)\s*$/);
+    return m ? Number(m[1]) * 1000 + Number(m[2]) : 9999;
+  }
+
+  function leadsAggregate(rows) {
+    const byCountry = {};
+    const postSale = {};
+
+    rows.forEach(r => {
+      if (leadsIsMainQueue(r.name)) {
+        if (!byCountry[r.country]) byCountry[r.country] = { country: r.country, queues: [], sumOrders: 0, sumTotalOrders: 0 };
+        byCountry[r.country].queues.push(r);
+        byCountry[r.country].sumOrders += r.orders;
+        byCountry[r.country].sumTotalOrders += r.totalOrders;
+      } else if (leadsIsPostSaleAuto(r.name)) {
+        postSale[r.country] = { country: r.country, ops: r.ops, orders: r.orders, totalOrders: r.totalOrders };
+      }
+    });
+
+    const countries = Object.values(byCountry).sort((a, b) => a.country.localeCompare(b.country));
+    countries.forEach(c => c.queues.sort((a, b) => leadsQueueSortKey(a.name) - leadsQueueSortKey(b.name)));
+    const postSaleList = Object.values(postSale).sort((a, b) => a.country.localeCompare(b.country));
+
+    const global = {
+      orders: countries.reduce((s, c) => s + c.sumOrders, 0),
+      totalOrders: countries.reduce((s, c) => s + c.sumTotalOrders, 0),
+    };
+    const postSaleGlobal = {
+      orders: postSaleList.reduce((s, c) => s + c.orders, 0),
+      totalOrders: postSaleList.reduce((s, c) => s + c.totalOrders, 0),
+    };
+
+    return { countries, postSaleList, global, postSaleGlobal };
+  }
+
+  async function leadsFetchLatest() {
+    try {
+      const rows = await sbFetch('dt_leads_campana', 'select=*&order=created_at.desc&limit=1');
+      return (rows && rows.length > 0) ? rows[0] : null;
+    } catch (err) {
+      console.error('Error cargando dt_leads_campana:', err);
+      return null;
+    }
+  }
+
+  async function leadsInitView() {
+    leadsLoaded = true;
+    document.getElementById('leads-upload-wrap').style.display = 'flex';
+    document.getElementById('leads-paste-panel').style.display = canEditLeads() ? 'block' : 'none';
+    await leadsFetchDataLink();
+    leadsRenderDataLinkBtn();
+    await leadsLoadLatest();
+  }
+
+  async function leadsLoadLatest(silent = false) {
+    const row = await leadsFetchLatest();
+    leadsLatest = row;
+    leadsRenderLastUpdate(row);
+    leadsApplyCooldown(row ? row.created_at : null);
+
+    const hasData = !!(row && row.by_country && row.by_country.length > 0);
+    document.getElementById('leads-empty-state').style.display = hasData ? 'none' : 'flex';
+    document.getElementById('leads-kpis').style.display = hasData ? 'grid' : 'none';
+    document.getElementById('leads-country-grid').style.display = hasData ? 'grid' : 'none';
+    document.getElementById('leads-postsale-panel').style.display = hasData ? 'block' : 'none';
+
+    if (!hasData) return;
+    leadsRenderKPIs(row.global || { orders: 0, totalOrders: 0 });
+    leadsRenderCountryCards(row.by_country || []);
+    leadsRenderPostSale(row.post_sale || []);
+  }
+
+  function leadsRenderLastUpdate(row) {
+    const box = document.getElementById('leads-lastupd-box');
+    if (!row || !row.created_by) { box.style.display = 'none'; return; }
+    box.style.display = 'flex';
+    document.getElementById('leads-lastupd-name').textContent = row.created_by;
+    const d = new Date(row.created_at);
+    document.getElementById('leads-lastupd-time').textContent =
+      `${d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})} · ${d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}`;
+  }
+
+  function leadsRenderKPIs(global) {
+    const wrap = document.getElementById('leads-kpis');
+    wrap.innerHTML = `
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-label">Leads Disponibles (todas las campañas)</span></div>
+        <div class="kpi-value" style="color:${global.orders > 0 ? 'var(--green)' : 'var(--red)'}">${global.orders.toLocaleString('es-PE')}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span class="kpi-label">Leads Totales (todas las campañas)</span></div>
+        <div class="kpi-value">${global.totalOrders.toLocaleString('es-PE')}</div>
+      </div>`;
+  }
+
+  function leadsRenderCountryCards(countries) {
+    const grid = document.getElementById('leads-country-grid');
+    grid.innerHTML = countries.map((c, i) => {
+      const color = REP_COUNTRY_COLORS[c.country] || REP_FALLBACK_COLORS[i % REP_FALLBACK_COLORS.length];
+      const rows = c.queues.map(q => `
+        <tr>
+          <td style="white-space:nowrap">${q.name}</td>
+          <td style="text-align:center">${q.ops}</td>
+          <td style="text-align:right;font-weight:800;color:${q.orders > 0 ? 'var(--green)' : 'var(--red)'}">${q.orders}</td>
+          <td style="text-align:right;color:var(--text-light)">${q.totalOrders}</td>
+        </tr>`).join('');
+      return `
+      <div class="panel" style="overflow:hidden;border-top:3px solid ${color}">
+        <div class="panel-head" style="background:${color}22">
+          <span class="panel-title" style="color:${color}">${countryFlag(c.country)}${c.country}</span>
+        </div>
+        <table>
+          <thead><tr><th>Cola</th><th style="text-align:center">OPs</th><th style="text-align:right">Orders</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr style="font-weight:800"><td colspan="2">Total</td><td style="text-align:right;color:${c.sumOrders > 0 ? 'var(--green)' : 'var(--red)'}">${c.sumOrders}</td><td style="text-align:right">${c.sumTotalOrders}</td></tr></tfoot>
+        </table>
+      </div>`;
+    }).join('');
+  }
+
+  function leadsRenderPostSale(list) {
+    const tbody = document.getElementById('leads-postsale-tbody');
+    const tfoot = document.getElementById('leads-postsale-tfoot');
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td style="white-space:nowrap">${countryFlag(c.country)}${c.country}</td>
+        <td style="text-align:right;font-weight:800;color:${c.orders > 0 ? 'var(--green)' : 'var(--red)'}">${c.orders}</td>
+        <td style="text-align:right;color:var(--text-light)">${c.totalOrders}</td>
+      </tr>`).join('');
+    const sumOrders = list.reduce((s, c) => s + c.orders, 0);
+    const sumTotalOrders = list.reduce((s, c) => s + c.totalOrders, 0);
+    tfoot.innerHTML = `<tr style="font-weight:800"><td>Total</td><td style="text-align:right">${sumOrders}</td><td style="text-align:right">${sumTotalOrders}</td></tr>`;
+  }
+
+  function leadsTogglePaste() {
+    const body = document.getElementById('leads-paste-body');
+    const chevron = document.getElementById('leads-paste-chevron');
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    chevron.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
+  }
+
+  /* Bloqueo compartido de 3 min: se calcula desde el created_at guardado (no desde estado
+     local), así aplica igual para cualquier Team Leader o Supervisor que entre a la página. */
+  function leadsApplyCooldown(lastCreatedAtIso) {
+    if (leadsCooldownTimer) { clearInterval(leadsCooldownTimer); leadsCooldownTimer = null; }
+    const btn = document.getElementById('leads-update-btn');
+    const text = document.getElementById('leads-cooldown-text');
+    if (!btn || !text) return;
+
+    const tick = () => {
+      const remaining = lastCreatedAtIso
+        ? LEADS_COOLDOWN_MS - (Date.now() - new Date(lastCreatedAtIso).getTime())
+        : 0;
+      if (remaining <= 0) {
+        btn.disabled = false;
+        text.textContent = '';
+        if (leadsCooldownTimer) { clearInterval(leadsCooldownTimer); leadsCooldownTimer = null; }
+        return;
+      }
+      btn.disabled = true;
+      const mm = Math.floor(remaining / 60000);
+      const ss = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+      text.textContent = `Ya se actualizó hace poco — podrás volver a actualizar en ${mm}:${ss}`;
+    };
+
+    tick();
+    if (btn.disabled) leadsCooldownTimer = setInterval(tick, 1000);
+  }
+
+  async function leadsSave() {
+    if (!canEditLeads()) return;
+    const btn = document.getElementById('leads-update-btn');
+    const status = document.getElementById('leads-save-status');
+    const errBox = document.getElementById('leads-parse-error');
+    errBox.style.display = 'none';
+
+    // Revalida el cooldown contra el servidor justo antes de guardar — por si alguien más
+    // actualizó mientras esta persona tenía la página abierta.
+    const freshLatest = await leadsFetchLatest();
+    if (freshLatest && freshLatest.created_at) {
+      const remaining = LEADS_COOLDOWN_MS - (Date.now() - new Date(freshLatest.created_at).getTime());
+      if (remaining > 0) {
+        leadsLatest = freshLatest;
+        leadsApplyCooldown(freshLatest.created_at);
+        status.style.color = 'var(--amber)';
+        status.textContent = 'Alguien más acaba de actualizar — espera el bloqueo antes de intentar de nuevo.';
+        return;
+      }
+    }
+
+    const raw = document.getElementById('leads-raw-input').value;
+    const parsed = leadsParsePaste(raw);
+    if (parsed.length === 0) {
+      errBox.textContent = 'No pude reconocer filas válidas. Verifica que hayas pegado el bloque completo con encabezado (Country, Name, Number of operators, Capacity, Orders...).';
+      errBox.style.display = 'flex';
+      return;
+    }
+
+    const { countries, postSaleList, global } = leadsAggregate(parsed);
+    if (countries.length === 0) {
+      errBox.textContent = 'No encontré ninguna cola principal reconocible (ej. "Mexico 1-1") en lo que pegaste.';
+      errBox.style.display = 'flex';
+      return;
+    }
+
+    btn.disabled = true;
+    status.style.color = 'var(--text-light)';
+    status.textContent = 'Guardando...';
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+      await sbInsert('dt_leads_campana', [{
+        created_by: user ? user[0] : null,
+        by_country: countries,
+        post_sale: postSaleList,
+        global,
+      }]);
+      document.getElementById('leads-raw-input').value = '';
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Actualizado';
+      setTimeout(() => { status.textContent = ''; }, 6000);
+      await leadsLoadLatest();
+    } catch (err) {
+      console.error('Error guardando Leads por Campaña:', err);
+      status.style.color = 'var(--red)';
+      status.textContent = 'No se pudo guardar, intenta de nuevo.';
+      btn.disabled = false;
+    }
+  }
+
+  /* Link de "Data" — mismo mecanismo que Recalls/Stats OPs Today (dt_data_links,
+     section_key='leads'). Cualquiera puede abrirlo; solo Supervisor lo cambia. */
+  async function leadsFetchDataLink() {
+    try {
+      const rows = await sbFetch('dt_data_links', 'select=*&section_key=eq.leads');
+      if (rows && rows[0]) dataLinksMap['leads'] = rows[0];
+      else delete dataLinksMap['leads'];
+    } catch (err) {
+      console.error('Error cargando link de Data de Leads por Campaña:', err);
+    }
+  }
+
+  function leadsRenderDataLinkBtn() {
+    const btn = document.getElementById('leads-data-link-btn');
+    const editBtn = document.getElementById('leads-data-edit-btn');
+    if (!btn || !editBtn) return;
+    const link = dataLinksMap['leads'];
+    btn.href = (link && link.url) ? link.url : '#';
+    editBtn.style.display = isSupervisor() ? 'inline-flex' : 'none';
+  }
+
+  function leadsOpenDataLink(event) {
+    const link = dataLinksMap['leads'];
+    if (link && link.url) return true;
+    event.preventDefault();
+    if (isSupervisor()) {
+      leadsEditDataLink();
+    } else {
+      alert('Aún no se ha configurado el link de Data — pide a un Supervisor que lo configure.');
+    }
+    return false;
+  }
+
+  async function leadsEditDataLink() {
+    if (!isSupervisor()) return;
+    await dataLinkEdit('leads', 'Leads por Campaña');
+    leadsRenderDataLinkBtn();
   }
 
   /* ══════════════════════════════
