@@ -2040,7 +2040,10 @@
     'accounts':      ['Gestión de Cuentas', 'Cuentas, contraseñas y permisos por cargo'],
   };
 
+  let currentPage = 'dashboard'; // usado por el auto-refresh para saber qué sección está viendo cada quien
+
   function setNav(el, page) {
+    currentPage = page;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     el.classList.add('active');
     // switch view
@@ -2073,6 +2076,40 @@
     // Gestión de Cuentas: cada visita pide reconfirmar contraseña (portón propio en la vista)
     if (page === 'accounts') loadAccountsView();
   }
+
+  /* ══════════════════════════════
+     AUTO-REFRESH — Recalls y Stats OPs Today
+     Para que nadie quede viendo data vieja (alertas ya revisadas por otro TL, cargas
+     nuevas de Excel) sin tener que recargar la página. Cada 5 min, SOLO si la persona
+     está viendo esa sección en ese momento, se vuelve a pedir todo a Supabase y se
+     redibuja en silencio (sin spinners ni parpadeos) preservando filtros, búsqueda y
+     filas expandidas — esos ya viven en inputs/estado que el reload no toca.
+     Se salta el ciclo si hay una subida de Excel en curso en esa sección (recBusy/otBusy),
+     para no leer un estado a medio escribir mientras se borra e inserta.
+  ══════════════════════════════ */
+  const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+
+  function autoRefreshCloseTransientMenus() {
+    ['rec-copy-menu', 'rec-alert-copy-menu', 'rec-link-menu'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+
+  async function autoRefreshTick() {
+    try {
+      if (currentPage === 'recalls' && recLoaded && !recBusy) {
+        autoRefreshCloseTransientMenus();
+        await recLoadAll(true);
+      } else if (currentPage === 'opstoday' && otLoaded && !otBusy) {
+        await loadOpsToday(true);
+      }
+    } catch (err) {
+      console.error('Error en auto-refresh:', err);
+    }
+  }
+
+  setInterval(autoRefreshTick, AUTO_REFRESH_INTERVAL_MS);
 
   /* ── Toggle submenu ── */
   function toggleSub(el, subId) {
@@ -3236,6 +3273,8 @@
     await sbInsert('dt_ops_today_history', [{ rows, snapshot_uploaded_at: snapshotUploadedAt }]);
   }
 
+  let otBusy = false; // true durante la subida de Excel — el auto-refresh se salta el ciclo mientras tanto
+
   async function otOnFileSelected(event) {
     const file = event.target.files[0];
     event.target.value = '';
@@ -3244,6 +3283,7 @@
     const status = document.getElementById('ot-upload-status');
     status.style.color = 'var(--text-light)';
     status.textContent = 'Leyendo archivo...';
+    otBusy = true;
 
     try {
       const buf = await file.arrayBuffer();
@@ -3276,6 +3316,8 @@
       status.style.color = 'var(--red)';
       status.textContent = (err && err.message) ? err.message : 'Error al procesar el archivo, intenta de nuevo.';
       status.title = status.textContent;
+    } finally {
+      otBusy = false;
     }
   }
 
@@ -3329,11 +3371,15 @@
     otRenderDataLinkBtn();
   }
 
-  async function loadOpsToday() {
+  async function loadOpsToday(silent = false) {
     otLoaded = true;
     document.getElementById('ot-upload-wrap').style.display = canEditOpsToday() ? 'flex' : 'none';
-    await otFetchDataLink();
-    otRenderDataLinkBtn();
+    // silent = refresco automático de fondo (ver autoRefreshTick): se salta el link de
+    // Data porque casi nunca cambia, así el ciclo de sync solo pide lo que sí es volátil.
+    if (!silent) {
+      await otFetchDataLink();
+      otRenderDataLinkBtn();
+    }
 
     try {
       const [rawRows, disRows, lastUpload, recallsRows] = await Promise.all([
@@ -4722,6 +4768,8 @@
     if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
   }
 
+  let recBusy = false; // true durante la subida de Excel — el auto-refresh se salta el ciclo mientras tanto
+
   async function recOnFileSelected(event) {
     const file = event.target.files[0];
     event.target.value = ''; // permite volver a elegir el mismo archivo si hace falta reintentar
@@ -4730,6 +4778,7 @@
     const status = document.getElementById('rec-upload-status');
     status.style.color = 'var(--text-light)';
     status.textContent = 'Leyendo archivo...';
+    recBusy = true;
 
     try {
       const buf = await file.arrayBuffer();
@@ -4784,6 +4833,8 @@
       console.error('Error procesando Excel de Recalls:', err);
       status.style.color = 'var(--red)';
       status.textContent = 'Error al procesar el archivo, intenta de nuevo.';
+    } finally {
+      recBusy = false;
     }
   }
 
@@ -4876,10 +4927,12 @@
     }
   }
 
-  async function recLoadAll() {
-    document.getElementById('rec-loading').style.display = 'flex';
-    document.getElementById('rec-table').style.display   = 'none';
-    document.getElementById('rec-empty').style.display   = 'none';
+  async function recLoadAll(silent = false) {
+    if (!silent) {
+      document.getElementById('rec-loading').style.display = 'flex';
+      document.getElementById('rec-table').style.display   = 'none';
+      document.getElementById('rec-empty').style.display   = 'none';
+    }
 
     try {
       recCurrentRows = await sbFetch('dt_recalls', 'select=*&order=id_in_cc.asc');
