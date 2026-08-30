@@ -119,16 +119,15 @@
       position: relative;
       font-size: 14px; font-weight: 400;
       white-space: nowrap;
-      border-left: 3px solid transparent;
+      border-left: 3px solid var(--item-color, transparent);
       margin: 1px 0;
     }
     .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; opacity: .7; transition: opacity .18s; }
     .nav-item:hover { background: var(--nav-hover); color: #fff; }
     .nav-item:hover svg { opacity: 1; }
     .nav-item.active {
-      background: var(--nav-hover);
+      background: var(--item-bg-active, var(--nav-hover));
       color: #fff;
-      border-left-color: var(--nav-accent);
       font-weight: 600;
     }
     .nav-item.active svg { opacity: 1; }
@@ -483,21 +482,6 @@
     .rec-copy-menu-item.all { border-top: 1px solid var(--border); font-weight: 700; }
     .rec-copy-menu-range { font-size: 10px; color: var(--text-light); font-weight: 400; }
 
-    /* ─── Submenu ─── */
-    .sub-menu {
-      max-height: 0; overflow: hidden;
-      transition: max-height .25s ease;
-      background: rgba(0,0,0,.15);
-    }
-    .sub-menu.open { max-height: 200px; }
-    .nav-sub {
-      padding-left: 38px !important;
-      font-size: 12px !important;
-      border-left: 3px solid transparent;
-    }
-    .nav-sub.active { border-left-color: var(--nav-accent); }
-    .nav-parent .chevron.rotated { transform: rotate(180deg); }
-
     /* ─── Animations ─── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(12px); }
@@ -832,62 +816,10 @@
     </div>
   </div>
 
-  <div class="sidebar-section-label">Principal</div>
-
-  <div class="nav-item active" onclick="setNav(this, 'dashboard')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-    Inicio
-  </div>
-
-  <!-- Distribución con submenú -->
-  <div class="nav-item nav-parent" onclick="toggleSub(this, 'sub-dist')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
-    Distribución
-    <svg class="chevron" viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;margin-left:auto;transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
-  </div>
-  <div class="sub-menu" id="sub-dist">
-    <div class="nav-item nav-sub" id="nav-goodday" onclick="setNav(this, 'goodday')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
-      GoodDay
-    </div>
-    <div class="nav-item nav-sub" id="nav-ops" onclick="setNav(this, 'ops')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
-      Approve Stats
-    </div>
-    <div class="nav-item nav-sub" id="nav-opstoday" onclick="setNav(this, 'opstoday')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-      Stats OPs Today
-    </div>
-  </div>
-
-  <div class="nav-item" id="nav-reportes" onclick="setNav(this, 'reportes')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-    Reporte
-  </div>
-  <div class="nav-item" onclick="setNav(this, 'recalls')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-    Gestión de Recalls
-  </div>
-  <div class="nav-item" onclick="setNav(this, 'leads')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>
-    Leads por Campaña
-  </div>
-  <div class="nav-item" onclick="setNav(this, 'tl')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
-    Top Team Leader
-  </div>
-
-  <div class="sidebar-section-label">Sistema</div>
-
-  <div class="nav-item" id="nav-data-update" onclick="setNav(this, 'actualizacion')" style="display:none">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-    Actualización de Data
-  </div>
-
-  <div class="nav-item" id="nav-accounts" onclick="setNav(this, 'accounts')" style="display:none">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-    Gestión de Cuentas
-  </div>
+  <!-- Generada dinámicamente por renderSidebar() a partir de sidebarConfig (grupos por color).
+       Con scroll propio: al ya no colapsar secciones, la lista puede crecer más que antes
+       (sobre todo si un Supervisor agrega grupos), así que no se puede recortar sin más. -->
+  <div id="sidebar-nav-container" style="flex:1;min-height:0;overflow-y:auto"></div>
 
   <div class="sidebar-bottom">
     <div class="user-chip">
@@ -2106,6 +2038,31 @@
 
   </div><!-- /view-accounts -->
 
+  <!-- ══ VIEW: CONFIGURAR SIDEBAR (solo Supervisores) ══ -->
+  <div class="view" id="view-sidebarconfig">
+    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+          Configurar Sidebar
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="sidebarConfigDiscard()">Descartar cambios</button>
+          <button class="btn btn-sm" onclick="sidebarAddGroup()">+ Grupo</button>
+          <button class="btn btn-primary btn-sm" id="sbcfg-save-btn" onclick="sidebarConfigSave()">Guardar para todos</button>
+        </div>
+      </div>
+      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <small>Organiza y ponle color a cada sección de la sidebar. Los cambios se ven al instante en tu propia sidebar mientras editas, pero solo se aplican para todo el equipo al presionar "Guardar para todos".</small>
+      </div>
+    </div>
+
+    <div id="sbcfg-status" style="font-size:12px;font-weight:600;margin-bottom:14px"></div>
+
+    <div id="sbcfg-groups" style="display:flex;flex-direction:column;gap:16px"></div>
+  </div><!-- /view-sidebarconfig -->
+
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -2129,6 +2086,7 @@
     'tl':            'view-tl',
     'actualizacion': 'view-actualizacion',
     'accounts':      'view-accounts',
+    'sidebarconfig': 'view-sidebarconfig',
   };
   const titleMap = {
     'dashboard':     ['Inicio', 'Resumen general de la operación'],
@@ -2141,6 +2099,7 @@
     'tl':            ['Top Team Leader', 'Ranking y evolución de % Approve por Team Leader'],
     'actualizacion': ['Actualización de Data', 'Centraliza la carga de información de todas las secciones'],
     'accounts':      ['Gestión de Cuentas', 'Cuentas, contraseñas y permisos por cargo'],
+    'sidebarconfig': ['Configurar Sidebar', 'Organización y colores de cada sección — solo Supervisores'],
   };
 
   let currentPage = 'dashboard'; // usado por el auto-refresh para saber qué sección está viendo cada quien
@@ -2180,6 +2139,232 @@
     if (page === 'actualizacion' && !dataUpdateLoaded) loadDataUpdateView();
     // Gestión de Cuentas: cada visita pide reconfirmar contraseña (portón propio en la vista)
     if (page === 'accounts') loadAccountsView();
+    // Configurar Sidebar: siempre se redibuja desde el último guardado, por si otro Supervisor cambió algo
+    if (page === 'sidebarconfig') sidebarConfigInitView();
+  }
+
+  /* ══════════════════════════════
+     SIDEBAR — grupos por color, sin secciones desplegables. La organización y los
+     colores se guardan en dt_sidebar_config y se comparten para todo el equipo; solo
+     Supervisor puede editarlos, desde "Configurar Sidebar".
+  ══════════════════════════════ */
+  const SIDEBAR_ITEMS = {
+    dashboard:     { label: 'Inicio', page: 'dashboard', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>' },
+    goodday:       { label: 'GoodDay', page: 'goodday', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>' },
+    ops:           { label: 'Approve Stats', page: 'ops', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>' },
+    opstoday:      { label: 'Stats OPs Today', page: 'opstoday', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>' },
+    reportes:      { label: 'Reporte', page: 'reportes', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>' },
+    recalls:       { label: 'Gestión de Recalls', page: 'recalls', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>' },
+    leads:         { label: 'Leads por Campaña', page: 'leads', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>' },
+    tl:            { label: 'Top Team Leader', page: 'tl', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>' },
+    actualizacion: { label: 'Actualización de Data', page: 'actualizacion', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>', supervisorOnly: true },
+    accounts:      { label: 'Gestión de Cuentas', page: 'accounts', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>', supervisorOnly: true },
+    sidebarconfig: { label: 'Configurar Sidebar', page: 'sidebarconfig', icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>', supervisorOnly: true },
+  };
+
+  function sidebarDefaultGroups() {
+    return [
+      { id: 'g-principal',   label: 'Principal',   color: '#4c8dff', items: ['dashboard', 'goodday', 'ops', 'opstoday'] },
+      { id: 'g-operacion',   label: 'Operación',   color: '#22c55e', items: ['reportes', 'recalls', 'leads'] },
+      { id: 'g-rendimiento', label: 'Rendimiento', color: '#c084fc', items: ['tl'] },
+      { id: 'g-sistema',     label: 'Sistema',     color: '#9ca8b5', items: ['actualizacion', 'accounts', 'sidebarconfig'] },
+    ];
+  }
+
+  let sidebarConfig = sidebarDefaultGroups();      // valor de partida hasta que cargue lo guardado (si hay)
+  let sidebarConfigSaved = sidebarDefaultGroups(); // último estado realmente guardado — para "Descartar cambios"
+
+  async function loadSidebarConfig() {
+    try {
+      const rows = await sbFetch('dt_sidebar_config', 'select=*&order=updated_at.desc&limit=1');
+      if (rows && rows[0] && Array.isArray(rows[0].groups) && rows[0].groups.length > 0) {
+        sidebarConfig = rows[0].groups;
+      }
+    } catch (err) {
+      console.error('Error cargando configuración de sidebar, se usa la de por defecto:', err);
+    }
+    sidebarConfigSaved = JSON.parse(JSON.stringify(sidebarConfig));
+    renderSidebar();
+  }
+
+  function renderSidebar() {
+    const container = document.getElementById('sidebar-nav-container');
+    if (!container) return;
+    const sup = isSupervisor();
+    container.innerHTML = sidebarConfig.map(group => {
+      const visibleItems = (group.items || []).filter(id => {
+        const item = SIDEBAR_ITEMS[id];
+        if (!item) return false;
+        if (item.supervisorOnly && !sup) return false;
+        return true;
+      });
+      if (visibleItems.length === 0) return '';
+      const itemsHtml = visibleItems.map(id => {
+        const item = SIDEBAR_ITEMS[id];
+        return `<div class="nav-item" id="nav-${id}" style="--item-color:${group.color};--item-bg-active:${group.color}33" onclick="setNav(this, '${item.page}')">
+          ${item.icon}
+          ${item.label}
+        </div>`;
+      }).join('');
+      return `<div class="sidebar-section-label" style="color:${group.color}">${group.label}</div>${itemsHtml}`;
+    }).join('');
+
+    // Un re-render reemplaza todo el DOM del nav — hay que volver a marcar activo el item actual
+    const activeId = Object.keys(SIDEBAR_ITEMS).find(id => SIDEBAR_ITEMS[id].page === currentPage);
+    const activeEl = activeId ? document.getElementById(`nav-${activeId}`) : null;
+    if (activeEl) activeEl.classList.add('active');
+  }
+
+  /* ── Configurar Sidebar: edición en vivo (solo en memoria) + guardado compartido ── */
+  function sidebarConfigInitView() {
+    renderSidebarConfigAdmin();
+  }
+
+  function renderSidebarConfigAdmin() {
+    const wrap = document.getElementById('sbcfg-groups');
+    if (!wrap) return;
+    wrap.innerHTML = sidebarConfig.map(g => {
+      const items = g.items || [];
+      const itemsHtml = items.length === 0
+        ? `<div style="padding:14px;text-align:center;color:var(--text-light);font-size:12px">Sin secciones — muévelas aquí desde otro grupo</div>`
+        : items.map((id, idx) => {
+            const item = SIDEBAR_ITEMS[id];
+            if (!item) return '';
+            const groupOptions = sidebarConfig.map(g2 => `<option value="${g2.id}" ${g2.id === g.id ? 'selected' : ''}>${g2.label}</option>`).join('');
+            return `<div style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border)">
+              <span style="width:19px;height:19px;color:${g.color};display:flex;align-items:center;justify-content:center;flex-shrink:0">${item.icon}</span>
+              <span style="flex:1;font-size:13px">${item.label}${item.supervisorOnly ? ' <span style="font-size:10px;color:var(--text-light)">(solo Supervisor)</span>' : ''}</span>
+              <button class="btn btn-ghost btn-sm" style="padding:3px 8px" ${idx === 0 ? 'disabled' : ''} onclick="sidebarMoveItem('${g.id}','${id}',-1)" title="Subir">▲</button>
+              <button class="btn btn-ghost btn-sm" style="padding:3px 8px" ${idx === items.length - 1 ? 'disabled' : ''} onclick="sidebarMoveItem('${g.id}','${id}',1)" title="Bajar">▼</button>
+              <select onchange="sidebarReassignItem('${id}', this.value)" style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:11.5px;padding:5px 8px;outline:none">${groupOptions}</select>
+            </div>`;
+          }).join('');
+
+      return `
+      <div class="panel" style="overflow:hidden;border-top:3px solid ${g.color}">
+        <div class="panel-head" style="background:${g.color}22;flex-wrap:wrap;gap:10px">
+          <button class="btn btn-ghost btn-sm" style="padding:3px 8px" onclick="sidebarMoveGroup('${g.id}',-1)" title="Subir grupo">▲</button>
+          <button class="btn btn-ghost btn-sm" style="padding:3px 8px" onclick="sidebarMoveGroup('${g.id}',1)" title="Bajar grupo">▼</button>
+          <input type="text" value="${g.label}" oninput="sidebarUpdateGroupLabel('${g.id}', this.value)" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:#fff;font-weight:800;font-size:14px;padding:2px 4px;min-width:140px;outline:none" />
+          <input type="color" value="${g.color}" onchange="sidebarUpdateGroupColor('${g.id}', this.value)" style="width:34px;height:28px;border:none;background:none;cursor:pointer;padding:0" title="Color del grupo"/>
+          <span style="margin-left:auto;font-size:11px;color:var(--text-light)">${items.length} sección${items.length === 1 ? '' : 'es'}</span>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="sidebarRemoveGroup('${g.id}')" title="Eliminar grupo">🗑</button>
+        </div>
+        <div class="panel-body" style="padding:6px 14px">${itemsHtml}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function sidebarMarkUnsaved() {
+    const status = document.getElementById('sbcfg-status');
+    if (status) { status.style.color = 'var(--amber)'; status.textContent = 'Cambios sin guardar — presiona "Guardar para todos" para que el equipo los vea.'; }
+  }
+
+  function sidebarLiveRefresh() {
+    renderSidebar();
+    renderSidebarConfigAdmin();
+    sidebarMarkUnsaved();
+  }
+
+  function sidebarAddGroup() {
+    const label = prompt('Nombre del nuevo grupo:', 'Nuevo grupo');
+    if (!label || !label.trim()) return;
+    sidebarConfig.push({ id: `g-${Date.now()}`, label: label.trim(), color: '#4c8dff', items: [] });
+    sidebarLiveRefresh();
+  }
+
+  function sidebarRemoveGroup(groupId) {
+    const g = sidebarConfig.find(x => x.id === groupId);
+    if (!g) return;
+    if ((g.items || []).length > 0) {
+      alert('Primero mueve o quita las secciones de este grupo antes de eliminarlo.');
+      return;
+    }
+    if (sidebarConfig.length <= 1) { alert('Tiene que quedar al menos un grupo.'); return; }
+    if (!confirm(`¿Eliminar el grupo "${g.label}"?`)) return;
+    sidebarConfig = sidebarConfig.filter(x => x.id !== groupId);
+    sidebarLiveRefresh();
+  }
+
+  function sidebarMoveGroup(groupId, dir) {
+    const idx = sidebarConfig.findIndex(g => g.id === groupId);
+    const newIdx = idx + dir;
+    if (idx === -1 || newIdx < 0 || newIdx >= sidebarConfig.length) return;
+    const [g] = sidebarConfig.splice(idx, 1);
+    sidebarConfig.splice(newIdx, 0, g);
+    sidebarLiveRefresh();
+  }
+
+  function sidebarUpdateGroupLabel(groupId, value) {
+    const g = sidebarConfig.find(x => x.id === groupId);
+    if (!g) return;
+    g.label = value;
+    renderSidebar(); // ojo: no redibuja el panel de admin, así el input no pierde el foco mientras se escribe
+    sidebarMarkUnsaved();
+  }
+
+  function sidebarUpdateGroupColor(groupId, value) {
+    const g = sidebarConfig.find(x => x.id === groupId);
+    if (!g) return;
+    g.color = value;
+    sidebarLiveRefresh();
+  }
+
+  function sidebarMoveItem(groupId, itemId, dir) {
+    const g = sidebarConfig.find(x => x.id === groupId);
+    if (!g) return;
+    const idx = g.items.indexOf(itemId);
+    const newIdx = idx + dir;
+    if (idx === -1 || newIdx < 0 || newIdx >= g.items.length) return;
+    g.items.splice(idx, 1);
+    g.items.splice(newIdx, 0, itemId);
+    sidebarLiveRefresh();
+  }
+
+  function sidebarReassignItem(itemId, newGroupId) {
+    const fromGroup = sidebarConfig.find(g => (g.items || []).includes(itemId));
+    const toGroup = sidebarConfig.find(g => g.id === newGroupId);
+    if (!toGroup || fromGroup === toGroup) return;
+    if (fromGroup) fromGroup.items = fromGroup.items.filter(id => id !== itemId);
+    toGroup.items = toGroup.items || [];
+    toGroup.items.push(itemId);
+    sidebarLiveRefresh();
+  }
+
+  function sidebarConfigDiscard() {
+    sidebarConfig = JSON.parse(JSON.stringify(sidebarConfigSaved));
+    renderSidebar();
+    renderSidebarConfigAdmin();
+    const status = document.getElementById('sbcfg-status');
+    if (status) {
+      status.style.color = 'var(--text-light)';
+      status.textContent = 'Cambios descartados.';
+      setTimeout(() => { status.textContent = ''; }, 4000);
+    }
+  }
+
+  async function sidebarConfigSave() {
+    if (!isSupervisor()) return;
+    const btn = document.getElementById('sbcfg-save-btn');
+    const status = document.getElementById('sbcfg-status');
+    btn.disabled = true;
+    status.style.color = 'var(--text-light)';
+    status.textContent = 'Guardando...';
+    try {
+      const stored = sessionStorage.getItem(SESSION_KEY);
+      const user = stored ? JSON.parse(stored) : null;
+      await sbInsert('dt_sidebar_config', [{ groups: sidebarConfig, updated_by: user ? user[0] : null }]);
+      sidebarConfigSaved = JSON.parse(JSON.stringify(sidebarConfig));
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Guardado — ya se ve así para todo el equipo.';
+      setTimeout(() => { status.textContent = ''; }, 6000);
+    } catch (err) {
+      console.error('Error guardando configuración de sidebar:', err);
+      status.style.color = 'var(--red)';
+      status.textContent = (err && err.message) ? err.message : 'No se pudo guardar, intenta de nuevo.';
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   /* ══════════════════════════════
@@ -2217,19 +2402,6 @@
   }
 
   setInterval(autoRefreshTick, AUTO_REFRESH_INTERVAL_MS);
-
-  /* ── Toggle submenu ── */
-  function toggleSub(el, subId) {
-    const sub = document.getElementById(subId);
-    const chevron = el.querySelector('.chevron');
-    const isOpen = sub.classList.contains('open');
-    document.querySelectorAll('.sub-menu').forEach(s => s.classList.remove('open'));
-    document.querySelectorAll('.chevron').forEach(c => c.classList.remove('rotated'));
-    if (!isOpen) {
-      sub.classList.add('open');
-      chevron.classList.add('rotated');
-    }
-  }
 
   /* ══════════════════════════════
      SUPABASE CONFIG
@@ -2801,11 +2973,12 @@
     // Hide login screen
     document.getElementById('login-screen').classList.add('hidden');
 
-    // "Actualización de Data" y "Gestión de Cuentas" son exclusivos de Supervisores — ni el nav item se muestra a otros cargos
-    document.getElementById('nav-data-update').style.display = isSupervisor() ? 'flex' : 'none';
-    document.getElementById('nav-accounts').style.display = isSupervisor() ? 'flex' : 'none';
+    // Sidebar dinámica: pinta ya con lo que haya en memoria (para que no se vea vacía)
+    // y en paralelo trae la configuración guardada en Supabase (grupos/colores compartidos).
+    renderSidebar();
+    loadSidebarConfig();
 
-    // Inicio ya está activo por defecto sin pasar por setNav — cargar sus datos ahora
+    // Inicio ya está activo por defecto (currentPage arranca en 'dashboard') sin pasar por setNav — cargar sus datos ahora
     if (!dashLoaded) loadDashboard();
   }
 
@@ -5605,9 +5778,6 @@
   }
 
   function dashGoToOpsCountry(country) {
-    const sub = document.getElementById('sub-dist');
-    sub.classList.add('open');
-    sub.previousElementSibling?.querySelector('.chevron')?.classList.add('rotated');
     setNav(document.getElementById('nav-ops'), 'ops');
     (async () => {
       if (!opsLoaded) await loadOps();
@@ -5620,9 +5790,6 @@
   }
 
   function dashGoToGoodDay() {
-    const sub = document.getElementById('sub-dist');
-    sub.classList.add('open');
-    sub.previousElementSibling?.querySelector('.chevron')?.classList.add('rotated');
     setNav(document.getElementById('nav-goodday'), 'goodday');
   }
 
