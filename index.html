@@ -248,46 +248,26 @@
     .row-2 { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
     .row-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
 
-    /* Recalls: tabla de órdenes (izq) + tabla de reasignaciones (der), lado a lado */
-    .rec-split { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 22px; align-items: start; margin-bottom: 22px; }
-    /* Expandir = esa tabla queda dominante y la otra se minimiza, pero AMBAS siguen visibles;
-       el modo compacto (columnas ocultas) solo aplica en 'split', así que al expandir
-       las dos muestran todas sus columnas */
-    .rec-split.rec-mode-left  { grid-template-columns: minmax(0,1fr) 130px; }
-    .rec-split.rec-mode-right { grid-template-columns: 130px minmax(0,1fr); }
-    .rec-mode-split .rc-col-cccomment,
-    .rec-mode-split .rc-col-asesor,
-    .rec-mode-split .rc-col-detected { display: none; }
-    @media (max-width: 1400px) {
-      .rec-split, .rec-split.rec-mode-left, .rec-split.rec-mode-right { grid-template-columns: minmax(0,1fr); }
-    }
-    /* Botón lateral de expandir/minimizar, pegado al borde interno de cada panel */
-    .rec-panel-left, .rec-panel-right { position: relative; }
-    .rec-expand-btn {
-      position: absolute; top: 50%; transform: translateY(-50%);
-      width: 30px; height: 68px; z-index: 6;
-      display: inline-flex; align-items: center; justify-content: center;
-      background: var(--card-bg-2); border: 1px solid var(--border);
-      color: var(--text-mid); cursor: pointer; transition: all .18s;
-    }
-    .rec-panel-left  .rec-expand-btn { right: 0; border-radius: 8px 0 0 8px; }
-    .rec-panel-right .rec-expand-btn { left: 0;  border-radius: 0 8px 8px 0; }
-    .rec-expand-btn:hover { background: var(--blue); color: #fff; }
-    .rec-expand-btn svg { width: 15px; height: 15px; }
     /* Menú flotante de enlaces (Change / View) */
     .rec-link-item { display: block; padding: 9px 16px; font-size: 13px; color: var(--text-dark); text-decoration: none; white-space: nowrap; cursor: pointer; transition: background .15s; }
     .rec-link-item:hover { background: var(--blue-soft); }
 
-    /* "Spine": lo que se ve cuando una tabla queda minimizada — solo su nombre, en vertical */
-    .rec-spine { display: none; align-items: center; justify-content: center; min-height: 420px; cursor: pointer; transition: background .18s; }
-    .rec-spine:hover { background: var(--nav-hover); }
-    .rec-spine span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 14px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text-mid); white-space: nowrap; }
-    .rec-spine-alert span { color: #fca5a5; }
-    /* Tabla minimizada: se oculta su contenido normal y aparece el spine */
-    .rec-mode-right .rec-panel-left  > *:not(.rec-expand-btn):not(.rec-spine) { display: none; }
-    .rec-mode-right .rec-panel-left  .rec-spine { display: flex; }
-    .rec-mode-left  .rec-panel-right > *:not(.rec-expand-btn):not(.rec-spine) { display: none; }
-    .rec-mode-left  .rec-panel-right .rec-spine { display: flex; }
+    /* Recalls: árbol Turno > Team Leader > Operador > Órdenes */
+    .rec-shift-btn .rec-shift-count { opacity: .8; font-weight: 400; margin-left: 2px; }
+    .rec-tl-header, .rec-op-header {
+      cursor: pointer; display: flex; align-items: center; gap: 12px;
+      transition: background .15s;
+    }
+    .rec-tl-header:hover, .rec-op-header:hover { background: var(--nav-hover); }
+    .rec-tree-chevron { width: 16px; height: 16px; flex-shrink: 0; color: var(--text-light); transition: transform .18s; }
+    .rec-tree-chevron.rec-tree-open { transform: rotate(90deg); }
+    .rec-reassigned-badge {
+      background: rgba(239,68,68,.16); color: #f87171; border: 1px solid rgba(239,68,68,.4);
+      padding: 4px 10px; border-radius: 99px; font-weight: 700; font-size: 11px; white-space: nowrap;
+    }
+    /* Orden reasignada a otro operador: borde rojo resaltante en la fila, sin pisar el
+       color de fondo que ya pinta Comparar Status (amarillo/rojo por status_check) */
+    tbody tr.rec-reassigned-row td:first-child { border-left: 4px solid #ef4444; }
 
     /* ─── Panel / Card ─── */
     .panel {
@@ -1501,40 +1481,35 @@
       </div>
     </div>
 
-    <!-- Tablas lado a lado: órdenes (izq) + reasignaciones (der) -->
-    <div class="rec-split rec-mode-split" id="rec-split">
-
-    <!-- Tabla principal (estado actual) -->
-    <div class="panel rec-panel-left" style="overflow:hidden">
-      <button class="rec-expand-btn" id="rec-expand-left" onclick="recToggleSplit('left')" title="Expandir / minimizar esta tabla">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
-      </button>
-      <div class="rec-spine" onclick="recToggleSplit('left')" title="Expandir esta tabla"><span>ÓRDENES ACTUALES</span></div>
+    <!-- Filtros: Turno + Country + búsqueda + acciones masivas -->
+    <div class="panel" style="margin-bottom:22px;overflow:hidden">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-          Órdenes Actuales
+          Órdenes y Reasignaciones
         </div>
-        <div class="gd-stat-chip">Total: <span id="rec-count-2">—</span></div>
+        <div class="gd-stat-chip">Mostrando: <span id="rec-showing">0</span> / <span id="rec-total">0</span></div>
+        <button id="rec-delete-reviewed-btn" class="gd-clear-all" style="display:none;margin-left:auto" onclick="recDeleteReviewedAlerts()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          Eliminar revisadas <span id="rec-reviewed-n">(0)</span>
+        </button>
       </div>
+
+      <!-- Turno: agrupa el horario en 4 bloques — el árbol de abajo muestra solo el turno activo -->
+      <div style="padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Turno</span>
+        <button class="btn btn-sm rec-shift-btn" data-shift="AM" onclick="recSetShift('AM')">AM <span class="rec-shift-count">(0)</span></button>
+        <button class="btn btn-sm rec-shift-btn" data-shift="Post-Sale" onclick="recSetShift('Post-Sale')">Post-Sale <span class="rec-shift-count">(0)</span></button>
+        <button class="btn btn-sm rec-shift-btn" data-shift="PM" onclick="recSetShift('PM')">PM <span class="rec-shift-count">(0)</span></button>
+        <button class="btn btn-sm rec-shift-btn" data-shift="Nocturno" onclick="recSetShift('Nocturno')">Nocturno <span class="rec-shift-count">(0)</span></button>
+      </div>
+
       <div class="gd-filters">
         <div class="gd-filter-pill" id="rec-pill-country">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
           <span class="pill-label">Country</span>
           <select id="rec-f-country" onchange="applyRecFilters()"><option value="">Todos</option></select>
           <span class="pill-clear" onclick="recClearPill('rec-f-country', applyRecFilters)">✕</span>
-        </div>
-        <div class="gd-filter-pill" id="rec-pill-tl">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-          <span class="pill-label">Team Leader</span>
-          <select id="rec-f-tl" onchange="applyRecFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="recClearPill('rec-f-tl', applyRecFilters)">✕</span>
-        </div>
-        <div class="gd-filter-pill" id="rec-pill-hor">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L11 13.49V7h1.5v5.75l4.5 2.67-1.27 2.08z"/></svg>
-          <span class="pill-label">Horario</span>
-          <select id="rec-f-hor" onchange="applyRecFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="recClearPill('rec-f-hor', applyRecFilters)">✕</span>
         </div>
         <div class="gd-search-wrap" style="margin-left:auto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -1562,114 +1537,20 @@
           Eliminar rojas (0)
         </button>
       </div>
-      <div class="gd-tbl-wrap" id="rec-table-wrap">
-        <div class="gd-state" id="rec-loading">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          <p>Cargando datos desde Supabase…</p>
-        </div>
-        <table id="rec-table" style="display:none">
-          <thead><tr>
-            <th>Id in CC</th><th>Country</th><th>Substatus</th><th class="rc-col-cccomment">CC comment</th>
-            <th>Team Leader</th><th class="rc-col-asesor">Asesor</th><th>Last call operator</th><th>Horario</th>
-            <th style="width:52px;padding:12px 4px;text-align:center">Enlaces</th>
-          </tr></thead>
-          <tbody id="rec-tbody"></tbody>
-        </table>
-        <div class="gd-state" id="rec-empty" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.96.5 13.5.5c-1.27 0-2.4.51-3.24 1.33L9 3.04 7.74 1.83C6.9 1.01 5.77.5 4.5.5 2.04.5 0 2.54 0 4.66c0 .46.11.9.18 1.34H0v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-3.68c1.1 0 2 .9 2 2 0 .36-.1.69-.26 1h-3.48c-.16-.31-.26-.64-.26-1 0-1.1.9-2 2-2z"/></svg>
-          <p>Sin datos cargados todavía</p>
-          <small>Espera a que un Supervisor suba el Excel del Panel</small>
-        </div>
-      </div>
-      <div style="padding:8px 20px;background:var(--main-bg);border-top:1px solid var(--border);font-size:11px;color:var(--text-light)">
-        Mostrando <strong id="rec-showing">0</strong> de <strong id="rec-total">0</strong> órdenes
-      </div>
     </div>
 
-    <!-- Tabla de alertas (reasignaciones detectadas) -->
-    <div class="panel rec-panel-right" style="overflow:hidden;border-color:rgba(239,68,68,.35)">
-      <button class="rec-expand-btn" id="rec-expand-right" onclick="recToggleSplit('right')" title="Expandir / minimizar esta tabla">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L10.83 12l4.58 4.59L14 18l-6-6 6-6z"/></svg>
-      </button>
-      <div class="rec-spine rec-spine-alert" onclick="recToggleSplit('right')" title="Expandir esta tabla"><span>ÓRDENES REASIGNADAS</span></div>
-      <div class="gd-infobar" style="background:linear-gradient(90deg, #2a1214 0%, #3a1518 100%)">
-        <div class="gd-infobar-title" style="color:#fca5a5">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-          Alertas — Órdenes Reasignadas a Otro Operador
-        </div>
-        <div class="gd-stat-chip" style="background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3)">
-          Pendientes: <span id="rec-alert-pending-count">—</span>
-        </div>
-        <button id="rec-delete-reviewed-btn" class="gd-clear-all" style="display:none" onclick="recDeleteReviewedAlerts()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          Eliminar revisadas <span id="rec-reviewed-n">(0)</span>
-        </button>
-        <div class="gd-filter-pill" id="rec-pill-status" style="margin-left:auto">
-          <span class="pill-label">Estado</span>
-          <select id="rec-f-status" onchange="applyRecAlertFilters()">
-            <option value="pending" selected>Pendientes</option>
-            <option value="reviewed">Revisadas</option>
-            <option value="">Todas</option>
-          </select>
-        </div>
-      </div>
-      <div class="gd-filters">
-        <div class="gd-filter-pill" id="rec-pill-acountry">
-          <span class="pill-label">Country</span>
-          <select id="rec-f-acountry" onchange="applyRecAlertFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="recClearPill('rec-f-acountry', applyRecAlertFilters)">✕</span>
-        </div>
-        <div class="gd-filter-pill" id="rec-pill-oldtl">
-          <span class="pill-label">TL anterior</span>
-          <select id="rec-f-oldtl" onchange="applyRecAlertFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="recClearPill('rec-f-oldtl', applyRecAlertFilters)">✕</span>
-        </div>
-        <div class="gd-filter-pill" id="rec-pill-newtl">
-          <span class="pill-label">TL nuevo</span>
-          <select id="rec-f-newtl" onchange="applyRecAlertFilters()"><option value="">Todos</option></select>
-          <span class="pill-clear" onclick="recClearPill('rec-f-newtl', applyRecAlertFilters)">✕</span>
-        </div>
-        <div class="gd-search-wrap" style="margin-left:auto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="rec-asearch" placeholder="Buscar Id in CC..." oninput="applyRecAlertFilters()"/>
-        </div>
-        <div style="position:relative;display:inline-block">
-          <button class="btn btn-ghost btn-sm" id="rec-alert-copy-ids-btn" onclick="recToggleCopyMenu(event,'alert')">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-            <span id="rec-alert-copy-label">Copiar IDs</span>
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;margin-left:2px"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
-          </button>
-          <div id="rec-alert-copy-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);min-width:230px;z-index:50;overflow:hidden"></div>
-        </div>
-      </div>
-      <div id="rec-alert-color-actions" style="display:none;padding:10px 20px;background:var(--main-bg);border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap">
-        <span style="font-size:11px;color:var(--text-light)">Acciones masivas:</span>
-        <button class="btn btn-sm" style="background:rgba(240,178,62,.16);color:#f0b23e;border:1px solid rgba(240,178,62,.35)" onclick="recDeleteAlertsByStatusColor('yellow')" id="rec-alert-del-yellow">
-          Eliminar marcadas en amarillo
-        </button>
-        <button class="btn btn-sm" style="background:rgba(239,68,68,.16);color:#f87171;border:1px solid rgba(239,68,68,.35)" onclick="recDeleteAlertsByStatusColor('red')" id="rec-alert-del-red">
-          Eliminar marcadas en rojo
-        </button>
-      </div>
-      <div class="gd-tbl-wrap" id="rec-alert-table-wrap">
-        <table id="rec-alert-table" style="display:none">
-          <thead><tr>
-            <th>Id in CC</th><th>Country</th><th>Operador: Antes / Ahora</th>
-            <th>Team Leader: Antes / Ahora</th>
-            <th class="rc-col-detected">Detectado</th><th>Acción</th>
-            <th style="width:52px;padding:12px 4px;text-align:center">Enlaces</th>
-          </tr></thead>
-          <tbody id="rec-alert-tbody"></tbody>
-        </table>
-        <div class="gd-state" id="rec-alert-empty">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-          <p>No hay alertas de reasignación</p>
-          <small>Cuando una orden cambie de operador entre dos cargas de Excel, aparecerá aquí</small>
-        </div>
-      </div>
+    <!-- Árbol: Team Leader > Operador > Recalls. Las órdenes reasignadas a otro operador
+         (antes en una tabla de alertas aparte) ahora salen con borde rojo dentro de la misma fila. -->
+    <div id="rec-loading" class="gd-state">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      <p>Cargando datos desde Supabase…</p>
     </div>
-
-    </div><!-- /rec-split -->
+    <div class="gd-state" id="rec-empty" style="display:none">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.96.5 13.5.5c-1.27 0-2.4.51-3.24 1.33L9 3.04 7.74 1.83C6.9 1.01 5.77.5 4.5.5 2.04.5 0 2.54 0 4.66c0 .46.11.9.18 1.34H0v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-3.68c1.1 0 2 .9 2 2 0 .36-.1.69-.26 1h-3.48c-.16-.31-.26-.64-.26-1 0-1.1.9-2 2-2z"/></svg>
+      <p>Sin órdenes para este turno / filtro</p>
+      <small>Prueba con otro turno o quita los filtros activos</small>
+    </div>
+    <div id="rec-tree"></div>
 
   </div>
 
@@ -2380,7 +2261,7 @@
   const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
 
   function autoRefreshCloseTransientMenus() {
-    ['rec-copy-menu', 'rec-alert-copy-menu', 'rec-link-menu'].forEach(id => {
+    ['rec-copy-menu', 'rec-link-menu'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -4949,7 +4830,6 @@
   let recCurrentRows     = [];
   let recCurrentFiltered = [];
   let recAlertRows       = [];
-  let recAlertFiltered   = [];
 
   function recNormalizeHeader(s) { return (s || '').toString().trim().toLowerCase(); }
 
@@ -5118,24 +4998,6 @@
     }
   }
 
-  /* Modo de las dos tablas: 'split' (lado a lado, compactas) | 'left' | 'right' (una dominante) */
-  let recSplitMode = 'split';
-  const REC_CHEV_R = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>';
-  const REC_CHEV_L = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L10.83 12l4.58 4.59L14 18l-6-6 6-6z"/></svg>';
-  function recToggleSplit(side) {
-    recSplitMode = (recSplitMode === side) ? 'split' : side;
-    recApplySplitMode();
-  }
-  function recApplySplitMode() {
-    const el = document.getElementById('rec-split');
-    if (!el) return;
-    el.classList.remove('rec-mode-split', 'rec-mode-left', 'rec-mode-right');
-    el.classList.add('rec-mode-' + recSplitMode);
-    // Flecha hacia afuera = expandir; hacia adentro = volver
-    document.getElementById('rec-expand-left').innerHTML  = (recSplitMode === 'left')  ? REC_CHEV_L : REC_CHEV_R;
-    document.getElementById('rec-expand-right').innerHTML = (recSplitMode === 'right') ? REC_CHEV_R : REC_CHEV_L;
-  }
-
   async function recInitView() {
     recLoaded = true;
     document.getElementById('rec-upload-wrap').style.display = canEditRecalls() ? 'flex' : 'none';
@@ -5143,7 +5005,6 @@
     document.getElementById('rec-delete-reviewed-btn').style.display = canEditRecalls() ? 'flex' : 'none';
     document.getElementById('rec-status-paste-panel').style.display = isSupervisor() ? 'block' : 'none';
     document.getElementById('rec-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
-    document.getElementById('rec-alert-color-actions').style.display = isSupervisor() ? 'flex' : 'none';
     await recFetchDataLink();
     recRenderDataLinkBtn();
     await recLoadAll();
@@ -5210,7 +5071,6 @@
   async function recLoadAll(silent = false) {
     if (!silent) {
       document.getElementById('rec-loading').style.display = 'flex';
-      document.getElementById('rec-table').style.display   = 'none';
       document.getElementById('rec-empty').style.display   = 'none';
     }
 
@@ -5229,12 +5089,10 @@
 
     recPopulateFilters();
     applyRecFilters();
-    applyRecAlertFilters();
     recUpdateDeleteCounts();
     recRenderLastUpdate();
 
     document.getElementById('rec-count').textContent = recCurrentRows.length;
-    document.getElementById('rec-count-2').textContent = recCurrentRows.length;
     document.getElementById('rec-alert-count').textContent = recAlertRows.filter(a => !a.reviewed).length;
   }
 
@@ -5248,12 +5106,6 @@
     };
 
     fillSelect('rec-f-country', unique(recCurrentRows, 'country'));
-    fillSelect('rec-f-tl',      unique(recCurrentRows, 'team_leader'));
-    fillSelect('rec-f-hor',     unique(recCurrentRows, 'horario'));
-
-    fillSelect('rec-f-acountry', unique(recAlertRows, 'country'));
-    fillSelect('rec-f-oldtl',    unique(recAlertRows, 'old_team_leader'));
-    fillSelect('rec-f-newtl',    unique(recAlertRows, 'new_team_leader'));
   }
 
   function recClearPill(selectId, applyFn) {
@@ -5261,38 +5113,74 @@
     applyFn();
   }
 
-  function applyRecFilters() {
-    const country = document.getElementById('rec-f-country').value;
-    const tl       = document.getElementById('rec-f-tl').value;
-    const hor      = document.getElementById('rec-f-hor').value;
-    const search   = document.getElementById('rec-search').value.toLowerCase();
+  /* Turno: agrupa el horario en 4 bloques. Post-Sale y Nocturno son horarios fijos;
+     el resto se separa por la hora de inicio (mismo criterio que Stats OPs Today). */
+  const REC_SHIFTS = ['AM', 'Post-Sale', 'PM', 'Nocturno'];
+  let recActiveShift = 'AM';
 
-    recCurrentFiltered = recCurrentRows.filter(r => {
+  function recShiftBucket(horario) {
+    const h = (horario || '').trim();
+    if (h.startsWith('09:00')) return 'Post-Sale';
+    if (h.startsWith('22:00')) return 'Nocturno';
+    const startHour = parseInt(h.slice(0, 2), 10);
+    if (isNaN(startHour)) return null;
+    return startHour >= 12 ? 'PM' : 'AM';
+  }
+
+  function recSetShift(shift) {
+    if (recActiveShift === shift) return;
+    recActiveShift = shift;
+    applyRecFilters();
+  }
+
+  /* Filtros que no dependen del turno (Country + búsqueda) — se aplican antes de separar
+     por turno, así los contadores de cada botón de turno ya reflejan Country/búsqueda. */
+  function recBaseFiltered() {
+    const country = document.getElementById('rec-f-country').value;
+    const search  = document.getElementById('rec-search').value.toLowerCase();
+    return recCurrentRows.filter(r => {
       if (country && r.country !== country) return false;
-      if (tl && r.team_leader !== tl) return false;
-      if (hor && r.horario !== hor) return false;
       if (search) {
         const hay = `${r.id_in_cc} ${r.cc_comment} ${r.last_call_operator} ${r.substatus}`.toLowerCase();
         if (!hay.includes(search)) return false;
       }
       return true;
     });
+  }
 
-    const pillMap = { 'rec-pill-country': country, 'rec-pill-tl': tl, 'rec-pill-hor': hor };
-    let anyActive = search.length > 0;
-    Object.entries(pillMap).forEach(([pillId, val]) => {
-      document.getElementById(pillId)?.classList.toggle('active', !!val);
-      if (val) anyActive = true;
+  function renderRecShiftTabs(baseRows) {
+    const counts = { AM: 0, 'Post-Sale': 0, PM: 0, Nocturno: 0 };
+    baseRows.forEach(r => {
+      const b = recShiftBucket(r.horario);
+      if (b && counts[b] !== undefined) counts[b]++;
     });
-    document.getElementById('rec-clear-btn').style.display = anyActive ? 'flex' : 'none';
+    document.querySelectorAll('.rec-shift-btn').forEach(btn => {
+      const shift = btn.dataset.shift;
+      btn.classList.toggle('btn-primary', shift === recActiveShift);
+      btn.classList.toggle('btn-ghost', shift !== recActiveShift);
+      const countEl = btn.querySelector('.rec-shift-count');
+      if (countEl) countEl.textContent = `(${counts[shift] || 0})`;
+    });
+  }
+
+  function applyRecFilters() {
+    const country = document.getElementById('rec-f-country').value;
+    const search  = document.getElementById('rec-search').value.toLowerCase();
+    const baseRows = recBaseFiltered();
+
+    recCurrentFiltered = baseRows.filter(r => recShiftBucket(r.horario) === recActiveShift);
+
+    document.getElementById('rec-pill-country')?.classList.toggle('active', !!country);
+    document.getElementById('rec-clear-btn').style.display = (country || search) ? 'flex' : 'none';
     const sw = document.querySelector('#view-recalls .gd-search-wrap');
     if (sw) sw.classList.toggle('active', search.length > 0);
 
-    renderRecTable();
+    renderRecShiftTabs(baseRows);
+    renderRecTree();
   }
 
   function clearRecFilters() {
-    ['rec-f-country', 'rec-f-tl', 'rec-f-hor'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('rec-f-country').value = '';
     document.getElementById('rec-search').value = '';
     applyRecFilters();
   }
@@ -5312,11 +5200,6 @@
     if (!v || v === '—') return `<span style="color:var(--text-light)">—</span>`;
     const c = recColorForName(v);
     return `<span style="display:inline-block;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;background:${c.bg};color:${c.color}">${v}</span>`;
-  }
-
-  /* Antes arriba, ahora abajo (apilado vertical) */
-  function recTlArrowHTML(oldVal, newVal) {
-    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">${recTlBadge(oldVal)}${recTlBadge(newVal)}</div>`;
   }
 
   /* Una sola columna "Enlaces": un botón que abre un menú con Change / View */
@@ -5354,39 +5237,140 @@
     if (!menu.contains(e.target) && !e.target.closest('.rec-link-trigger')) menu.style.display = 'none';
   });
 
-  function renderRecTable() {
-    const tbody   = document.getElementById('rec-tbody');
-    const table   = document.getElementById('rec-table');
-    const empty   = document.getElementById('rec-empty');
-    const loading = document.getElementById('rec-loading');
-    loading.style.display = 'none';
+  function recEscAttr(s) { return (s || '').replace(/'/g, "\\'"); }
 
+  /* Antes en gris, ahora en rojo — igual formato que ya usaba la vieja tabla de alertas */
+  function recArrowHTML(oldVal, newVal) {
+    const o = oldVal || '—';
+    const n = newVal || '—';
+    return `<div style="display:flex;flex-direction:column;gap:2px;line-height:1.3">
+      <span style="color:var(--text-light)">${o}</span>
+      <span style="font-weight:700;color:#fca5a5">${n}</span>
+    </div>`;
+  }
+
+  /* ── Árbol Turno (ya filtrado en recCurrentFiltered) > Team Leader > Operador > Órdenes ──
+     Une "Órdenes Actuales" con "Alertas" (antes dos tablas): cada fila de dt_recalls se cruza
+     por id_in_cc contra dt_recalls_alerts — si hay una alerta SIN revisar, la fila se marca
+     como reasignada (borde rojo) y suma al contador de su Team Leader/Operador. */
+  let recExpandedTLs = new Set();
+  let recExpandedOps = new Set();
+
+  function recToggleTL(tlKey) {
+    if (recExpandedTLs.has(tlKey)) recExpandedTLs.delete(tlKey);
+    else recExpandedTLs.add(tlKey);
+    renderRecTree();
+  }
+  function recToggleOp(opKey) {
+    if (recExpandedOps.has(opKey)) recExpandedOps.delete(opKey);
+    else recExpandedOps.add(opKey);
+    renderRecTree();
+  }
+
+  function recBuildTree(rows) {
+    const alertsByIdInCc = {};
+    // recAlertRows ya viene ordenado desc por detected_at — la primera que aparece por id es la más reciente
+    recAlertRows.forEach(a => { if (!alertsByIdInCc[a.id_in_cc]) alertsByIdInCc[a.id_in_cc] = a; });
+
+    const byTl = {};
+    rows.forEach(r => {
+      const tl = r.team_leader || '—';
+      if (!byTl[tl]) byTl[tl] = { teamLeader: tl, byOperator: {}, reassignedCount: 0, total: 0 };
+      const op = r.last_call_operator || '—';
+      if (!byTl[tl].byOperator[op]) byTl[tl].byOperator[op] = { operator: op, asesor: r.asesor || '—', rows: [], reassignedCount: 0 };
+
+      const alert = alertsByIdInCc[r.id_in_cc] || null;
+      const pending = !!(alert && !alert.reviewed);
+      byTl[tl].byOperator[op].rows.push({ ...r, _alert: alert, _pending: pending });
+      byTl[tl].total++;
+      if (pending) { byTl[tl].byOperator[op].reassignedCount++; byTl[tl].reassignedCount++; }
+    });
+
+    return Object.values(byTl)
+      .map(tl => ({ ...tl, operators: Object.values(tl.byOperator).sort((a, b) => a.asesor.localeCompare(b.asesor)) }))
+      .sort((a, b) => a.teamLeader.localeCompare(b.teamLeader));
+  }
+
+  function renderRecTree() {
+    document.getElementById('rec-loading').style.display = 'none';
     document.getElementById('rec-showing').textContent = recCurrentFiltered.length;
     document.getElementById('rec-total').textContent   = recCurrentRows.length;
 
-    if (recCurrentFiltered.length === 0) {
-      table.style.display = 'none';
+    const wrap = document.getElementById('rec-tree');
+    const empty = document.getElementById('rec-empty');
+    const tlGroups = recBuildTree(recCurrentFiltered);
+
+    if (tlGroups.length === 0) {
+      wrap.innerHTML = '';
       empty.style.display = 'flex';
       return;
     }
     empty.style.display = 'none';
-    table.style.display = 'table';
 
-    tbody.innerHTML = recCurrentFiltered.map(r => {
-      const statusCls = recStatusColorClass(r.status_check);
+    wrap.innerHTML = tlGroups.map(tl => {
+      const tlKey = tl.teamLeader;
+      const expanded = recExpandedTLs.has(tlKey);
       return `
-      <tr class="${statusCls}">
-        <td><strong>${r.id_in_cc || '—'}</strong></td>
-        <td>${countryFlag(r.country)}${r.country || '—'}</td>
-        <td>${r.substatus || '—'}</td>
-        <td class="rc-col-cccomment" style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
-        <td>${recTlBadge(r.team_leader)}</td>
-        <td class="rc-col-asesor">${r.asesor || '—'}</td>
-        <td>${r.last_call_operator || '—'}</td>
-        <td>${gdScheduleBadge(r.horario)}</td>
-        ${recLinkCells(r.id_in_cc)}
-      </tr>`;
+      <div class="panel" style="margin-bottom:12px;overflow:hidden">
+        <div class="rec-tl-header" style="padding:14px 20px" onclick="recToggleTL('${recEscAttr(tlKey)}')">
+          <svg class="rec-tree-chevron ${expanded ? 'rec-tree-open' : ''}" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          ${recTlBadge(tl.teamLeader)}
+          <span style="color:var(--text-light);font-size:12px">${tl.total} orden${tl.total === 1 ? '' : 'es'}</span>
+          ${tl.reassignedCount > 0 ? `<span class="rec-reassigned-badge" style="margin-left:auto">🔴 ${tl.reassignedCount} reasignada${tl.reassignedCount === 1 ? '' : 's'}</span>` : ''}
+        </div>
+        ${expanded ? `<div style="padding:10px 14px 14px;background:var(--main-bg)">${tl.operators.map(op => recRenderOperatorBlock(tlKey, op)).join('')}</div>` : ''}
+      </div>`;
     }).join('');
+  }
+
+  function recRenderOperatorBlock(tlKey, op) {
+    const opKey = `${tlKey}::${op.operator}`;
+    const expanded = recExpandedOps.has(opKey);
+    return `
+    <div style="margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:var(--card-bg)">
+      <div class="rec-op-header" style="padding:10px 14px" onclick="recToggleOp('${recEscAttr(opKey)}')">
+        <svg class="rec-tree-chevron ${expanded ? 'rec-tree-open' : ''}" viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+        <span style="font-weight:600;font-size:13px">${op.asesor}</span>
+        <span style="font-size:10px;color:var(--text-light)">${op.operator}</span>
+        <span style="color:var(--text-light);font-size:11px">${op.rows.length} orden${op.rows.length === 1 ? '' : 'es'}</span>
+        ${op.reassignedCount > 0 ? `<span class="rec-reassigned-badge" style="margin-left:auto">🔴 ${op.reassignedCount}</span>` : ''}
+      </div>
+      ${expanded ? recRenderOperatorRowsTable(op.rows) : ''}
+    </div>`;
+  }
+
+  function recReassignCell(r) {
+    const a = r._alert;
+    if (!a) return `<span style="color:var(--text-light);font-size:11px">—</span>`;
+    const action = a.reviewed
+      ? `<span class="badge badge-green">✓ Revisado</span>`
+      : (canEditRecalls() ? `<button class="btn btn-ghost btn-sm" onclick="recMarkReviewed(${a.id})">Marcar revisado</button>` : `<span class="badge badge-red">Pendiente</span>`);
+    return `<div style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+      ${recArrowHTML(a.old_operator, r.last_call_operator)}
+      ${action}
+    </div>`;
+  }
+
+  function recRenderOperatorRowsTable(rows) {
+    return `<div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Id in CC</th><th>Country</th><th>Substatus</th><th>CC comment</th><th>Horario</th><th>Reasignación</th>
+        <th style="width:52px;padding:12px 4px;text-align:center">Enlaces</th>
+      </tr></thead>
+      <tbody>${rows.map(r => {
+        const statusCls = recStatusColorClass(r.status_check);
+        const reassignedCls = r._pending ? 'rec-reassigned-row' : '';
+        return `<tr class="${statusCls} ${reassignedCls}">
+          <td><strong>${r.id_in_cc || '—'}</strong></td>
+          <td>${countryFlag(r.country)}${r.country || '—'}</td>
+          <td>${r.substatus || '—'}</td>
+          <td style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
+          <td>${gdScheduleBadge(r.horario)}</td>
+          <td style="white-space:nowrap">${recReassignCell(r)}</td>
+          ${recLinkCells(r.id_in_cc)}
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
   }
 
   /* ── Copiar Id in CC visibles al portapapeles, en grupos de REC_COPY_CHUNK_SIZE
@@ -5394,10 +5378,9 @@
   const REC_COPY_CHUNK_SIZE = 150;
   const REC_COPY_ORDINALS = ['primeros', 'segundos', 'terceros', 'cuartos', 'quintos', 'sextos', 'séptimos', 'octavos', 'novenos', 'décimos'];
 
-  /* Config de copiar por tabla — 'main' (órdenes) y 'alert' (reasignaciones) */
+  /* Config de copiar IDs — ahora una sola tabla unificada */
   const REC_COPY_CFG = {
-    main:  { menuId: 'rec-copy-menu',       btnId: 'rec-copy-ids-btn',       labelId: 'rec-copy-ids-label',   src: () => recCurrentFiltered },
-    alert: { menuId: 'rec-alert-copy-menu', btnId: 'rec-alert-copy-ids-btn', labelId: 'rec-alert-copy-label', src: () => recAlertFiltered },
+    main: { menuId: 'rec-copy-menu', btnId: 'rec-copy-ids-btn', labelId: 'rec-copy-ids-label', src: () => recCurrentFiltered },
   };
 
   function recToggleCopyMenu(evt, which = 'main') {
@@ -5642,28 +5625,6 @@
     }
   }
 
-  /* Elimina alertas (reasignaciones) marcadas por color tras comparar status */
-  async function recDeleteAlertsByStatusColor(color) {
-    if (!isSupervisor()) return;
-    const ids = recAlertRows.filter(a => recColorGroup(a) === color).map(a => a.id_in_cc);
-    if (ids.length === 0) return;
-    const label = color === 'yellow' ? 'amarillas' : 'rojas';
-    if (!confirm(`¿Eliminar ${ids.length} alerta(s) marcada(s) en ${label}?`)) return;
-
-    try {
-      const idsParam = ids.map(id => encodeURIComponent(id)).join(',');
-      const res = await fetch(`${SB_URL}/rest/v1/dt_recalls_alerts?id_in_cc=in.(${idsParam})`, {
-        method: 'DELETE',
-        headers: SB_HEADERS,
-      });
-      if (!res.ok) throw new Error(`Supabase delete error ${res.status}`);
-      await recLoadAll();
-    } catch (err) {
-      console.error('Error eliminando alertas por color:', err);
-      alert('No se pudo eliminar, intenta de nuevo.');
-    }
-  }
-
   /* Caja azul: quién y cuándo hizo la última carga de data (todas las filas comparten estos valores) */
   function recRenderLastUpdate() {
     const box = document.getElementById('rec-lastupd-box');
@@ -5683,68 +5644,7 @@
     const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
     setTxt('rec-del-yellow', `Eliminar amarillas (${cnt(recCurrentRows, 'yellow')})`);
     setTxt('rec-del-red',    `Eliminar rojas (${cnt(recCurrentRows, 'red')})`);
-    setTxt('rec-alert-del-yellow', `Eliminar amarillas (${cnt(recAlertRows, 'yellow')})`);
-    setTxt('rec-alert-del-red',    `Eliminar rojas (${cnt(recAlertRows, 'red')})`);
     setTxt('rec-reviewed-n', `(${recAlertRows.filter(a => a.reviewed).length})`);
-  }
-
-  function applyRecAlertFilters() {
-    const status  = document.getElementById('rec-f-status').value;
-    const country = document.getElementById('rec-f-acountry').value;
-    const oldtl   = document.getElementById('rec-f-oldtl').value;
-    const newtl   = document.getElementById('rec-f-newtl').value;
-    const search  = document.getElementById('rec-asearch').value.toLowerCase();
-
-    recAlertFiltered = recAlertRows.filter(a => {
-      if (status === 'pending' && a.reviewed) return false;
-      if (status === 'reviewed' && !a.reviewed) return false;
-      if (country && a.country !== country) return false;
-      if (oldtl && a.old_team_leader !== oldtl) return false;
-      if (newtl && a.new_team_leader !== newtl) return false;
-      if (search && !(a.id_in_cc || '').toLowerCase().includes(search)) return false;
-      return true;
-    });
-
-    document.getElementById('rec-alert-pending-count').textContent = recAlertRows.filter(a => !a.reviewed).length;
-    renderRecAlertTable();
-  }
-
-  /* Antes arriba (atenuado), ahora abajo (resaltado) — apilado vertical */
-  function recArrowHTML(oldVal, newVal) {
-    const o = oldVal || '—';
-    const n = newVal || '—';
-    return `<div style="display:flex;flex-direction:column;gap:2px;line-height:1.3">
-      <span style="color:var(--text-light)">${o}</span>
-      <span style="font-weight:700;color:#fca5a5">${n}</span>
-    </div>`;
-  }
-
-  function renderRecAlertTable() {
-    const table = document.getElementById('rec-alert-table');
-    const tbody = document.getElementById('rec-alert-tbody');
-    const empty = document.getElementById('rec-alert-empty');
-
-    if (recAlertFiltered.length === 0) {
-      table.style.display = 'none';
-      empty.style.display = 'flex';
-      return;
-    }
-    empty.style.display = 'none';
-    table.style.display = 'table';
-
-    tbody.innerHTML = recAlertFiltered.map(a => `
-      <tr class="${recStatusColorClass(a.status_check)}" style="${a.reviewed ? 'opacity:.5' : ''}">
-        <td><strong>${a.id_in_cc || '—'}</strong></td>
-        <td>${countryFlag(a.country)}${a.country || '—'}</td>
-        <td style="white-space:nowrap">${recArrowHTML(a.old_operator, a.new_operator)}</td>
-        <td style="white-space:nowrap">${recTlArrowHTML(a.old_team_leader, a.new_team_leader)}</td>
-        <td class="rc-col-detected" style="color:var(--text-light);white-space:nowrap">${repTimeAgo(a.detected_at)}</td>
-        <td>${a.reviewed
-          ? `<span class="badge badge-green">✓ Revisado</span>`
-          : (canEditRecalls() ? `<button class="btn btn-ghost btn-sm" onclick="recMarkReviewed(${a.id})">Marcar revisado</button>` : `<span class="badge badge-red">Pendiente</span>`)
-        }</td>
-        ${recLinkCells(a.id_in_cc)}
-      </tr>`).join('');
   }
 
   async function recMarkReviewed(id) {
