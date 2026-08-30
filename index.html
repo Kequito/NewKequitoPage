@@ -5294,16 +5294,29 @@
   }
 
   function recToggleOp(ti, oi, opKey) {
+    const opEl = document.getElementById(`rec-opbody-${ti}-${oi}`);
     const opening = !recExpandedOps.has(opKey);
+
+    // El Team Leader que contiene a este operador puede necesitar más (o menos) alto también.
+    // Se calcula el destino ANTES de togglear el operador (mientras opEl todavía tiene su alto
+    // viejo) sumando/restando lo que va a ganar/perder, y se aplica ya mismo junto con el toggle
+    // del operador — así las dos transiciones corren en paralelo con la misma duración y el
+    // contenedor del Team Leader nunca se queda con un tope viejo cortando al operador a mitad
+    // de la animación (antes se medía con requestAnimationFrame un frame después, agarrando el
+    // alto del operador a medio abrir, y ese tope corto se quedaba fijo — la fila se veía
+    // "pegada"/cortada al abrirla).
+    const tlBody = document.getElementById(`rec-tlbody-${ti}`);
+    let tlTarget = null;
+    if (tlBody && tlBody.style.maxHeight && tlBody.style.maxHeight !== '0px' && opEl) {
+      const delta = opening ? opEl.scrollHeight : -opEl.scrollHeight;
+      tlTarget = Math.max(0, tlBody.scrollHeight + delta);
+    }
+
     opening ? recExpandedOps.add(opKey) : recExpandedOps.delete(opKey);
-    recAnimateCollapse(document.getElementById(`rec-opbody-${ti}-${oi}`), opening);
+    recAnimateCollapse(opEl, opening);
     document.getElementById(`rec-opchevron-${ti}-${oi}`)?.classList.toggle('rec-tree-open', opening);
 
-    // El Team Leader que contiene a este operador puede necesitar más (o menos) alto también
-    const tlBody = document.getElementById(`rec-tlbody-${ti}`);
-    if (tlBody && tlBody.style.maxHeight && tlBody.style.maxHeight !== '0px') {
-      requestAnimationFrame(() => { tlBody.style.maxHeight = tlBody.scrollHeight + 'px'; });
-    }
+    if (tlTarget !== null) tlBody.style.maxHeight = tlTarget + 'px';
   }
 
   function recBuildTree(rows) {
