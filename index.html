@@ -6128,6 +6128,7 @@
   ══════════════════════════════ */
   let leadsLoaded = false;
   let leadsLatest = null;          // última fila guardada en dt_leads_campana (o null)
+  let leadsApproveByCountry = {};  // país -> approvePct, del snapshot de Reporte más reciente
   let leadsCooldownTimer = null;
   let leadsCampaignMode = 'normal'; // 'normal' (Aray, Adcombo) | 'postsale' — igual que Stats OPs Today
   const LEADS_COOLDOWN_MS = 3 * 60 * 1000; // 3 minutos
@@ -6184,17 +6185,31 @@
     return /-PS-Auto\s*$/i.test((name || '').trim());
   }
 
+  /* Quita tildes y normaliza espacios/mayúsculas — así "País"/"Pais", "Órdenes"/"Ordenes", etc.
+     comparan igual sin importar cómo los haya exportado el panel. */
+  function leadsNormalizeHeaderCell(s) {
+    return (s || '').toString().trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  /* El panel deja elegir el idioma al exportar — inglés o español — así que se acepta
+     cualquiera de los dos nombres de columna. "cantudad" (con typo) es el nombre real que
+     usa el panel en español para "Number of operators", no un error nuestro. */
+  const LEADS_HEADER_ALIASES = {
+    country:  ['country', 'pais'],
+    name:     ['name', 'nombre'],
+    ops:      ['number of operators', 'cantidad de operadores', 'cantudad de operadores'],
+    capacity: ['capacity', 'capacidad'],
+    orders:   ['orders', 'ordenes'],
+  };
+
   function leadsParsePaste(raw) {
     const lines = (raw || '').split('\n').map(l => l.replace(/\r$/, '')).filter(l => l.trim() !== '');
     if (lines.length < 2) return [];
-    const headerCells = lines[0].split('\t').map(h => h.trim().toLowerCase());
-    const idx = {
-      country:  headerCells.findIndex(h => h === 'country'),
-      name:     headerCells.findIndex(h => h === 'name'),
-      ops:      headerCells.findIndex(h => h === 'number of operators'),
-      capacity: headerCells.findIndex(h => h === 'capacity'),
-      orders:   headerCells.findIndex(h => h === 'orders'),
-    };
+    const headerCells = lines[0].split('\t').map(leadsNormalizeHeaderCell);
+    const idx = {};
+    Object.entries(LEADS_HEADER_ALIASES).forEach(([field, aliases]) => {
+      idx[field] = headerCells.findIndex(h => aliases.includes(h));
+    });
     if (idx.country === -1 || idx.name === -1 || idx.capacity === -1 || idx.orders === -1) return [];
 
     const rows = [];
@@ -6277,9 +6292,29 @@
     await leadsLoadLatest();
   }
 
+  /* Approve % por país del snapshot de Reporte más reciente (dt_reportes_ventas) — mismo
+     snapshot que usa "Reporte" para sus deltas (repFetchPrevSnapshot), así Leads y Approve
+     se leen del mismo "reporte actualizado en este momento" sin depender de que alguien
+     haya abierto la sección Reporte en esta sesión. */
+  async function leadsFetchApproveByCountry() {
+    try {
+      const snap = await repFetchPrevSnapshot();
+      const map = {};
+      (snap ? (snap.by_country || []) : []).forEach(c => { map[c.country] = c.approvePct; });
+      return map;
+    } catch (err) {
+      console.error('Error cargando Approve de Reporte para Leads por Campaña:', err);
+      return {};
+    }
+  }
+
   async function leadsLoadLatest(silent = false) {
-    const row = await leadsFetchLatest();
+    const [row, approveMap] = await Promise.all([
+      leadsFetchLatest(),
+      leadsFetchApproveByCountry(),
+    ]);
     leadsLatest = row;
+    leadsApproveByCountry = approveMap;
     leadsRenderLastUpdate(row);
     leadsApplyCooldown(row ? row.created_at : null);
 
@@ -6369,6 +6404,10 @@
 
     grid.innerHTML = countries.map((c, i) => {
       const color = REP_COUNTRY_COLORS[c.country] || REP_FALLBACK_COLORS[i % REP_FALLBACK_COLORS.length];
+      const approvePct = leadsApproveByCountry[c.country];
+      const approveHtml = approvePct != null
+        ? `<span class="rep-approve-badge ${repApproveClass(approvePct)}" style="font-size:11px" title="Approve del reporte más reciente">${repFmtPct(approvePct)}</span>`
+        : '';
       const rows = c.queues.map(q => `
         <tr style="${q.orders < LEADS_LOW_ORDERS_THRESHOLD ? 'background:rgba(239,68,68,.14)' : ''}">
           <td style="padding:10px 8px;white-space:nowrap">${q.name}</td>
@@ -6383,6 +6422,7 @@
       <div class="panel" style="overflow:hidden;border-top:3px solid ${color}">
         <div class="panel-head" style="background:${color}22">
           <span class="panel-title" style="color:${color}">${countryFlag(c.country)}${c.country}</span>
+          ${approveHtml}
         </div>
         <div style="overflow-x:auto">
           <table style="min-width:290px">
@@ -6423,10 +6463,12 @@
     const noLeads = countries
       .filter(c => c.queues.length > 0 && c.queues.every(q => q.orders < LEADS_LOW_ORDERS_THRESHOLD))
       .map(c => c.country);
-    // "Por quedarse sin leads": las primeras 3 colas ya en 0, pero la campaña todavía no califica
-    // como "sin leads disponibles" de arriba (si ya calificó, no hace falta repetirla como warning)
+    // "Por quedarse sin leads": las primeras 3 colas ya en rojo (mismo criterio que "sin leads
+    // disponibles" de arriba, < LEADS_LOW_ORDERS_THRESHOLD, antes exigía 0 exacto), pero la
+    // campaña todavía no califica como "sin leads disponibles" completa (si ya calificó, no
+    // hace falta repetirla como warning)
     const nearEmpty = countries
-      .filter(c => !noLeads.includes(c.country) && c.queues.slice(0, 3).length > 0 && c.queues.slice(0, 3).every(q => q.orders === 0))
+      .filter(c => !noLeads.includes(c.country) && c.queues.slice(0, 3).length > 0 && c.queues.slice(0, 3).every(q => q.orders < LEADS_LOW_ORDERS_THRESHOLD))
       .map(c => c.country);
 
     const alerts = [];
@@ -6440,7 +6482,7 @@
     }
     if (nearEmpty.length > 0) {
       alerts.push({ level: 'warning', title: 'Por quedarse sin leads',
-        text: `${nearEmpty.length} campaña${nearEmpty.length > 1 ? 's' : ''} con las primeras 3 colas ya en 0 — cerca de agotarse por completo: ${nearEmpty.join(', ')}.` });
+        text: `${nearEmpty.length} campaña${nearEmpty.length > 1 ? 's' : ''} con las primeras 3 colas ya en rojo — cerca de agotarse por completo: ${nearEmpty.join(', ')}.` });
     }
     return alerts;
   }
