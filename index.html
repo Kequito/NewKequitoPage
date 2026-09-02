@@ -1510,6 +1510,10 @@
         <button class="btn btn-sm btn-ghost" id="rec-only-reassigned-btn" onclick="recToggleOnlyReassigned()">
           🔴 Ver solo órdenes reasignadas <span id="rec-only-reassigned-count">(0)</span>
         </button>
+        <span style="width:1px;height:22px;background:var(--border);margin:0 4px"></span>
+        <button class="btn btn-sm btn-ghost" id="rec-global-reassigned-btn" onclick="recToggleGlobalReassignedView()" title="Ignora el turno activo y muestra de una vez todas las órdenes reasignadas pendientes de revisión, de todos los turnos">
+          🌎 Ver TODAS las reasignadas (todos los turnos) <span id="rec-global-reassigned-count">(0)</span>
+        </button>
       </div>
 
       <div class="gd-filters">
@@ -5118,7 +5122,12 @@
   }
 
   function recSetShift(shift) {
-    if (recActiveShift === shift) return;
+    // Elegir un turno puntual siempre saca de la vista global (aunque sea el mismo turno
+    // que ya estaba activo antes de entrar a la vista global — por eso no se puede usar el
+    // de-early-return de antes tal cual, hay que revisar si veníamos de la vista global).
+    const wasGlobal = recGlobalReassignedView;
+    recGlobalReassignedView = false;
+    if (!wasGlobal && recActiveShift === shift) return;
     recActiveShift = shift;
     applyRecFilters();
   }
@@ -5137,7 +5146,18 @@
 
   let recOnlyReassigned = false;
   function recToggleOnlyReassigned() {
+    recGlobalReassignedView = false; // este toggle es dentro del turno activo, no la vista global
     recOnlyReassigned = !recOnlyReassigned;
+    applyRecFilters();
+  }
+
+  /* Vista global: TODAS las órdenes reasignadas pendientes de revisión, de todos los turnos
+     a la vez, ya desglosadas en una sola tabla (sin tener que abrir Team Leader/Operador uno
+     por uno) — ignora el turno activo y el toggle "Ver solo reasignadas" de arriba. */
+  let recGlobalReassignedView = false;
+  function recToggleGlobalReassignedView() {
+    recGlobalReassignedView = !recGlobalReassignedView;
+    if (recGlobalReassignedView) recOnlyReassigned = false; // evita el filtro doble, ya de por sí solo trae reasignadas
     applyRecFilters();
   }
 
@@ -5162,8 +5182,10 @@
     });
     document.querySelectorAll('.rec-shift-btn').forEach(btn => {
       const shift = btn.dataset.shift;
-      btn.classList.toggle('btn-primary', shift === recActiveShift);
-      btn.classList.toggle('btn-ghost', shift !== recActiveShift);
+      // En la vista global ningún turno puntual está "activo" — todos se ven a la vez
+      const active = !recGlobalReassignedView && shift === recActiveShift;
+      btn.classList.toggle('btn-primary', active);
+      btn.classList.toggle('btn-ghost', !active);
       const countEl = btn.querySelector('.rec-shift-count');
       if (countEl) countEl.textContent = `(${counts[shift] || 0})`;
     });
@@ -5173,9 +5195,23 @@
     const btn = document.getElementById('rec-only-reassigned-btn');
     if (!btn) return;
     const count = shiftRows.filter(r => recIsPendingReassigned(r.id_in_cc)).length;
-    btn.classList.toggle('btn-primary', recOnlyReassigned);
-    btn.classList.toggle('btn-ghost', !recOnlyReassigned);
+    const active = !recGlobalReassignedView && recOnlyReassigned;
+    btn.classList.toggle('btn-primary', active);
+    btn.classList.toggle('btn-ghost', !active);
     const countEl = document.getElementById('rec-only-reassigned-count');
+    if (countEl) countEl.textContent = `(${count})`;
+  }
+
+  /* Contador del botón global: siempre cuenta sobre TODOS los turnos (baseRows, sin recortar
+     por recActiveShift), sea cual sea el modo activo — así ya avisa cuántas hay en total
+     incluso antes de presionarlo. */
+  function renderRecGlobalReassignedToggle(baseRows) {
+    const btn = document.getElementById('rec-global-reassigned-btn');
+    if (!btn) return;
+    const count = baseRows.filter(r => recIsPendingReassigned(r.id_in_cc)).length;
+    btn.classList.toggle('btn-primary', recGlobalReassignedView);
+    btn.classList.toggle('btn-ghost', !recGlobalReassignedView);
+    const countEl = document.getElementById('rec-global-reassigned-count');
     if (countEl) countEl.textContent = `(${count})`;
   }
 
@@ -5184,9 +5220,9 @@
     const baseRows = recBaseFiltered();
     const shiftRows = baseRows.filter(r => recShiftBucket(r.horario) === recActiveShift);
 
-    recCurrentFiltered = recOnlyReassigned
-      ? shiftRows.filter(r => recIsPendingReassigned(r.id_in_cc))
-      : shiftRows;
+    recCurrentFiltered = recGlobalReassignedView
+      ? baseRows.filter(r => recIsPendingReassigned(r.id_in_cc))
+      : (recOnlyReassigned ? shiftRows.filter(r => recIsPendingReassigned(r.id_in_cc)) : shiftRows);
 
     document.getElementById('rec-clear-btn').style.display = search ? 'flex' : 'none';
     const sw = document.querySelector('#view-recalls .gd-search-wrap');
@@ -5194,6 +5230,7 @@
 
     renderRecShiftTabs(baseRows);
     renderRecOnlyReassignedToggle(shiftRows);
+    renderRecGlobalReassignedToggle(baseRows);
     renderRecTree();
   }
 
@@ -5339,6 +5376,18 @@
       .sort((a, b) => a.teamLeader.localeCompare(b.teamLeader));
   }
 
+  /* Textos del estado vacío — se restauran cada vez porque la vista global (más abajo)
+     los pisa temporalmente con su propio mensaje. */
+  const REC_EMPTY_TEXT_DEFAULT = { p: 'Sin órdenes para este turno / filtro', small: 'Prueba con otro turno o quita los filtros activos' };
+  const REC_EMPTY_TEXT_GLOBAL  = { p: 'No hay reasignaciones pendientes', small: 'Todas las órdenes reasignadas ya fueron revisadas, en todos los turnos.' };
+  function recSetEmptyText(texts) {
+    const empty = document.getElementById('rec-empty');
+    const p = empty.querySelector('p');
+    const small = empty.querySelector('small');
+    if (p) p.textContent = texts.p;
+    if (small) small.textContent = texts.small;
+  }
+
   function renderRecTree() {
     document.getElementById('rec-loading').style.display = 'none';
     document.getElementById('rec-showing').textContent = recCurrentFiltered.length;
@@ -5346,6 +5395,22 @@
 
     const wrap = document.getElementById('rec-tree');
     const empty = document.getElementById('rec-empty');
+
+    // Vista global: una sola tabla plana con TODAS las reasignaciones pendientes de todos los
+    // turnos, ya desglosada — sin árbol Team Leader/Operador que abrir.
+    if (recGlobalReassignedView) {
+      if (recCurrentFiltered.length === 0) {
+        wrap.innerHTML = '';
+        recSetEmptyText(REC_EMPTY_TEXT_GLOBAL);
+        empty.style.display = 'flex';
+        return;
+      }
+      empty.style.display = 'none';
+      wrap.innerHTML = recRenderGlobalReassignedTable(recCurrentFiltered);
+      return;
+    }
+
+    recSetEmptyText(REC_EMPTY_TEXT_DEFAULT);
     const tlGroups = recBuildTree(recCurrentFiltered);
 
     if (tlGroups.length === 0) {
@@ -5430,6 +5495,44 @@
           <td style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
           <td>${gdScheduleBadge(r.horario)}</td>
           <td style="white-space:nowrap">${recReassignCell(r)}</td>
+          ${recLinkCells(r.id_in_cc)}
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  }
+
+  /* ── Vista global "Ver TODAS las reasignadas": una sola tabla plana con Team Leader y
+     Operador como columnas (en vez de agrupar en árbol) — ordenada por Team Leader > Operador
+     > Id in CC para que sea fácil de escanear de un vistazo, con todo ya visible sin togglear
+     nada. Las filas que llegan acá ya son 100% reasignadas pendientes (recCurrentFiltered en
+     modo global las filtra así), así que recReassignCell siempre va a tener alerta. ── */
+  function recRenderGlobalReassignedTable(rows) {
+    const sorted = [...rows].sort((a, b) => {
+      const tl = (a.team_leader || '—').localeCompare(b.team_leader || '—');
+      if (tl !== 0) return tl;
+      const op = (a.asesor || '—').localeCompare(b.asesor || '—');
+      if (op !== 0) return op;
+      return (a.id_in_cc || '').localeCompare(b.id_in_cc || '');
+    });
+
+    return `<div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Team Leader</th><th>Operador</th><th>Turno</th><th>Id in CC</th><th>Country</th><th>Substatus</th><th>CC comment</th><th>Horario</th><th>Reasignación</th>
+        <th style="width:52px;padding:12px 4px;text-align:center">Enlaces</th>
+      </tr></thead>
+      <tbody>${sorted.map(r => {
+        const statusCls = recStatusColorClass(r.status_check);
+        const augmented = { ...r, _alert: recAlertIndex[r.id_in_cc] || null };
+        return `<tr class="${statusCls} rec-reassigned-row">
+          <td>${recTlBadge(r.team_leader)}</td>
+          <td style="white-space:nowrap"><span style="font-weight:600">${r.asesor || '—'}</span> <span style="font-size:10px;color:var(--text-light)">${r.last_call_operator || '—'}</span></td>
+          <td style="white-space:nowrap;color:var(--text-light);font-size:11px">${recShiftBucket(r.horario) || '—'}</td>
+          <td><strong>${r.id_in_cc || '—'}</strong></td>
+          <td>${countryFlag(r.country)}${r.country || '—'}</td>
+          <td>${r.substatus || '—'}</td>
+          <td style="max-width:220px;white-space:normal">${r.cc_comment || '—'}</td>
+          <td>${gdScheduleBadge(r.horario)}</td>
+          <td style="white-space:nowrap">${recReassignCell(augmented)}</td>
           ${recLinkCells(r.id_in_cc)}
         </tr>`;
       }).join('')}</tbody>
