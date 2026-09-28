@@ -1,0 +1,211 @@
+/* Estilos específicos de cada vista (GoodDay, Approve Stats, Reportes, Stats OPs Live). */
+
+/* ─── Views (páginas) ─── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ─── GoodDay header info bar ─── */
+.gd-infobar {
+  display: flex; align-items: center; gap: 11px;
+  padding: 12px 22px;
+  background: linear-gradient(90deg, var(--nav-bg) 0%, var(--nav-bg2) 100%);
+  border-radius: var(--radius) var(--radius) 0 0;
+  flex-wrap: wrap;
+}
+.gd-infobar-title {
+  font-size: 14.5px; font-weight: 700; color: #fff;
+  display: flex; align-items: center; gap: 9px;
+}
+.gd-infobar-title svg { width: 17px; height: 17px; }
+.gd-stat-chip {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--nav-text);
+  font-size: 11.5px; font-weight: 600;
+  padding: 4px 11px; border-radius: 99px;
+  display: flex; align-items: center; gap: 5px;
+}
+.gd-stat-chip span { color: #fff; }
+.gd-refresh-btn {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(200,30,44,.5);
+  border: 1px solid rgba(200,30,44,.8);
+  color: #fff; font-family: inherit; font-size: 11px; font-weight: 600;
+  padding: 5px 12px; border-radius: 99px; cursor: pointer;
+  transition: background .18s;
+}
+.gd-refresh-btn:hover { background: rgba(200,30,44,.8); }
+.gd-refresh-btn svg { width: 13px; height: 13px; }
+.spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── GoodDay filter bar ─── */
+.gd-filters {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px;
+  background: var(--main-bg);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.gd-filters label {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-light); text-transform: uppercase; letter-spacing: .8px;
+}
+
+/* ─── GoodDay table ─── */
+.gd-tbl-wrap { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+.gd-tbl-wrap thead th {
+  position: sticky; top: 0; z-index: 2;
+}
+
+/* ─── GoodDay empty / loading state ─── */
+.gd-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; gap: 14px; color: var(--text-light);
+}
+.gd-state svg { width: 42px; height: 42px; opacity: .3; }
+.gd-state p { font-size: 14px; font-weight: 500; }
+.gd-state small { font-size: 12px; }
+
+/* ─── last updated chip ─── */
+#gd-last-update { font-size: 10px; color: var(--text-light); }
+
+/* ─── Approve Stats table ─── */
+.ops-tbl-wrap { overflow-x: auto; }
+.ops-tbl-wrap thead th {
+  white-space: nowrap;
+}
+.ops-tbl-wrap thead th.country-group {
+  background: var(--nav-bg);
+  color: #fff;
+  text-align: center;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .3px;
+  border-left: 2px solid rgba(255,255,255,.1);
+  padding: 8px 6px;
+}
+.ops-tbl-wrap thead tr.sub-header th {
+  background: var(--nav-bg2);
+  color: var(--nav-muted);
+  font-size: 10.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .3px;
+  border-left: 1px solid rgba(255,255,255,.06);
+  text-align: center;
+  padding: 6px 4px;
+}
+.ops-tbl-wrap tbody td.metric-cell {
+  text-align: center;
+  font-size: 13px;
+  border-left: 1px solid var(--border);
+  padding: 8px 6px;
+  min-width: 56px;
+}
+.ops-tbl-wrap tbody td.country-start { border-left: 2px solid var(--border); }
+.ops-identity-cell { min-width: 260px; white-space: nowrap; }
+.ops-name-inline { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+.ops-code-inline  { font-size: 11.5px; color: var(--text-light); margin-left: 6px; }
+/* Approve % colored cells — reutiliza el semáforo de .rep-approve-* (rojo/neutro/verde) */
+.ops-empty-cell   { color: #6f747a; font-size: 13px; text-align:center; }
+
+/* ─── Approve Stats — tarjetas de selección ─── */
+.ops-pick-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 24px 10px; border-radius: var(--radius); border: 1.5px solid var(--border);
+  background: var(--main-bg); cursor: pointer; transition: all .18s;
+}
+.ops-pick-card:hover { transform: translateY(-3px); border-color: var(--nav-accent); box-shadow: var(--shadow-md); }
+.ops-pick-label { font-size: 13px; font-weight: 700; }
+
+/* ─── Reportes — semáforo de Approve % ─── */
+.rep-approve-badge { display:inline-block; padding:2px 9px; border-radius:6px; font-weight:700; font-variant-numeric:tabular-nums; }
+.rep-approve-bad   { color:#dc2626; background:rgba(220,38,38,.10); }
+.rep-approve-mid   { color:#a7acb1; background:var(--card-bg-2); }
+.rep-approve-good  { color:#16a34a; background:rgba(22,163,74,.10); }
+.rep-toggle-chip {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 12px; border-radius:99px;
+  background:var(--main-bg); border:1.5px solid var(--border);
+  font-size:12px; font-weight:600; cursor:pointer;
+  transition:opacity .18s, border-color .18s;
+}
+.rep-toggle-chip.off { opacity:.35; }
+#rep-date-input::-webkit-calendar-picker-indicator { cursor: pointer; }
+.rep-delta { font-size:10px; font-weight:700; white-space:nowrap; }
+.rep-delta-up   { color:#16a34a; }
+.rep-delta-down { color:#dc2626; }
+.rep-delta-flat { color:var(--text-light); }
+.rep-summary-banner {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 18px; margin-bottom:22px;
+  background:linear-gradient(90deg, var(--nav-bg) 0%, var(--nav-bg2) 100%);
+  border-radius:var(--radius); border:1px solid var(--border);
+  color:#fff; font-size:13px; font-weight:500;
+}
+.rep-summary-banner svg { width:20px; height:20px; flex-shrink:0; color:var(--nav-accent); }
+
+/* ─── Stats OPs Live (nueva, en prueba) — js/views/opslive.js ─── */
+.ol-live { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; font-size: 11.5px; font-weight: 600; color: var(--green); }
+.ol-live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: olPulse 2s infinite; }
+@keyframes olPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.55); }
+  70%  { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+@media (prefers-reduced-motion: reduce) { .ol-live-dot { animation: none; } }
+.ol-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+.ol-updated { font-size: 11.5px; color: var(--nav-text); }
+.ol-spin svg { animation: spin .8s linear infinite; }
+.ol-note { padding: 14px 22px 16px; font-size: 12px; color: var(--text-light); line-height: 1.55; }
+.ol-note span { color: var(--text-mid); }
+.ol-error {
+  margin: 14px 22px 0; padding: 10px 14px;
+  border: 1px solid var(--red); background: var(--red-soft); color: #ff8a8a;
+  border-radius: var(--radius-sm); font-size: 12.5px;
+}
+.kpi-value.ol-kpi-green { color: var(--green); }
+.kpi-value.ol-kpi-red   { color: var(--red); }
+.kpi-value.ol-kpi-amber { color: var(--amber); }
+.ol-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ol-sales { font-weight: 800; color: var(--green); }
+.ol-big { font-size: 16px; }
+.ol-rank { font-weight: 700; color: var(--text-light); }
+.ol-nowrap { white-space: nowrap; }
+.ol-op-name { font-weight: 600; max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ol-sub { font-size: 10px; color: var(--text-light); font-weight: 400; }
+.ol-inactive td { opacity: .45; }
+.ol-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-mid); cursor: pointer; }
+#view-opslive th[data-key] { cursor: pointer; user-select: none; }
+/* ─── Asistencia en vivo (js/core/attendance.js) — GoodDay ─── */
+.att-badge { display: inline-block; min-width: 34px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; text-align: center; white-space: nowrap; }
+.att-a     { background: var(--green-soft); color: var(--green); }
+.att-fa    { background: var(--red-soft);   color: #ff8a8a; }
+.att-s     { background: rgba(192,132,252,.18); color: #c084fc; }
+.att-off   { background: var(--blue-soft);  color: var(--blue); }
+.att-baja  { background: rgba(156,168,181,.16); color: #b4bec9; text-decoration: line-through; }
+.att-other { background: var(--amber-soft); color: var(--amber); }
+.att-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 10px 22px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--text-light); }
+.att-legend-title { font-weight: 700; color: var(--text-mid); }
+.att-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.att-empty { background: transparent; color: var(--text-light); font-weight: 500; border: 1px dashed var(--border); }
+.gd-stat-chip.att-warn-chip { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); cursor: help; }
+/* ─── Gestión de Cuentas: permisos editables (js/views/accounts.js) ─── */
+.acct-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.perm-help { padding: 12px 18px 4px; font-size: 12px; color: var(--text-light); line-height: 1.55; }
+.perm-help + .ol-error { margin: 10px 18px 0; }
+.perm-lock { font-size: 11px; cursor: help; }
+.perm-status { font-size: 11.5px; color: var(--text-light); }
+.perm-status--dirty { color: var(--amber); font-weight: 600; }
+.perm-status--ok { color: var(--green); font-weight: 600; }
+.perm-matrix td:not(:first-child), .perm-matrix th:not(:first-child) { width: 120px; }
+.perm-group-row td { background: var(--card-bg-2); font-size: 10.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text-mid); }
+.perm-check { width: 17px; height: 17px; cursor: pointer; accent-color: var(--nav-accent); }
+.perm-check:disabled { cursor: not-allowed; }
+/* Editor de permisos de una cuenta (dentro de uiDialog) */
+.perm-acct-warn { margin-bottom: 10px; padding: 9px 12px; border-radius: var(--radius-sm); background: var(--amber-soft); color: var(--amber); font-size: 12px; }
+.perm-acct-group { margin: 12px 0 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text-mid); }
+.perm-acct-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 10px; border-radius: var(--radius-sm); }
+.perm-acct-row:hover { background: var(--card-bg-2); }
+.perm-acct-row--custom { background: var(--amber-soft); }
+.perm-acct-label { font-size: 12.5px; color: var(--text-dark); }
+.perm-acct-row select { flex-shrink: 0; min-width: 170px; }
