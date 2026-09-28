@@ -1,0 +1,40 @@
+/* Ajustes para pantallas medianas y chicas. Va al final para que sus reglas ganen. */
+
+/* ─── Responsive ─── */
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .row-2 { grid-template-columns: minmax(0,1fr); }
+  .row-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+
+@media (max-width: 720px) {
+  :root { --nav-width: 0px; }
+
+  /* Sidebar como panel deslizable (lo abre el botón ☰, ver sidebarToggleMobile en core/sidebar.js) */
+  .sidebar {
+    width: min(280px, 85vw);
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+  }
+  .sidebar.open { transform: none; box-shadow: var(--shadow-md); }
+  .sidebar-backdrop.open { display: block; }
+  body.sidebar-open { overflow: hidden; }
+  .topbar-menu-btn { display: flex; }
+
+  /* Topbar compacto: sin nombre del usuario ni texto "Salir", solo íconos */
+  .topbar { padding: 0 14px; }
+  .topbar-left h1 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-right { gap: 8px; }
+  .topbar-user-info { padding: 4px; }
+  .topbar-user-text, .topbar-logout-label { display: none; }
+  .topbar-logout { padding: 0 11px; }
+  .content { padding: 16px 14px; }
+
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .row-3 { grid-template-columns: minmax(0,1fr); }
+}
+
+@media (max-width: 420px) {
+  .topbar-right .icon-btn:not(.topbar-menu-btn) { display: none; } /* la campana sobra en pantallas muy chicas */
+}
