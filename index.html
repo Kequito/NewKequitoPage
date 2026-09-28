@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/login.css?v=2026.09.28"/>
   <link rel="stylesheet" href="css/views.css?v=2026.09.28"/>
   <link rel="stylesheet" href="css/modal.css?v=2026.09.28"/>
+  <link rel="stylesheet" href="css/utilities.css?v=2026.09.28"/>
   <link rel="stylesheet" href="css/responsive.css?v=2026.09.28"/>
 
   <!-- Librerías -->
@@ -42,6 +43,7 @@
   <script defer src="js/views/goodday.js?v=2026.09.28"></script>
   <script defer src="js/views/ops.js?v=2026.09.28"></script>
   <script defer src="js/views/opstoday.js?v=2026.09.28"></script>
+  <script defer src="js/views/opslive.js?v=2026.09.28"></script>
   <script defer src="js/views/reportes.js?v=2026.09.28"></script>
   <script defer src="js/views/recalls.js?v=2026.09.28"></script>
   <script defer src="js/views/dashboard.js?v=2026.09.28"></script>
@@ -49,6 +51,7 @@
   <script defer src="js/views/tl.js?v=2026.09.28"></script>
   <script defer src="js/views/actualizacion.js?v=2026.09.28"></script>
   <script defer src="js/views/accounts.js?v=2026.09.28"></script>
+  <script defer src="js/core/notifications.js?v=2026.09.28"></script>
   <script defer src="js/main.js?v=2026.09.28"></script>
 </head>
 <body>
@@ -177,9 +180,17 @@
       <p class="topbar-subtitle" id="topbar-subtitle">Resumen general de la operación</p>
     </div>
     <div class="topbar-right">
-      <div class="icon-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="notif-dot"></span>
+      <!-- Campanita: avisos reales de Recalls y Leads (js/core/notifications.js) -->
+      <div class="notif-wrap">
+        <button type="button" class="icon-btn" id="notif-btn" onclick="notifToggle()"
+          aria-label="Notificaciones" aria-haspopup="true" aria-expanded="false" aria-controls="notif-panel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-count" id="notif-count" hidden>0</span>
+        </button>
+        <div class="notif-panel" id="notif-panel" role="dialog" aria-label="Notificaciones" hidden>
+          <div class="notif-panel-head">Notificaciones</div>
+          <div class="notif-list" id="notif-list"></div>
+        </div>
       </div>
       <div class="topbar-user-info">
         <div class="topbar-user-avatar" id="topbar-avatar">
@@ -217,13 +228,13 @@
           </div>
         </div>
         <div class="panel-body">
-          <div id="dash-top-ops-progress" style="display:none;height:3px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:14px">
-            <div id="dash-top-ops-progress-fill" style="height:100%;width:0%;background:var(--nav-accent);border-radius:99px"></div>
+          <div id="dash-top-ops-progress" class="progress-track" style="display:none">
+            <div id="dash-top-ops-progress-fill" class="progress-fill"></div>
           </div>
           <div id="dash-top-ops-slide">
-            <div class="gd-state" style="padding:30px"><p>Cargando…</p></div>
+            <div class="gd-state pad-30"><p>Cargando…</p></div>
           </div>
-          <div id="dash-top-ops-dots" style="display:flex;gap:6px;justify-content:center;margin-top:14px"></div>
+          <div id="dash-top-ops-dots" class="dots-row"></div>
         </div>
       </div>
 
@@ -242,13 +253,13 @@
             <canvas id="dashApproveChart"></canvas>
           </div>
           <div id="dash-lowest-campaign" style="margin-top:14px">
-            <div class="gd-state" style="padding:20px"><p>Cargando…</p></div>
+            <div class="gd-state pad-20"><p>Cargando…</p></div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+    <div class="row cols-2">
       <!-- Widget 3a: Conteo de OPs -->
       <div class="panel">
         <div class="panel-head">
@@ -259,7 +270,7 @@
           <button class="btn btn-ghost btn-sm" onclick="dashGoToGoodDay()">Ver detalle →</button>
         </div>
         <div class="panel-body" id="dash-ops-count-body">
-          <div class="gd-state" style="padding:30px"><p>Cargando…</p></div>
+          <div class="gd-state pad-30"><p>Cargando…</p></div>
         </div>
       </div>
 
@@ -275,7 +286,7 @@
         <div class="panel-body">
           <select id="dash-rest-country-filter" onchange="dashRenderRestCount()" style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:6px 10px;cursor:pointer;outline:none;margin-bottom:14px;width:100%"></select>
           <div id="dash-rest-count-body">
-            <div class="gd-state" style="padding:30px"><p>Cargando…</p></div>
+            <div class="gd-state pad-30"><p>Cargando…</p></div>
           </div>
         </div>
       </div>
@@ -340,7 +351,7 @@
           <span class="pill-clear" onclick="clearPill('gd-f-desc')">✕</span>
         </div>
 
-        <div class="gd-search-wrap" style="margin-left:auto">
+        <div class="gd-search-wrap ml-auto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="text" id="gd-search" placeholder="Buscar asesor..." oninput="applyGDFilters()"/>
         </div>
@@ -376,23 +387,23 @@
 
   <!-- ══ VIEW: OPS PERFORMANCE ══ -->
   <div class="view" id="view-ops">
-    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+    <div class="panel mb-22 clip">
 
       <!-- Header bar -->
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
           Approve Stats — Rendimiento por País
         </div>
       </div>
 
       <!-- Última actualización de la data (grande y resaltada, mismo formato que Recalls/Reporte) -->
-      <div id="ops-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 0;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(37,99,235,.3);border-radius:var(--radius)">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <div id="ops-lastupd-box" class="info-banner" style="display:none">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
-          <div id="ops-lastupd-time" style="font-size:19px;font-weight:800;color:var(--text-dark);line-height:1.3">—</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text-mid)">Reporte BI-04 · Actualización de Data (solo Supervisores)</div>
+          <div class="eyebrow">Última actualización de la data</div>
+          <div id="ops-lastupd-time" class="stat-value">—</div>
+          <div class="text-mid-600">Reporte BI-04 · Actualización de Data (solo Supervisores)</div>
         </div>
       </div>
 
@@ -437,7 +448,7 @@
         <div style="padding:14px 20px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="opsShowPicker()">← Volver</button>
           <span id="ops-country-title" style="font-size:14px;font-weight:700;display:flex;align-items:center"></span>
-          <span style="font-size:11px;color:var(--text-light)">(<span id="ops-country-count">0</span> operadores)</span>
+          <span class="muted-11">(<span id="ops-country-count">0</span> operadores)</span>
         </div>
         <div class="gd-filters">
           <div class="gd-filter-pill" id="ops-cf-pill-tl">
@@ -479,20 +490,20 @@
   <div class="view" id="view-opstoday">
 
     <!-- Header con carga propia (NO desde Actualización de Data) -->
-    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+    <div class="panel mb-22 clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           Stats OPs Today
         </div>
-        <div id="ot-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
-          <span id="ot-upload-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
-          <a id="ot-data-link-btn" class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noopener" style="cursor:pointer;margin:0;text-decoration:none" onclick="return otOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
+        <div id="ot-upload-wrap" class="inline-actions" style="display:none">
+          <span id="ot-upload-status" class="nav-label-11"></span>
+          <a id="ot-data-link-btn" class="btn btn-ghost btn-sm cursor-pointer m-0 no-underline" href="#" target="_blank" rel="noopener" onclick="return otOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
             Data
           </a>
-          <button id="ot-data-edit-btn" class="btn btn-ghost btn-sm" type="button" style="display:none;cursor:pointer;margin:0" onclick="otEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
-          <label class="btn btn-primary btn-sm" for="ot-file-input" style="cursor:pointer;margin:0">
+          <button id="ot-data-edit-btn" class="btn btn-ghost btn-sm cursor-pointer m-0" type="button" style="display:none" onclick="otEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
+          <label class="btn btn-primary btn-sm cursor-pointer m-0" for="ot-file-input">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Subir Excel
           </label>
@@ -501,26 +512,26 @@
       </div>
 
       <!-- Última actualización de la data (grande y resaltada, mismo formato que Recalls/Reporte/Approve Stats) -->
-      <div id="ot-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 0;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(37,99,235,.3);border-radius:var(--radius)">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <div id="ot-lastupd-box" class="info-banner" style="display:none">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
-          <div id="ot-lastupd-name" style="font-size:19px;font-weight:800;color:var(--text-dark);line-height:1.3">—</div>
-          <div id="ot-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
+          <div class="eyebrow">Última actualización de la data</div>
+          <div id="ot-lastupd-name" class="stat-value">—</div>
+          <div id="ot-lastupd-time" class="text-mid-600">—</div>
         </div>
       </div>
 
       <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left;margin-top:16px">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Esta sección se actualiza subiendo el Excel aquí mismo, varias veces al día — cada carga guarda automáticamente el estado anterior para poder comparar "desde la última actualización" y armar la evolución de abajo.</small>
       </div>
     </div>
 
     <!-- Switch de tipo de campaña: se diferencian solo por el horario de turno.
          Post-Sale = 09:00-18:00, todo lo demás = Campaña Normal (Aray, Adcombo). -->
-    <div class="panel" style="margin-bottom:22px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px">
-        <span style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Tipo de campaña</span>
+    <div class="panel mb-22">
+      <div class="toolbar-row">
+        <span class="caps-label">Tipo de campaña</span>
         <button class="btn btn-sm btn-primary ot-campaign-btn" data-mode="normal" onclick="otSetCampaignMode('normal')">Campaña Normal (Aray, Adcombo)</button>
         <button class="btn btn-sm btn-ghost ot-campaign-btn" data-mode="postsale" onclick="otSetCampaignMode('postsale')">Post-Sale (09:00-18:00)</button>
       </div>
@@ -533,11 +544,11 @@
         <div class="panel-head">
           <span class="panel-title">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
-            Top 7 Operadores <span id="ot-top5-scope" style="color:var(--text-light);font-weight:400"></span>
+            Top 7 Operadores <span id="ot-top5-scope" class="muted-normal"></span>
           </span>
         </div>
         <div class="panel-body">
-          <div id="ot-top5"><div class="gd-state" style="padding:30px"><p>Cargando…</p></div></div>
+          <div id="ot-top5"><div class="gd-state pad-30"><p>Cargando…</p></div></div>
         </div>
       </div>
 
@@ -554,43 +565,43 @@
           </div>
         </div>
         <div class="panel-body">
-          <div id="ot-top-ops-progress" style="display:none;height:3px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:14px">
-            <div id="ot-top-ops-progress-fill" style="height:100%;width:0%;background:var(--nav-accent);border-radius:99px"></div>
+          <div id="ot-top-ops-progress" class="progress-track" style="display:none">
+            <div id="ot-top-ops-progress-fill" class="progress-fill"></div>
           </div>
-          <div id="ot-top-ops-slide" style="height:380px;overflow:hidden"><div class="gd-state" style="padding:30px"><p>Cargando…</p></div></div>
-          <div id="ot-top-ops-dots" style="display:flex;gap:6px;justify-content:center;margin-top:14px"></div>
+          <div id="ot-top-ops-slide" style="height:380px;overflow:hidden"><div class="gd-state pad-30"><p>Cargando…</p></div></div>
+          <div id="ot-top-ops-dots" class="dots-row"></div>
         </div>
       </div>
     </div>
 
     <!-- 4 cajas: mayor cambio desde la última actualización -->
-    <div class="row" style="grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:22px">
+    <div class="row cols-4 mb-22">
       <div class="panel" style="border-top:3px solid #16a34a;background:var(--green-soft)">
         <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:#16a34a">📈 Más ventas desde la última actualización</span></div>
-        <div class="panel-body" id="ot-hl-approve"><div class="gd-state" style="padding:16px"><p>Cargando…</p></div></div>
+        <div class="panel-body" id="ot-hl-approve"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
       <div class="panel" style="border-top:3px solid #dc2626;background:var(--red-soft)">
         <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:#dc2626">📉 Más Rejects desde la última actualización</span></div>
-        <div class="panel-body" id="ot-hl-reject"><div class="gd-state" style="padding:16px"><p>Cargando…</p></div></div>
+        <div class="panel-body" id="ot-hl-reject"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
       <div class="panel" style="border-top:3px solid var(--amber);background:var(--amber-soft)">
         <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:var(--amber)">🗑 Más Trash desde la última actualización</span></div>
-        <div class="panel-body" id="ot-hl-trash"><div class="gd-state" style="padding:16px"><p>Cargando…</p></div></div>
+        <div class="panel-body" id="ot-hl-trash"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
       <div class="panel" style="border-top:3px solid #64748b;background:rgba(100,116,139,.08)">
         <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:#475569">📞 Más Órdenes Únicas desde la última actualización</span></div>
-        <div class="panel-body" id="ot-hl-orders"><div class="gd-state" style="padding:16px"><p>Cargando…</p></div></div>
+        <div class="panel-body" id="ot-hl-orders"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
     </div>
 
     <!-- ── Parte 2: Detalle por operador ── -->
-    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+    <div class="panel mb-22 clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
           Detalle por Operador <span id="ot-detail-count" style="color:var(--nav-muted);font-weight:400">(0)</span>
         </div>
-        <div class="gd-filter-pill" style="margin-left:auto">
+        <div class="gd-filter-pill ml-auto">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
           <span class="pill-label">Team Leader</span>
           <select id="ot-f-tl" onchange="otRenderDetailTable()"><option value="">Todos</option></select>
@@ -615,7 +626,7 @@
           <tbody id="ot-tbody"></tbody>
         </table>
       </div>
-      <div class="gd-state" id="ot-detail-empty" style="padding:40px 20px">
+      <div class="gd-state pad-40-20" id="ot-detail-empty">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <p>Todavía no hay data para mostrar</p>
         <small>Sube el Excel del día desde el botón de arriba</small>
@@ -644,13 +655,13 @@
           <button class="btn btn-sm btn-ghost ot-date-btn" data-filter="all" onclick="otSetHistDateFilter('all')">Todo</button>
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text-light)">Métrica:</span>
+          <span class="muted-11">Métrica:</span>
           <button class="btn btn-sm btn-primary ot-metric-btn" data-metric="approve" onclick="otSelectHistoryMetric('approve')">Ventas (Approve)</button>
           <button class="btn btn-sm btn-ghost ot-metric-btn" data-metric="uniqueOrders" onclick="otSelectHistoryMetric('uniqueOrders')">Órdenes Únicas</button>
           <button class="btn btn-sm btn-ghost ot-metric-btn" data-metric="reject" onclick="otSelectHistoryMetric('reject')">Reject</button>
           <button class="btn btn-sm btn-ghost ot-metric-btn" data-metric="trash" onclick="otSelectHistoryMetric('trash')">Trash</button>
         </div>
-        <div id="ot-hist-chart-empty" class="gd-state" style="padding:40px 20px">
+        <div id="ot-hist-chart-empty" class="gd-state pad-40-20">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           <p>Selecciona un operador para ver su evolución</p>
           <small>Cada carga de Excel queda guardada como un punto en el tiempo</small>
@@ -663,50 +674,165 @@
 
   </div><!-- /view-opstoday -->
 
+  <!-- ══ VIEW: STATS OPS LIVE (nueva, en prueba) — js/views/opslive.js ══ -->
+  <div class="view" id="view-opslive">
+
+    <div class="panel mb-22 clip">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+          Stats OPs Live
+          <span class="ol-live"><span class="ol-live-dot"></span>En vivo desde Google Sheets</span>
+        </div>
+        <div class="ol-actions">
+          <span id="ol-updated" class="ol-updated"></span>
+          <a id="ol-sheet-link" class="btn btn-ghost btn-sm no-underline" href="#" target="_blank" rel="noopener" title="Abrir la hoja de Google en una pestaña nueva">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
+            Ver hoja
+          </a>
+          <button id="ol-refresh-btn" class="btn btn-primary btn-sm" type="button" onclick="olLoad()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            Actualizar
+          </button>
+        </div>
+      </div>
+      <div id="ol-error" class="ol-error" role="alert" hidden></div>
+      <p class="ol-note">
+        Datos leídos de la hoja publicada y cruzados con la distribución actual (GoodDay) por el número del PEROP1AM.
+        Si un operador aparece varias veces, se toma la fila con más órdenes únicas. Se actualiza sola cada 5 minutos.
+        <br><span id="ol-note"></span>
+      </p>
+    </div>
+
+    <!-- Mismo criterio que Stats OPs Today: Post-Sale = horario 09:00-18:00 -->
+    <div class="panel mb-22">
+      <div class="toolbar-row">
+        <span class="caps-label">Tipo de campaña</span>
+        <button class="btn btn-sm btn-primary ol-campaign-btn" data-mode="normal" onclick="olSetCampaignMode('normal')">Campaña Normal (Aray, Adcombo)</button>
+        <button class="btn btn-sm btn-ghost ol-campaign-btn" data-mode="postsale" onclick="olSetCampaignMode('postsale')">Post-Sale (09:00-18:00)</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid cols-3 mb-22" id="ol-kpis"></div>
+
+    <div class="row row-2">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+            Top 7 en Ventas
+          </span>
+        </div>
+        <div class="panel-body" id="ol-top"><div class="gd-state pad-30"><p>Cargando…</p></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Por Team Leader
+          </span>
+        </div>
+        <div class="panel-body" id="ol-tl-summary"><div class="gd-state pad-30"><p>Cargando…</p></div></div>
+      </div>
+    </div>
+
+    <div class="panel mb-22 clip">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          Detalle por Operador <span id="ol-detail-count" class="muted-normal">(0)</span>
+        </div>
+      </div>
+      <div class="toolbar-row">
+        <div class="gd-filter-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          <span class="pill-label">Team Leader</span>
+          <select id="ol-f-tl" onchange="olRenderDetail()"><option value="">Todos</option></select>
+        </div>
+        <div class="gd-filter-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+          <span class="pill-label">Campaña</span>
+          <select id="ol-f-pais" onchange="olRenderDetail()"><option value="">Todos</option></select>
+        </div>
+        <div class="gd-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input id="ol-search" type="search" placeholder="Buscar operador o PEROP1AM…" oninput="olRenderDetail()" aria-label="Buscar operador"/>
+        </div>
+        <label class="ol-check"><input type="checkbox" id="ol-show-inactive" onchange="olRenderDetail()"/> Mostrar OPs sin actividad</label>
+        <button class="btn btn-ghost btn-sm ml-auto" type="button" onclick="olClearFilters()">Limpiar filtros</button>
+      </div>
+      <div class="tbl-wrap">
+        <table id="ol-table" hidden>
+          <thead>
+            <tr>
+              <th data-key="teamLeader" onclick="olSortBy('teamLeader')">Team Leader <span class="sort-icon">↕</span></th>
+              <th data-key="asesor" onclick="olSortBy('asesor')">Operador <span class="sort-icon">↕</span></th>
+              <th data-key="pais" onclick="olSortBy('pais')">Campaña <span class="sort-icon">↕</span></th>
+              <th data-key="horario" onclick="olSortBy('horario')">Horario <span class="sort-icon">↕</span></th>
+              <th data-key="uniqueOrders" class="ol-num" onclick="olSortBy('uniqueOrders')">Órdenes Únicas <span class="sort-icon">↕</span></th>
+              <th data-key="approve" class="ol-num" onclick="olSortBy('approve')">Ventas <span class="sort-icon">↕</span></th>
+              <th data-key="approvePct" class="ol-num" onclick="olSortBy('approvePct')">% Approve <span class="sort-icon">↕</span></th>
+              <th data-key="reject" class="ol-num" onclick="olSortBy('reject')">Reject <span class="sort-icon">↕</span></th>
+              <th data-key="trash" class="ol-num" onclick="olSortBy('trash')">Trash <span class="sort-icon">↕</span></th>
+              <th data-key="recall" class="ol-num" onclick="olSortBy('recall')">Recall <span class="sort-icon">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="ol-tbody"></tbody>
+        </table>
+      </div>
+      <div class="gd-state pad-40-20" id="ol-detail-empty">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <p>Sin operadores para mostrar</p>
+        <small>Prueba con otro filtro o marca "Mostrar OPs sin actividad"</small>
+      </div>
+    </div>
+
+  </div><!-- /view-opslive -->
+
   <!-- ══ VIEW: REPORTES ══ -->
   <div class="view" id="view-reportes">
 
     <!-- Paste box (solo Supervisor) -->
-    <div class="panel" id="rep-paste-panel" style="display:none;margin-bottom:22px">
-      <div class="panel-head" style="cursor:pointer" onclick="repTogglePaste()">
+    <div class="panel mb-22" id="rep-paste-panel" style="display:none">
+      <div class="panel-head cursor-pointer" onclick="repTogglePaste()">
         <span class="panel-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/></svg>
           Pegar datos del Panel
         </span>
-        <svg id="rep-paste-chevron" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:var(--text-light);transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        <svg id="rep-paste-chevron" viewBox="0 0 24 24" fill="currentColor" class="chevron-ico"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
       </div>
       <div class="panel-body" id="rep-paste-body">
-        <textarea id="rep-raw-input" placeholder="Pega aquí el bloque completo copiado del Panel (incluye el encabezado #, Name, Primary queue...)" style="width:100%;min-height:150px;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-mid);font-family:inherit;font-size:12px;padding:14px;resize:vertical;outline:none"></textarea>
-        <div id="rep-parse-error" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:12px;margin-top:10px"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <textarea id="rep-raw-input" placeholder="Pega aquí el bloque completo copiado del Panel (incluye el encabezado #, Name, Primary queue...)" class="paste-area"></textarea>
+        <div id="rep-parse-error" class="form-error" style="display:none"></div>
+        <div class="actions-row">
           <button class="btn btn-primary" onclick="repGenerate()">Generar reporte</button>
           <button class="btn btn-primary" id="rep-save-btn" style="display:none;background:var(--green)" onclick="repSaveSnapshot()">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
             Guardar snapshot
           </button>
-          <span id="rep-save-status" style="font-size:12px;font-weight:600"></span>
+          <span id="rep-save-status" class="fs12-600"></span>
         </div>
       </div>
     </div>
 
     <!-- Nota para Team Leaders (no pueden subir datos) -->
     <div id="rep-tl-note" class="gd-state" style="display:none;padding:16px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left;margin-bottom:22px;background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
       <small>Solo un Supervisor puede actualizar este reporte — tú puedes ver la información aquí en cualquier momento.</small>
     </div>
 
     <!-- Última actualización del reporte (grande y resaltada, mismo formato que Recalls) -->
     <div id="rep-lastupd-box" style="display:none;align-items:center;gap:14px;margin-bottom:22px;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(37,99,235,.3);border-radius:var(--radius)">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
       <div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización del reporte</div>
-        <div id="rep-lastupd-name" style="font-size:19px;font-weight:800;color:var(--text-dark);line-height:1.3">—</div>
-        <div id="rep-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
+        <div class="eyebrow">Última actualización del reporte</div>
+        <div id="rep-lastupd-name" class="stat-value">—</div>
+        <div id="rep-lastupd-time" class="text-mid-600">—</div>
       </div>
     </div>
 
     <!-- Empty state antes del primer reporte guardado -->
-    <div class="gd-state" id="rep-empty-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
+    <div class="gd-state card-box" id="rep-empty-state">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
       <p>Aún no hay ningún reporte guardado</p><small>Cuando un Supervisor pegue datos y guarde un snapshot, aparecerá aquí para todos</small>
     </div>
@@ -718,10 +844,10 @@
     </div>
 
     <!-- Summary KPIs -->
-    <div class="kpi-grid" id="rep-kpis" style="display:none;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:22px"></div>
+    <div class="kpi-grid cols-3 mb-22" id="rep-kpis" style="display:none"></div>
 
     <!-- Country table -->
-    <div class="panel" id="rep-table-panel" style="display:none;margin-bottom:22px">
+    <div class="panel mb-22" id="rep-table-panel" style="display:none">
       <div class="panel-head">
         <span class="panel-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
@@ -750,30 +876,30 @@
     </div>
 
     <!-- Timeline chart -->
-    <div class="panel" style="margin-bottom:22px">
+    <div class="panel mb-22">
       <div class="panel-head">
         <span class="panel-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           Evolución del % Approve por país
         </span>
-        <span id="rep-snap-count" style="font-size:11px;color:var(--text-light)">0 snapshots guardados</span>
+        <span id="rep-snap-count" class="muted-11">0 snapshots guardados</span>
       </div>
       <div class="panel-body">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="header-row">
           <button class="btn btn-sm btn-primary rep-date-btn" data-filter="today" onclick="repSetDateFilter('today')">Hoy</button>
           <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="yesterday" onclick="repSetDateFilter('yesterday')">Ayer</button>
           <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="7d" onclick="repSetDateFilter('7d')">Últimos 7 días</button>
           <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="all" onclick="repSetDateFilter('all')">Todo</button>
           <input type="date" id="rep-date-input" onchange="repSetDateFilter(this.value)"
-            style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:6px 10px;cursor:pointer;outline:none"/>
+            class="form-select-sm"/>
         </div>
-        <div id="rep-chart-toggles" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
-        <div id="rep-chart-empty" class="gd-state" style="padding:40px 20px">
+        <div id="rep-chart-toggles" class="chips-row"></div>
+        <div id="rep-chart-empty" class="gd-state pad-40-20">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           <p>Aún no hay snapshots guardados</p>
           <small>Pega datos, genera el reporte y guarda tu primer snapshot para ver la evolución</small>
         </div>
-        <div class="chart-wrap" style="height:340px;display:none" id="rep-chart-wrap">
+        <div class="chart-wrap h-340" style="display:none" id="rep-chart-wrap">
           <canvas id="repChart"></canvas>
         </div>
       </div>
@@ -785,7 +911,7 @@
   <div class="view" id="view-recalls">
 
     <!-- Upload bar -->
-    <div class="panel" style="margin-bottom:22px">
+    <div class="panel mb-22">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 12h1.5v3.5h3V12H15l-3-3-3 3zm-4 6v-3H3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-3h-2v3H5zM5 4h14v3H5z"/></svg>
@@ -793,14 +919,14 @@
         </div>
         <div class="gd-stat-chip">Órdenes actuales: <span id="rec-count">—</span></div>
         <div class="gd-stat-chip">Alertas pendientes: <span id="rec-alert-count">—</span></div>
-        <div id="rec-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
-          <span id="rec-upload-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
-          <a id="rec-data-link-btn" class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noopener" style="cursor:pointer;margin:0;text-decoration:none" onclick="return recOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
+        <div id="rec-upload-wrap" class="inline-actions" style="display:none">
+          <span id="rec-upload-status" class="nav-label-11"></span>
+          <a id="rec-data-link-btn" class="btn btn-ghost btn-sm cursor-pointer m-0 no-underline" href="#" target="_blank" rel="noopener" onclick="return recOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
             Data
           </a>
-          <button id="rec-data-edit-btn" class="btn btn-ghost btn-sm" type="button" style="display:none;cursor:pointer;margin:0" onclick="recEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
-          <label class="btn btn-primary btn-sm" for="rec-file-input" style="cursor:pointer;margin:0">
+          <button id="rec-data-edit-btn" class="btn btn-ghost btn-sm cursor-pointer m-0" type="button" style="display:none" onclick="recEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
+          <label class="btn btn-primary btn-sm cursor-pointer m-0" for="rec-file-input">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Subir Excel
           </label>
@@ -808,48 +934,48 @@
         </div>
       </div>
       <div id="rec-tl-note" class="gd-state" style="display:none;padding:16px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
       </div>
       <!-- Última actualización de la data (grande y resaltada) -->
       <div id="rec-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 20px;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(37,99,235,.3);border-radius:var(--radius)">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
-          <div id="rec-lastupd-name" style="font-size:19px;font-weight:800;color:var(--text-dark);line-height:1.3">—</div>
-          <div id="rec-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
+          <div class="eyebrow">Última actualización de la data</div>
+          <div id="rec-lastupd-name" class="stat-value">—</div>
+          <div id="rec-lastupd-time" class="text-mid-600">—</div>
         </div>
       </div>
     </div>
 
     <!-- Comparar Status (solo Supervisor) -->
-    <div class="panel" id="rec-status-paste-panel" style="display:none;margin-bottom:22px">
-      <div class="panel-head" style="cursor:pointer" onclick="recToggleStatusPaste()">
+    <div class="panel mb-22" id="rec-status-paste-panel" style="display:none">
+      <div class="panel-head cursor-pointer" onclick="recToggleStatusPaste()">
         <span class="panel-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/></svg>
           Comparar Status (pegar datos)
         </span>
-        <svg id="rec-status-paste-chevron" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:var(--text-light);transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        <svg id="rec-status-paste-chevron" viewBox="0 0 24 24" fill="currentColor" class="chevron-ico"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
       </div>
       <div class="panel-body" id="rec-status-paste-body">
-        <textarea id="rec-status-raw-input" placeholder="Pega aquí el bloque completo (con encabezado, incluyendo las columnas # y Status)" style="width:100%;min-height:150px;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-mid);font-family:inherit;font-size:12px;padding:14px;resize:vertical;outline:none"></textarea>
-        <div id="rec-status-parse-error" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:12px;margin-top:10px"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <textarea id="rec-status-raw-input" placeholder="Pega aquí el bloque completo (con encabezado, incluyendo las columnas # y Status)" class="paste-area"></textarea>
+        <div id="rec-status-parse-error" class="form-error" style="display:none"></div>
+        <div class="actions-row">
           <button class="btn btn-primary" onclick="recCompareStatus()">Comparar y marcar</button>
-          <span id="rec-status-compare-status" style="font-size:12px;font-weight:600"></span>
+          <span id="rec-status-compare-status" class="fs12-600"></span>
         </div>
       </div>
     </div>
 
     <!-- Filtros: Turno + Country + búsqueda + acciones masivas -->
-    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+    <div class="panel mb-22 clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
           Órdenes y Reasignaciones
         </div>
         <div class="gd-stat-chip">Mostrando: <span id="rec-showing">0</span> / <span id="rec-total">0</span></div>
-        <button id="rec-delete-reviewed-btn" class="gd-clear-all" style="display:none;margin-left:auto" onclick="recDeleteReviewedAlerts()">
+        <button id="rec-delete-reviewed-btn" class="gd-clear-all ml-auto" style="display:none" onclick="recDeleteReviewedAlerts()">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
           Eliminar revisadas <span id="rec-reviewed-n">(0)</span>
         </button>
@@ -857,23 +983,23 @@
 
       <!-- Turno: agrupa el horario en 4 bloques — el árbol de abajo muestra solo el turno activo -->
       <div style="padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--border)">
-        <span style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Turno</span>
+        <span class="caps-label">Turno</span>
         <button class="btn btn-sm rec-shift-btn" data-shift="AM" onclick="recSetShift('AM')">AM <span class="rec-shift-count">(0)</span></button>
         <button class="btn btn-sm rec-shift-btn" data-shift="Post-Sale" onclick="recSetShift('Post-Sale')">Post-Sale <span class="rec-shift-count">(0)</span></button>
         <button class="btn btn-sm rec-shift-btn" data-shift="PM" onclick="recSetShift('PM')">PM <span class="rec-shift-count">(0)</span></button>
         <button class="btn btn-sm rec-shift-btn" data-shift="Nocturno" onclick="recSetShift('Nocturno')">Nocturno <span class="rec-shift-count">(0)</span></button>
-        <span style="width:1px;height:22px;background:var(--border);margin:0 4px"></span>
+        <span class="divider-v"></span>
         <button class="btn btn-sm btn-ghost" id="rec-only-reassigned-btn" onclick="recToggleOnlyReassigned()">
           🔴 Ver solo órdenes reasignadas <span id="rec-only-reassigned-count">(0)</span>
         </button>
-        <span style="width:1px;height:22px;background:var(--border);margin:0 4px"></span>
+        <span class="divider-v"></span>
         <button class="btn btn-sm btn-ghost" id="rec-global-reassigned-btn" onclick="recToggleGlobalReassignedView()" title="Ignora el turno activo y muestra de una vez todas las órdenes reasignadas pendientes de revisión, de todos los turnos">
           🌎 Ver TODAS las reasignadas (todos los turnos) <span id="rec-global-reassigned-count">(0)</span>
         </button>
       </div>
 
       <div class="gd-filters">
-        <div class="gd-search-wrap" style="margin-left:auto">
+        <div class="gd-search-wrap ml-auto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input type="text" id="rec-search" placeholder="Buscar Id in CC, comentario..." oninput="applyRecFilters()"/>
         </div>
@@ -891,7 +1017,7 @@
         </div>
       </div>
       <div id="rec-color-actions" style="display:none;padding:10px 20px;background:var(--main-bg);border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap">
-        <span style="font-size:11px;color:var(--text-light)">Acciones masivas:</span>
+        <span class="muted-11">Acciones masivas:</span>
         <button class="btn btn-sm" id="rec-del-yellow" style="background:rgba(180,83,9,.10);color:#b45309;border:1px solid rgba(180,83,9,.3)" onclick="recDeleteByStatusColor('yellow')">
           Eliminar amarillas (0)
         </button>
@@ -920,70 +1046,70 @@
   <div class="view" id="view-leads">
 
     <!-- Header bar -->
-    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+    <div class="panel mb-22 clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>
           Leads por Campaña
         </div>
-        <div id="leads-upload-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
-          <a id="leads-data-link-btn" class="btn btn-ghost btn-sm" href="#" target="_blank" rel="noopener" style="cursor:pointer;margin:0;text-decoration:none" onclick="return leadsOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
+        <div id="leads-upload-wrap" class="inline-actions" style="display:none">
+          <a id="leads-data-link-btn" class="btn btn-ghost btn-sm cursor-pointer m-0 no-underline" href="#" target="_blank" rel="noopener" onclick="return leadsOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
             Data
           </a>
-          <button id="leads-data-edit-btn" class="btn btn-ghost btn-sm" type="button" style="display:none;cursor:pointer;margin:0" onclick="leadsEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
+          <button id="leads-data-edit-btn" class="btn btn-ghost btn-sm cursor-pointer m-0" type="button" style="display:none" onclick="leadsEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
         </div>
       </div>
 
       <!-- Última actualización de la data -->
-      <div id="leads-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 0;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(37,99,235,.3);border-radius:var(--radius)">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:28px;height:28px;color:var(--blue);flex-shrink:0"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      <div id="leads-lastupd-box" class="info-banner" style="display:none">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         <div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue)">Última actualización de la data</div>
-          <div id="leads-lastupd-name" style="font-size:19px;font-weight:800;color:var(--text-dark);line-height:1.3">—</div>
-          <div id="leads-lastupd-time" style="font-size:13px;font-weight:600;color:var(--text-mid)">—</div>
+          <div class="eyebrow">Última actualización de la data</div>
+          <div id="leads-lastupd-name" class="stat-value">—</div>
+          <div id="leads-lastupd-time" class="text-mid-600">—</div>
         </div>
       </div>
 
       <div style="padding:12px 20px 16px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left" class="gd-state">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Cualquier Team Leader o Supervisor puede pegar los datos y actualizar — después de cada actualización hay un bloqueo de 3 minutos antes de poder volver a actualizar, para evitar choques entre varias personas a la vez.</small>
       </div>
     </div>
 
     <!-- Paste box -->
-    <div class="panel" id="leads-paste-panel" style="display:none;margin-bottom:22px">
-      <div class="panel-head" style="cursor:pointer" onclick="leadsTogglePaste()">
+    <div class="panel mb-22" id="leads-paste-panel" style="display:none">
+      <div class="panel-head cursor-pointer" onclick="leadsTogglePaste()">
         <span class="panel-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/></svg>
           Pegar datos del Panel de Colas
         </span>
-        <svg id="leads-paste-chevron" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;color:var(--text-light);transition:transform .2s"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        <svg id="leads-paste-chevron" viewBox="0 0 24 24" fill="currentColor" class="chevron-ico"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
       </div>
       <div class="panel-body" id="leads-paste-body">
-        <textarea id="leads-raw-input" placeholder="Pega aquí el bloque completo copiado del Panel de colas (incluye el encabezado: Country, Name, Number of operators, Capacity, Orders...)" style="width:100%;min-height:150px;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-mid);font-family:inherit;font-size:12px;padding:14px;resize:vertical;outline:none"></textarea>
-        <div id="leads-parse-error" style="display:none;align-items:center;gap:6px;color:var(--red);font-size:12px;margin-top:10px"></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <textarea id="leads-raw-input" placeholder="Pega aquí el bloque completo copiado del Panel de colas (incluye el encabezado: Country, Name, Number of operators, Capacity, Orders...)" class="paste-area"></textarea>
+        <div id="leads-parse-error" class="form-error" style="display:none"></div>
+        <div class="actions-row">
           <button class="btn btn-primary" id="leads-update-btn" onclick="leadsSave()">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
             Actualizar
           </button>
-          <span id="leads-save-status" style="font-size:12px;font-weight:600"></span>
+          <span id="leads-save-status" class="fs12-600"></span>
           <span id="leads-cooldown-text" style="font-size:11.5px;color:var(--text-light)"></span>
         </div>
       </div>
     </div>
 
     <!-- Empty state antes de la primera actualización guardada -->
-    <div class="gd-state" id="leads-empty-state" style="background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
+    <div class="gd-state card-box" id="leads-empty-state">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.11-.31.18-.65.18-1a2 2 0 0 0-2-2c-1.05 0-1.96.54-2.5 1.35l-.5.67-.5-.68C11.96 3.54 11.05 3 10 3a2 2 0 0 0-2 2c0 .35.07.69.18 1H6c-1.11 0-1.99.89-1.99 2L4 19c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6-1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM6 8h12v3H6V8zm0 5h5v6H6v-6zm7 6v-6h5v6h-5z"/></svg>
       <p>Aún no hay ninguna actualización guardada</p><small>Pega el bloque de colas copiado del panel y presiona "Actualizar" para que aparezca aquí para todos</small>
     </div>
 
     <!-- Switch de tipo de campaña — mismo mecanismo que Stats OPs Today -->
-    <div class="panel" id="leads-campaign-switch" style="display:none;margin-bottom:22px">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px">
-        <span style="font-size:11px;color:var(--text-light);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Tipo de campaña</span>
+    <div class="panel mb-22" id="leads-campaign-switch" style="display:none">
+      <div class="toolbar-row">
+        <span class="caps-label">Tipo de campaña</span>
         <button class="btn btn-sm btn-primary leads-campaign-btn" data-mode="normal" onclick="leadsSetCampaignMode('normal')">Campaña Normal (Aray, Adcombo)</button>
         <button class="btn btn-sm btn-ghost leads-campaign-btn" data-mode="postsale" onclick="leadsSetCampaignMode('postsale')">Post-Sale</button>
       </div>
@@ -993,7 +1119,7 @@
     <div id="leads-content-wrap" style="display:none;gap:20px;align-items:flex-start">
       <div style="flex:1;min-width:0">
         <!-- KPIs globales -->
-        <div class="kpi-grid" id="leads-kpis" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:22px"></div>
+        <div class="kpi-grid cols-2 mb-22" id="leads-kpis"></div>
 
         <!-- Cuadrícula de tarjetas por país -->
         <div id="leads-country-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px"></div>
@@ -1017,29 +1143,29 @@
   <div class="view" id="view-tl">
 
     <!-- Header -->
-    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+    <div class="panel mb-22 clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
           Top Team Leader — Rendimiento Mensual
         </div>
         <span id="tl-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
-        <div id="tl-save-wrap" style="display:none;align-items:center;gap:10px;margin-left:auto">
-          <span id="tl-save-status" style="font-size:11px;font-weight:600;color:var(--nav-text)"></span>
+        <div id="tl-save-wrap" class="inline-actions" style="display:none">
+          <span id="tl-save-status" class="nav-label-11"></span>
           <button class="btn btn-primary btn-sm" id="tl-save-btn" onclick="tlSaveSnapshot()">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
             Guardar avance
           </button>
         </div>
       </div>
-      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <div class="gd-state gd-state--inline">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Esta data se actualiza desde <strong>Actualización de Data</strong> (solo Supervisores). "Guardar avance" registra el estado actual como un nuevo punto en la evolución de abajo — los % y las flechas de cambio se ven siempre, se guarde o no.</small>
       </div>
     </div>
 
     <!-- Ranking -->
-    <div class="panel" style="margin-bottom:22px">
+    <div class="panel mb-22">
       <div class="panel-head">
         <span class="panel-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
@@ -1052,7 +1178,7 @@
           <tbody id="tl-tbody"></tbody>
         </table>
       </div>
-      <div class="gd-state" id="tl-empty" style="padding:40px 20px">
+      <div class="gd-state pad-40-20" id="tl-empty">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <p>Todavía no hay data de Team Leaders</p>
         <small>Un Supervisor puede subirla desde "Actualización de Data"</small>
@@ -1060,15 +1186,15 @@
     </div>
 
     <!-- Baneados (solo Supervisores) — Team Leaders excluidos del ranking/comparador, sin perder su data -->
-    <div class="panel" id="tl-banned-panel" style="display:none;margin-bottom:22px">
+    <div class="panel mb-22" id="tl-banned-panel" style="display:none">
       <div class="panel-head">
         <span class="panel-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9A7.902 7.902 0 0 1 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1A7.902 7.902 0 0 1 20 12c0 4.42-3.58 8-8 8z"/></svg>
-          Team Leaders Baneados <span id="tl-banned-count" style="color:var(--text-light);font-weight:400">(0)</span>
+          Team Leaders Baneados <span id="tl-banned-count" class="muted-normal">(0)</span>
         </span>
       </div>
-      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <div class="gd-state gd-state--inline">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>No participan en el ranking ni en el comparador, ni para ti ni para los Team Leaders — pero su data se sigue guardando normal y puedes restaurarlos cuando quieras.</small>
       </div>
       <div class="tbl-wrap">
@@ -1100,25 +1226,25 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           Evolución y comparador de % Approve
         </span>
-        <span id="tl-snap-count" style="font-size:11px;color:var(--text-light)">0 snapshots guardados</span>
+        <span id="tl-snap-count" class="muted-11">0 snapshots guardados</span>
       </div>
       <div class="panel-body">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="header-row">
           <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="today" onclick="tlSetDateFilter('today')">Hoy</button>
           <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="yesterday" onclick="tlSetDateFilter('yesterday')">Ayer</button>
           <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="7d" onclick="tlSetDateFilter('7d')">Últimos 7 días</button>
           <button class="btn btn-sm btn-primary tl-date-btn" data-filter="all" onclick="tlSetDateFilter('all')">Todo</button>
           <input type="date" id="tl-date-input" onchange="tlSetDateFilter(this.value)"
-            style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:6px 10px;cursor:pointer;outline:none"/>
+            class="form-select-sm"/>
         </div>
         <div style="font-size:11px;color:var(--text-light);margin-bottom:6px">Elige uno o más Team Leaders para comparar:</div>
-        <div id="tl-chart-toggles" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px"></div>
-        <div id="tl-chart-empty" class="gd-state" style="padding:40px 20px">
+        <div id="tl-chart-toggles" class="chips-row"></div>
+        <div id="tl-chart-empty" class="gd-state pad-40-20">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           <p>Todavía no hay snapshots guardados para comparar</p>
           <small>Pulsa "Guardar avance" en la tabla de arriba para empezar a registrar evolución</small>
         </div>
-        <div class="chart-wrap" style="height:340px;display:none" id="tl-chart-wrap">
+        <div class="chart-wrap h-340" style="display:none" id="tl-chart-wrap">
           <canvas id="tlChart"></canvas>
         </div>
       </div>
@@ -1131,7 +1257,7 @@
     <div class="panel" style="overflow:hidden">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
           Centro de Carga de Datos
         </div>
       </div>
@@ -1139,7 +1265,7 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <span>Guarda aquí el link de la fuente de cada sección y sube el Excel correspondiente cuando tengas información nueva — todo desde un solo lugar.</span>
       </div>
-      <div class="tbl-wrap" style="padding:20px">
+      <div class="tbl-wrap pad-20">
         <table>
           <thead>
             <tr>
@@ -1178,13 +1304,13 @@
 
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
         <button class="btn btn-primary btn-sm" onclick="acctStartCreate()">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           Nueva cuenta
         </button>
       </div>
 
       <!-- Formulario crear/editar -->
-      <div class="panel" id="acct-form-panel" style="display:none;margin-bottom:22px">
+      <div class="panel mb-22" id="acct-form-panel" style="display:none">
         <div class="panel-head">
           <span class="panel-title" id="acct-form-title">Nueva cuenta</span>
           <button class="btn btn-ghost btn-sm" onclick="acctCloseForm()">✕ Cerrar</button>
@@ -1192,24 +1318,24 @@
         <div class="panel-body">
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
             <div>
-              <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:4px">Nombre completo</label>
-              <input type="text" id="acct-f-nombre" style="width:100%;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:13px;padding:8px 12px;outline:none"/>
+              <label class="field-label">Nombre completo</label>
+              <input type="text" id="acct-f-nombre" class="form-input"/>
             </div>
             <div>
-              <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:4px">PEROP1AM</label>
-              <input type="text" id="acct-f-perop" style="width:100%;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:13px;padding:8px 12px;outline:none"/>
+              <label class="field-label">PEROP1AM</label>
+              <input type="text" id="acct-f-perop" class="form-input"/>
             </div>
             <div>
-              <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:4px">Cargo</label>
-              <select id="acct-f-cargo" style="width:100%;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:13px;padding:8px 12px;outline:none">
+              <label class="field-label">Cargo</label>
+              <select id="acct-f-cargo" class="form-input">
                 <option value="Operador">Operador</option>
                 <option value="Team Leader">Team Leader</option>
                 <option value="Supervisor">Supervisor</option>
               </select>
             </div>
             <div>
-              <label style="font-size:11px;color:var(--text-light);display:block;margin-bottom:4px">Género</label>
-              <select id="acct-f-genero" style="width:100%;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:13px;padding:8px 12px;outline:none">
+              <label class="field-label">Género</label>
+              <select id="acct-f-genero" class="form-input">
                 <option value="M">Masculino</option>
                 <option value="F">Femenino</option>
               </select>
@@ -1227,7 +1353,7 @@
       </div>
 
       <!-- Tabla de cuentas -->
-      <div class="panel" style="margin-bottom:22px">
+      <div class="panel mb-22">
         <div class="panel-head">
           <span class="panel-title">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
@@ -1258,8 +1384,8 @@
             Opciones de permisos
           </span>
         </div>
-        <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        <div class="gd-state gd-state--inline">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
           <small>Esto describe lo que cada cargo puede hacer <strong>hoy</strong> en la página — todavía no es un permiso configurable por cuenta individual.</small>
         </div>
         <div class="tbl-wrap">
@@ -1267,9 +1393,9 @@
             <thead>
               <tr>
                 <th>Acción</th>
-                <th style="text-align:center">Operador</th>
-                <th style="text-align:center">Team Leader</th>
-                <th style="text-align:center">Supervisor</th>
+                <th class="text-center">Operador</th>
+                <th class="text-center">Team Leader</th>
+                <th class="text-center">Supervisor</th>
               </tr>
             </thead>
             <tbody id="acct-perm-tbody"></tbody>
@@ -1283,10 +1409,10 @@
 
   <!-- ══ VIEW: CONFIGURAR SIDEBAR (solo Supervisores) ══ -->
   <div class="view" id="view-sidebarconfig">
-    <div class="panel" style="margin-bottom:22px;overflow:hidden">
+    <div class="panel mb-22 clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
           Configurar Sidebar
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap">
@@ -1295,8 +1421,8 @@
           <button class="btn btn-primary btn-sm" id="sbcfg-save-btn" onclick="sidebarConfigSave()">Guardar para todos</button>
         </div>
       </div>
-      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;flex-shrink:0"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <div class="gd-state gd-state--inline">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Organiza y ponle color a cada sección de la sidebar. Los cambios se ven al instante en tu propia sidebar mientras editas, pero solo se aplican para todo el equipo al presionar "Guardar para todos".</small>
       </div>
     </div>
