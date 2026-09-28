@@ -11,13 +11,17 @@
   <link rel="preconnect" href="https://nxxwwkseelvxrwqjqmip.supabase.co" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
+  <!-- ?v=... evita que el navegador use CSS/JS viejos de caché. Al publicar cambios,
+       sube la versión en TODAS las líneas (buscar y reemplazar "?v=2026.09.28"). -->
+
   <!-- Estilos -->
-  <link rel="stylesheet" href="css/base.css"/>
-  <link rel="stylesheet" href="css/layout.css"/>
-  <link rel="stylesheet" href="css/components.css"/>
-  <link rel="stylesheet" href="css/login.css"/>
-  <link rel="stylesheet" href="css/views.css"/>
-  <link rel="stylesheet" href="css/responsive.css"/>
+  <link rel="stylesheet" href="css/base.css?v=2026.09.28"/>
+  <link rel="stylesheet" href="css/layout.css?v=2026.09.28"/>
+  <link rel="stylesheet" href="css/components.css?v=2026.09.28"/>
+  <link rel="stylesheet" href="css/login.css?v=2026.09.28"/>
+  <link rel="stylesheet" href="css/views.css?v=2026.09.28"/>
+  <link rel="stylesheet" href="css/modal.css?v=2026.09.28"/>
+  <link rel="stylesheet" href="css/responsive.css?v=2026.09.28"/>
 
   <!-- Librerías -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -27,23 +31,25 @@
   <!-- App — scripts clásicos (comparten scope global, los onclick del HTML los llaman directo).
        Con "defer" se ejecutan EN ESTE ORDEN al terminar de parsear el HTML: el orden importa
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo). -->
-  <script defer src="js/core/supabase.js"></script>
-  <script defer src="js/core/session.js"></script>
-  <script defer src="js/core/charts.js"></script>
-  <script defer src="js/core/nav.js"></script>
-  <script defer src="js/core/sidebar.js"></script>
-  <script defer src="js/core/autorefresh.js"></script>
-  <script defer src="js/views/goodday.js"></script>
-  <script defer src="js/views/ops.js"></script>
-  <script defer src="js/views/opstoday.js"></script>
-  <script defer src="js/views/reportes.js"></script>
-  <script defer src="js/views/recalls.js"></script>
-  <script defer src="js/views/dashboard.js"></script>
-  <script defer src="js/views/leads.js"></script>
-  <script defer src="js/views/tl.js"></script>
-  <script defer src="js/views/actualizacion.js"></script>
-  <script defer src="js/views/accounts.js"></script>
-  <script defer src="js/main.js"></script>
+  <script defer src="js/core/dom.js?v=2026.09.28"></script>
+  <script defer src="js/core/modal.js?v=2026.09.28"></script>
+  <script defer src="js/core/supabase.js?v=2026.09.28"></script>
+  <script defer src="js/core/session.js?v=2026.09.28"></script>
+  <script defer src="js/core/charts.js?v=2026.09.28"></script>
+  <script defer src="js/core/nav.js?v=2026.09.28"></script>
+  <script defer src="js/core/sidebar.js?v=2026.09.28"></script>
+  <script defer src="js/core/autorefresh.js?v=2026.09.28"></script>
+  <script defer src="js/views/goodday.js?v=2026.09.28"></script>
+  <script defer src="js/views/ops.js?v=2026.09.28"></script>
+  <script defer src="js/views/opstoday.js?v=2026.09.28"></script>
+  <script defer src="js/views/reportes.js?v=2026.09.28"></script>
+  <script defer src="js/views/recalls.js?v=2026.09.28"></script>
+  <script defer src="js/views/dashboard.js?v=2026.09.28"></script>
+  <script defer src="js/views/leads.js?v=2026.09.28"></script>
+  <script defer src="js/views/tl.js?v=2026.09.28"></script>
+  <script defer src="js/views/actualizacion.js?v=2026.09.28"></script>
+  <script defer src="js/views/accounts.js?v=2026.09.28"></script>
+  <script defer src="js/main.js?v=2026.09.28"></script>
 </head>
 <body>
 
@@ -126,7 +132,8 @@
 </div>
 
 <!-- ══════════════ SIDEBAR ══════════════ -->
-<aside class="sidebar">
+<!-- En celular (≤720px) el sidebar es un panel deslizable: lo abre el botón ☰ del topbar -->
+<aside class="sidebar" id="app-sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">
       <!-- Headset icon -->
@@ -145,37 +152,48 @@
 
   <div class="sidebar-bottom">
     <div class="user-chip">
-      <div class="user-avatar">SR</div>
+      <!-- Se llena en enterDashboard() con el usuario real -->
+      <div class="user-avatar"></div>
       <div class="user-info">
-        <span>Supervisor Ruiz</span>
-        <span>En línea</span>
+        <span>—</span>
+        <span></span>
       </div>
     </div>
   </div>
 </aside>
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="sidebarCloseMobile()"></div>
 
 <!-- ══════════════ MAIN ══════════════ -->
 <div class="main">
 
   <!-- Topbar -->
   <header class="topbar">
+    <button type="button" class="icon-btn topbar-menu-btn" id="topbar-menu-btn" onclick="sidebarToggleMobile()"
+      aria-label="Abrir menú" aria-controls="app-sidebar" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
     <div class="topbar-left">
       <h1>Inicio</h1>
+      <p class="topbar-subtitle" id="topbar-subtitle">Resumen general de la operación</p>
     </div>
     <div class="topbar-right">
       <div class="icon-btn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span class="notif-dot"></span>
       </div>
-      <div class="topbar-user-info" onclick="logoutUser()" title="Cerrar sesión">
+      <div class="topbar-user-info">
         <div class="topbar-user-avatar" id="topbar-avatar">
           <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </div>
-        <div style="display:flex;flex-direction:column">
+        <div class="topbar-user-text">
           <span class="topbar-user-name"  id="topbar-username">—</span>
           <span class="topbar-user-cargo" id="topbar-usercargo">—</span>
         </div>
       </div>
+      <button type="button" class="btn btn-ghost topbar-logout" onclick="logoutUser()" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        <span class="topbar-logout-label">Salir</span>
+      </button>
     </div>
   </header>
 
