@@ -8,9 +8,9 @@
   <title>Gestión Center</title>
 
   <!-- Ícono de la pestaña: audífono del logo sobre el rojo de la marca (favicon.svg; PNG de respaldo) -->
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2026.09.28g"/>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2026.09.28g"/>
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026.09.28g"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2026.09.29a"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2026.09.29a"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026.09.29a"/>
   <!-- Color de la barra del navegador en celular (mismo fondo que el sidebar) -->
   <meta name="theme-color" content="#1b1d1f"/>
 
@@ -20,17 +20,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
   <!-- ?v=... evita que el navegador use CSS/JS viejos de caché. Al publicar cambios,
-       sube la versión en TODAS las líneas (buscar y reemplazar "?v=2026.09.28g"). -->
+       sube la versión en TODAS las líneas (buscar y reemplazar "?v=2026.09.29a"). -->
 
   <!-- Estilos -->
-  <link rel="stylesheet" href="css/base.css?v=2026.09.28g"/>
-  <link rel="stylesheet" href="css/layout.css?v=2026.09.28g"/>
-  <link rel="stylesheet" href="css/components.css?v=2026.09.28g"/>
-  <link rel="stylesheet" href="css/login.css?v=2026.09.28g"/>
-  <link rel="stylesheet" href="css/views.css?v=2026.09.28g"/>
-  <link rel="stylesheet" href="css/modal.css?v=2026.09.28g"/>
-  <link rel="stylesheet" href="css/utilities.css?v=2026.09.28g"/>
-  <link rel="stylesheet" href="css/responsive.css?v=2026.09.28g"/>
+  <link rel="stylesheet" href="css/base.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/layout.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/components.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/login.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/views.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/equipos.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/modal.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/utilities.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/responsive.css?v=2026.09.29a"/>
 
   <!-- Librerías -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -40,30 +41,31 @@
   <!-- App — scripts clásicos (comparten scope global, los onclick del HTML los llaman directo).
        Con "defer" se ejecutan EN ESTE ORDEN al terminar de parsear el HTML: el orden importa
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo). -->
-  <script defer src="js/core/dom.js?v=2026.09.28g"></script>
-  <script defer src="js/core/modal.js?v=2026.09.28g"></script>
-  <script defer src="js/core/supabase.js?v=2026.09.28g"></script>
-  <script defer src="js/core/sheets.js?v=2026.09.28g"></script>
-  <script defer src="js/core/attendance.js?v=2026.09.28g"></script>
-  <script defer src="js/core/permissions.js?v=2026.09.28g"></script>
-  <script defer src="js/core/session.js?v=2026.09.28g"></script>
-  <script defer src="js/core/charts.js?v=2026.09.28g"></script>
-  <script defer src="js/core/nav.js?v=2026.09.28g"></script>
-  <script defer src="js/core/sidebar.js?v=2026.09.28g"></script>
-  <script defer src="js/core/autorefresh.js?v=2026.09.28g"></script>
-  <script defer src="js/views/goodday.js?v=2026.09.28g"></script>
-  <script defer src="js/views/ops.js?v=2026.09.28g"></script>
-  <script defer src="js/views/opstoday.js?v=2026.09.28g"></script>
-  <script defer src="js/views/opslive.js?v=2026.09.28g"></script>
-  <script defer src="js/views/reportes.js?v=2026.09.28g"></script>
-  <script defer src="js/views/recalls.js?v=2026.09.28g"></script>
-  <script defer src="js/views/dashboard.js?v=2026.09.28g"></script>
-  <script defer src="js/views/leads.js?v=2026.09.28g"></script>
-  <script defer src="js/views/tl.js?v=2026.09.28g"></script>
-  <script defer src="js/views/actualizacion.js?v=2026.09.28g"></script>
-  <script defer src="js/views/accounts.js?v=2026.09.28g"></script>
-  <script defer src="js/core/notifications.js?v=2026.09.28g"></script>
-  <script defer src="js/main.js?v=2026.09.28g"></script>
+  <script defer src="js/core/dom.js?v=2026.09.29a"></script>
+  <script defer src="js/core/modal.js?v=2026.09.29a"></script>
+  <script defer src="js/core/supabase.js?v=2026.09.29a"></script>
+  <script defer src="js/core/sheets.js?v=2026.09.29a"></script>
+  <script defer src="js/core/attendance.js?v=2026.09.29a"></script>
+  <script defer src="js/core/errors.js?v=2026.09.29a"></script>
+  <script defer src="js/core/permissions.js?v=2026.09.29a"></script>
+  <script defer src="js/core/session.js?v=2026.09.29a"></script>
+  <script defer src="js/core/charts.js?v=2026.09.29a"></script>
+  <script defer src="js/core/nav.js?v=2026.09.29a"></script>
+  <script defer src="js/core/sidebar.js?v=2026.09.29a"></script>
+  <script defer src="js/core/autorefresh.js?v=2026.09.29a"></script>
+  <script defer src="js/views/goodday.js?v=2026.09.29a"></script>
+  <script defer src="js/views/ops.js?v=2026.09.29a"></script>
+  <script defer src="js/views/opstoday.js?v=2026.09.29a"></script>
+  <script defer src="js/views/opslive.js?v=2026.09.29a"></script>
+  <script defer src="js/views/reportes.js?v=2026.09.29a"></script>
+  <script defer src="js/views/recalls.js?v=2026.09.29a"></script>
+  <script defer src="js/views/dashboard.js?v=2026.09.29a"></script>
+  <script defer src="js/views/leads.js?v=2026.09.29a"></script>
+  <script defer src="js/views/tl.js?v=2026.09.29a"></script>
+  <script defer src="js/views/actualizacion.js?v=2026.09.29a"></script>
+  <script defer src="js/views/accounts.js?v=2026.09.29a"></script>
+  <script defer src="js/core/notifications.js?v=2026.09.29a"></script>
+  <script defer src="js/main.js?v=2026.09.29a"></script>
 </head>
 <body>
 
@@ -310,30 +312,73 @@
 
   </div><!-- /view-dashboard -->
 
-  <!-- ══ VIEW: GOODDAY ══ -->
+  <!-- ══ VIEW: EQUIPOS 360 (antes GoodDay) — js/views/goodday.js + js/core/errors.js ══ -->
   <div class="view" id="view-goodday">
 
-    <!-- Info bar -->
-    <div class="panel" style="margin-bottom:22px; border-radius:var(--radius); overflow:hidden;">
+    <!-- Barra: título, avisos, actualizar + vista y periodo -->
+    <div class="panel mb-22 clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
-          GoodDay — Distribución de Agentes
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          Equipos 360
+          <span class="eq-title-sub">Distribución · rendimiento · calidad</span>
         </div>
-        <div class="gd-stat-chip">Registros: <span id="gd-count">—</span></div>
-        <div class="gd-stat-chip">Campañas: <span id="gd-campaigns">—</span></div>
-        <div class="gd-stat-chip">Empresas: <span id="gd-companies">—</span></div>
-        <div class="gd-stat-chip" title="OPs marcados con &quot;A&quot; en la hoja de asistencia">Asistieron: <span id="gd-present">—</span></div>
         <div class="gd-stat-chip att-warn-chip" id="gd-att-warn" hidden>⚠ Asistencia no disponible</div>
-        <span id="gd-last-update"></span>
-        <button class="gd-refresh-btn" onclick="loadGoodDay()">
+        <div class="gd-stat-chip att-warn-chip" id="eq-err-warn" hidden>⚠ Errores no disponibles</div>
+        <span id="gd-last-update" class="ml-auto"></span>
+        <button class="gd-refresh-btn" type="button" onclick="loadGoodDay()">
           <svg id="gd-spin-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
           Actualizar
         </button>
       </div>
+      <div class="toolbar-row eq-toolbar">
+        <div class="eq-seg" role="tablist" aria-label="Vista">
+          <button type="button" class="eq-seg-btn eq-view-btn" data-view="tl" role="tab" onclick="eqSetView('tl')">👥 Por Team Leader</button>
+          <button type="button" class="eq-seg-btn eq-view-btn" data-view="ops" role="tab" onclick="eqSetView('ops')">🧑‍💻 Todos los OPs</button>
+          <button type="button" class="eq-seg-btn eq-view-btn" data-view="rank" role="tab" onclick="eqSetView('rank')">🏆 Ranking de calidad</button>
+        </div>
+        <div class="eq-period ml-auto">
+          <span class="caps-label">Errores de los</span>
+          <div class="eq-seg" aria-label="Periodo de errores">
+            <button type="button" class="eq-seg-btn eq-period-btn" data-period="7d" onclick="eqSetPeriod('7d')">7 días</button>
+            <button type="button" class="eq-seg-btn eq-period-btn" data-period="30d" onclick="eqSetPeriod('30d')">30 días</button>
+            <button type="button" class="eq-seg-btn eq-period-btn" data-period="all" onclick="eqSetPeriod('all')">Todo</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <!-- Filters -->
-      <div class="gd-filters">
+    <!-- Indicadores -->
+    <div class="eq-kpis mb-22" id="eq-kpis"></div>
+
+    <!-- Alertas automáticas de calidad (últimos 7 días) -->
+    <div class="panel mb-22 eq-alerts-panel" id="eq-alerts-panel" hidden>
+      <div class="panel-head">
+        <span class="panel-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--amber)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          Alertas de calidad <span id="eq-alerts-count" class="muted-normal"></span>
+        </span>
+        <span class="muted-11">Errores repetidos o en aumento · últimos 7 días</span>
+      </div>
+      <div class="eq-alerts-list" id="eq-alerts-list"></div>
+      <button type="button" class="btn btn-ghost btn-sm eq-alerts-more" id="eq-alerts-more" onclick="eqToggleAlerts()" hidden></button>
+    </div>
+
+    <div class="gd-state card-box" id="eq-loading" hidden>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      <p>Cargando equipos…</p>
+      <small>Distribución, asistencia, Approve Stats y hojas de errores</small>
+    </div>
+
+    <!-- Vista 1: tarjetas por Team Leader -->
+    <div id="eq-view-tl" hidden>
+      <div class="eq-tl-grid" id="eq-tl-grid"></div>
+    </div>
+
+    <!-- Vista 2: todos los OPs (tabla) -->
+    <div id="eq-view-ops" hidden>
+      <div class="panel mb-22 clip">
+        <div class="gd-filters">
         <div class="gd-filter-pill" id="pill-tl">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
           <span class="pill-label" id="pill-tl-label">Team Leader</span>
@@ -386,30 +431,49 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           Limpiar todo
         </button>
-      </div>
-
-      <!-- Leyenda de códigos de asistencia (se llena desde ATT_CODES en js/core/attendance.js) -->
-      <div class="att-legend" id="gd-att-legend" hidden></div>
-
-      <!-- Table -->
-      <div class="gd-tbl-wrap" id="gd-table-wrap">
-        <div class="gd-state" id="gd-loading">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          <p>Cargando datos desde Supabase…</p>
-          <small>Conectando con la base de datos</small>
+          <label class="eq-check"><input type="checkbox" id="gd-f-onlyerr" onchange="applyGDFilters()"/> Solo con errores o alertas</label>
         </div>
-        <table id="gd-table" style="display:none">
-          <thead><tr id="gd-thead-row"></tr></thead>
-          <tbody id="gd-tbody"></tbody>
-        </table>
-        <div class="gd-state" id="gd-empty" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.34C18 2.54 15.96.5 13.5.5c-1.27 0-2.4.51-3.24 1.33L9 3.04 7.74 1.83C6.9 1.01 5.77.5 4.5.5 2.04.5 0 2.54 0 4.66c0 .46.11.9.18 1.34H0v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-5-3.68c1.1 0 2 .9 2 2 0 .36-.1.69-.26 1h-3.48c-.16-.31-.26-.64-.26-1 0-1.1.9-2 2-2z"/></svg>
-          <p>Sin resultados</p>
-          <small>Intenta ajustar los filtros</small>
+
+        <!-- Leyenda de códigos de asistencia (se llena desde ATT_CODES en js/core/attendance.js) -->
+        <div class="att-legend" id="gd-att-legend"></div>
+
+        <div class="gd-tbl-wrap eq-tbl-wrap">
+          <table id="gd-table" style="display:none">
+            <thead><tr id="gd-thead-row"></tr></thead>
+            <tbody id="gd-tbody"></tbody>
+          </table>
+          <div class="gd-state" id="gd-empty" style="display:none">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <p>Sin resultados</p>
+            <small>Intenta ajustar los filtros</small>
+          </div>
+        </div>
+        <div class="eq-tbl-foot">Mostrando <strong id="gd-count">0</strong> OPs · clic en una fila para ver su ficha</div>
+      </div>
+    </div>
+
+    <!-- Vista 3: ranking de calidad de Team Leaders -->
+    <div id="eq-view-rank" hidden>
+      <div class="panel mb-22">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+            Ranking de calidad por Team Leader
+          </span>
+          <span class="muted-11">Errores de los <span id="eq-rank-period"></span> · menos errores por OP = mejor puesto</span>
+        </div>
+        <p class="eq-rank-help">El puesto se calcula con el <strong>promedio de errores por OP</strong> (errores del equipo ÷ OPs que tiene hoy en la distribución), así un equipo grande no queda castigado solo por ser grande. Si hay empate, gana el de mejor Approve.</p>
+        <div class="tbl-wrap">
+          <table class="eq-rank-table">
+            <thead><tr>
+              <th>#</th><th>Team Leader</th><th class="eq-num">OPs</th><th class="eq-num">Errores</th><th>Errores por OP</th>
+              <th class="eq-num" style="color:#f87171">Gestión</th><th class="eq-num" style="color:#fbbf24">Tipificación</th><th class="eq-num" style="color:#60a5fa">Verificación</th>
+              <th class="eq-num">Approve (90 d)</th>
+            </tr></thead>
+            <tbody id="eq-rank-tbody"></tbody>
+          </table>
         </div>
       </div>
-
-
     </div>
 
   </div><!-- /view-goodday -->
@@ -1466,6 +1530,19 @@
   </div><!-- /content -->
 </div><!-- /main -->
 
+<!-- Panel lateral de Equipos 360: ficha del OP / del Team Leader (js/views/goodday.js) -->
+<div class="eq-drawer-backdrop" id="eq-drawer-backdrop" onclick="eqCloseDrawer()"></div>
+<aside class="eq-drawer" id="eq-drawer" role="dialog" aria-modal="true" aria-labelledby="eq-drawer-title">
+  <div class="eq-drawer-top">
+    <button type="button" class="btn btn-ghost btn-sm" id="eq-drawer-back" onclick="eqDrawerBack()" hidden>← Volver</button>
+    <span class="eq-drawer-title" id="eq-drawer-title">Ficha</span>
+    <span class="eq-drawer-status" id="eq-drawer-status" role="status"></span>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="eqCopyFeedback()" title="Copia un resumen en texto para mandarlo por WhatsApp">📋 Copiar resumen</button>
+    <button type="button" class="btn btn-primary btn-sm" onclick="eqDownloadFeedback()" title="Descarga la ficha como imagen">⬇ Imagen</button>
+    <button type="button" class="icon-btn eq-drawer-close" id="eq-drawer-close" onclick="eqCloseDrawer()" aria-label="Cerrar ficha">✕</button>
+  </div>
+  <div class="eq-drawer-body" id="eq-drawer-body"></div>
+</aside>
 <!-- Menú flotante Change/View (uno solo, compartido por toda la app — se posiciona junto
      al botón que lo abre, sin importar en qué sección/vista estés). -->
 <div id="rec-link-menu" style="display:none;position:fixed;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);z-index:200;overflow:hidden;min-width:130px"></div>
