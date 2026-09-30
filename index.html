@@ -18,53 +18,37 @@
   <link rel="preconnect" href="https://nxxwwkseelvxrwqjqmip.supabase.co" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
-  <!-- ?v=... evita que el navegador use CSS/JS viejos de caché. Al publicar cambios,
-       sube la versión en TODAS las líneas (buscar y reemplazar "?v=2026.09.30a"). -->
-
-  <!-- Estilos -->
-  <link rel="stylesheet" href="css/base.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/layout.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/components.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/login.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/views.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/equipos.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/modal.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/utilities.css?v=2026.09.30a"/>
-  <link rel="stylesheet" href="css/responsive.css?v=2026.09.30a"/>
-
-  <!-- Librerías -->
+  <!-- Librerías (versión fija en su propia URL, no necesitan ?v=) -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-  <!-- App — scripts clásicos (comparten scope global, los onclick del HTML los llaman directo).
-       Con "defer" se ejecutan EN ESTE ORDEN al terminar de parsear el HTML: el orden importa
-       (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo). -->
-  <script defer src="js/core/dom.js?v=2026.09.30a"></script>
-  <script defer src="js/core/modal.js?v=2026.09.30a"></script>
-  <script defer src="js/core/supabase.js?v=2026.09.30a"></script>
-  <script defer src="js/core/sheets.js?v=2026.09.30a"></script>
-  <script defer src="js/core/attendance.js?v=2026.09.30a"></script>
-  <script defer src="js/core/errors.js?v=2026.09.30a"></script>
-  <script defer src="js/core/permissions.js?v=2026.09.30a"></script>
-  <script defer src="js/core/session.js?v=2026.09.30a"></script>
-  <script defer src="js/core/charts.js?v=2026.09.30a"></script>
-  <script defer src="js/core/nav.js?v=2026.09.30a"></script>
-  <script defer src="js/core/sidebar.js?v=2026.09.30a"></script>
-  <script defer src="js/core/autorefresh.js?v=2026.09.30a"></script>
-  <script defer src="js/views/goodday.js?v=2026.09.30a"></script>
-  <script defer src="js/views/ops.js?v=2026.09.30a"></script>
-  <script defer src="js/views/opstoday.js?v=2026.09.30a"></script>
-  <script defer src="js/views/opslive.js?v=2026.09.30a"></script>
-  <script defer src="js/views/reportes.js?v=2026.09.30a"></script>
-  <script defer src="js/views/recalls.js?v=2026.09.30a"></script>
-  <script defer src="js/views/dashboard.js?v=2026.09.30a"></script>
-  <script defer src="js/views/leads.js?v=2026.09.30a"></script>
-  <script defer src="js/views/tl.js?v=2026.09.30a"></script>
-  <script defer src="js/views/actualizacion.js?v=2026.09.30a"></script>
-  <script defer src="js/views/accounts.js?v=2026.09.30a"></script>
-  <script defer src="js/core/notifications.js?v=2026.09.30a"></script>
-  <script defer src="js/main.js?v=2026.09.30a"></script>
+  <!-- ══ Estilos y scripts de la app ══
+       APP_VERSION es el ÚNICO lugar donde se cambia la versión al publicar (cualquier texto nuevo
+       sirve, ej. la fecha + una letra). El "?v=…" hace que el navegador de cada persona descargue
+       los CSS/JS nuevos en vez de usar los viejos que tiene guardados.
+       Las etiquetas se escriben aquí mismo mientras se lee la página (document.write), así que se
+       comportan igual que escritas a mano: los CSS se aplican antes de mostrar nada y los scripts
+       "defer" corren EN ESTE ORDEN al terminar de leer el HTML — el orden importa
+       (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
+       Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
+  <script>
+    window.APP_VERSION = '2026.09.30b';
+    (function () {
+      var v = '?v=' + encodeURIComponent(window.APP_VERSION);
+      var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
+      var js = [
+        'core/dom', 'core/modal', 'core/supabase', 'core/sheets', 'core/attendance', 'core/errors',
+        'core/permissions', 'core/session', 'core/charts', 'core/nav', 'core/sidebar', 'core/autorefresh',
+        'views/goodday', 'views/ops', 'views/opstoday', 'views/opslive', 'views/reportes', 'views/recalls',
+        'views/dashboard', 'views/leads', 'views/ventasfuera', 'views/tl', 'views/actualizacion', 'views/accounts',
+        'core/notifications', 'main'
+      ];
+      var html = css.map(function (n) { return '<link rel="stylesheet" href="css/' + n + '.css' + v + '"/>'; }).join('')
+               + js.map(function (n) { return '<script defer src="js/' + n + '.js' + v + '"><\/script>'; }).join('');
+      document.write(html);
+    })();
+  </script>
 </head>
 <body>
 
@@ -141,7 +125,7 @@
         onkeydown="if(event.key==='Enter') submitPassword()"/>
       <div class="login-pass-error" id="pass-error"></div>
       <button class="login-btn login-btn-primary" onclick="submitPassword()">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-15"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
         Ingresar
       </button>
     </div>
@@ -168,7 +152,7 @@
   <!-- Generada dinámicamente por renderSidebar() a partir de sidebarConfig (grupos por color).
        Con scroll propio: al ya no colapsar secciones, la lista puede crecer más que antes
        (sobre todo si un Supervisor agrega grupos), así que no se puede recortar sin más. -->
-  <div id="sidebar-nav-container" style="flex:1;min-height:0;overflow-y:auto"></div>
+  <div id="sidebar-nav-container" class="sidebar-nav"></div>
 
   <div class="sidebar-bottom">
     <div class="user-chip">
@@ -229,84 +213,102 @@
   <div class="content">
 
   <!-- ══ VIEW: DASHBOARD (Inicio) ══ -->
+  <!-- Centro de mando (js/views/dashboard.js). Cada bloque se muestra SOLO si la cuenta puede ver la
+       sección de donde sale su información (dashWidgets en el JS). Todo se arma desde el JS. -->
   <div class="view active" id="view-dashboard">
 
-    <div class="row row-2">
-      <!-- Widget 1: Top Operadores por Campaña -->
-      <div class="panel">
+    <!-- Bienvenida: saludo, fecha, estado general y accesos rápidos -->
+    <section class="dash-hero mb-22">
+      <div class="dash-hero-main">
+        <h2 class="dash-hello" id="dash-hello">Hola 👋</h2>
+        <div class="dash-date" id="dash-date"></div>
+        <div class="dash-status" id="dash-status" role="status"></div>
+      </div>
+      <div class="dash-hero-side">
+        <span class="dash-refreshed" id="dash-refreshed"></span>
+        <button type="button" class="gd-refresh-btn" id="dash-refresh-btn" onclick="loadDashboard(true)">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Actualizar
+        </button>
+      </div>
+      <nav class="dash-shortcuts" id="dash-shortcuts" aria-label="Accesos rápidos"></nav>
+    </section>
+
+    <!-- Indicadores clave (cada uno lleva a su sección) -->
+    <div class="dash-kpis mb-22" id="dash-kpis"></div>
+
+    <div class="dash-grid">
+      <!-- Requiere atención: todo lo urgente de la página, con su botón para resolverlo -->
+      <section class="panel dash-w dash-w-attention" id="dash-w-attention" hidden>
         <div class="panel-head">
           <span class="panel-title">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
-            Top Operadores por Campaña
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-amber"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+            Requiere atención <span id="dash-attention-count" class="muted-normal"></span>
           </span>
-          <div class="panel-actions">
-            <button class="btn btn-ghost btn-sm" onclick="dashTopOpsPrev()" title="Anterior">‹</button>
-            <button class="btn btn-ghost btn-sm" onclick="dashTopOpsNext()" title="Siguiente">›</button>
-          </div>
         </div>
-        <div class="panel-body">
-          <div id="dash-top-ops-progress" class="progress-track" style="display:none">
-            <div id="dash-top-ops-progress-fill" class="progress-fill"></div>
-          </div>
-          <div id="dash-top-ops-slide">
-            <div class="gd-state pad-30"><p>Cargando…</p></div>
-          </div>
-          <div id="dash-top-ops-dots" class="dots-row"></div>
-        </div>
-      </div>
+        <div class="dash-attention-list" id="dash-attention-list"></div>
+      </section>
 
-      <!-- Widget 2: Approve general últimos 7 días -->
-      <div class="panel">
+      <!-- Approve por campaña (último reporte) + evolución 7 días -->
+      <section class="panel dash-w dash-w-approve" id="dash-w-approve" hidden>
         <div class="panel-head">
           <span class="panel-title">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-            Approve General — Últimos 7 días
+            Approve por campaña
           </span>
-          <button class="btn btn-ghost btn-sm" onclick="dashGoToReportes()">Ver detalle →</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="goToPage('reportes')">Ver Reporte →</button>
         </div>
         <div class="panel-body">
-          <div id="dash-approve-updated" style="font-size:11px;color:var(--text-light);margin-bottom:8px"></div>
-          <div class="chart-wrap" style="height:130px">
-            <canvas id="dashApproveChart"></canvas>
-          </div>
-          <div id="dash-lowest-campaign" style="margin-top:14px">
-            <div class="gd-state pad-20"><p>Cargando…</p></div>
-          </div>
+          <div class="dash-approve-meta" id="dash-approve-meta"></div>
+          <div class="dash-bars" id="dash-approve-bars"></div>
+          <div class="dash-subtitle">Approve general · último reporte de cada día (7 días)</div>
+          <div class="chart-wrap h-130"><canvas id="dashApproveChart"></canvas></div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <div class="row cols-2">
-      <!-- Widget 3a: Conteo de OPs -->
-      <div class="panel">
+      <!-- Top operadores por campaña (Approve Stats, 90 días) -->
+      <section class="panel dash-w dash-w-topops" id="dash-w-topops" hidden>
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+            Top operadores por campaña
+          </span>
+          <button type="button" class="btn btn-ghost btn-sm" id="dash-topops-go" onclick="dashGoToOpsCountry()">Ver campaña →</button>
+        </div>
+        <div class="dash-tabs" id="dash-topops-tabs" role="tablist" aria-label="Campaña"></div>
+        <div class="progress-track dash-topops-progress" id="dash-topops-progress"><div class="progress-fill" id="dash-topops-progress-fill"></div></div>
+        <div class="panel-body dash-topops-body" id="dash-topops-body"></div>
+      </section>
+
+      <!-- Top Team Leaders -->
+      <section class="panel dash-w dash-w-tl" id="dash-w-tl" hidden>
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
+            Top Team Leaders
+          </span>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="goToPage('tl')">Ver ranking →</button>
+        </div>
+        <div class="panel-body" id="dash-tl-body"></div>
+      </section>
+
+      <!-- Equipo hoy: asistencia, OPs por campaña, descansos de la semana -->
+      <section class="panel dash-w dash-w-team" id="dash-w-team" hidden>
         <div class="panel-head">
           <span class="panel-title">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            Conteo de OPs
+            Equipo hoy
           </span>
-          <button class="btn btn-ghost btn-sm" onclick="dashGoToGoodDay()">Ver detalle →</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="goToPage('goodday')">Ver Equipos 360 →</button>
         </div>
-        <div class="panel-body" id="dash-ops-count-body">
-          <div class="gd-state pad-30"><p>Cargando…</p></div>
-        </div>
-      </div>
+        <div class="panel-body dash-team" id="dash-team-body"></div>
+      </section>
+    </div>
 
-      <!-- Widget 3b: Conteo de Descanso -->
-      <div class="panel">
-        <div class="panel-head">
-          <span class="panel-title">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
-            Conteo de Descanso por Campaña
-          </span>
-          <button class="btn btn-ghost btn-sm" onclick="dashGoToGoodDay()">Ver detalle →</button>
-        </div>
-        <div class="panel-body">
-          <select id="dash-rest-country-filter" onchange="dashRenderRestCount()" style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:6px 10px;cursor:pointer;outline:none;margin-bottom:14px;width:100%"></select>
-          <div id="dash-rest-count-body">
-            <div class="gd-state pad-30"><p>Cargando…</p></div>
-          </div>
-        </div>
-      </div>
+    <!-- Cuenta sin ningún bloque habilitado en el Inicio -->
+    <div class="gd-state card-box" id="dash-nothing" hidden>
+      <p>Tu cuenta no tiene secciones con información para mostrar aquí</p>
+      <small>Usa el menú de la izquierda para entrar a las secciones que tienes habilitadas</small>
     </div>
 
   </div><!-- /view-dashboard -->
@@ -354,7 +356,7 @@
     <div class="panel mb-22 eq-alerts-panel" id="eq-alerts-panel" hidden>
       <div class="panel-head">
         <span class="panel-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--amber)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-amber"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
           Alertas de calidad <span id="eq-alerts-count" class="muted-normal"></span>
         </span>
         <span class="muted-11">Errores repetidos o en aumento · últimos 7 días</span>
@@ -466,7 +468,7 @@
           <table class="eq-rank-table">
             <thead><tr>
               <th>#</th><th>Team Leader</th><th class="eq-num">OPs</th><th class="eq-num">Errores</th><th>Errores por OP</th>
-              <th class="eq-num" style="color:#f87171">Gestión</th><th class="eq-num" style="color:#fbbf24">Tipificación</th><th class="eq-num" style="color:#60a5fa">Verificación</th>
+              <th class="eq-num eq-th-gestion">Gestión</th><th class="eq-num eq-th-tipificacion">Tipificación</th><th class="eq-num eq-th-verificacion">Verificación</th>
               <th class="eq-num">Approve (90 d)</th>
             </tr></thead>
             <tbody id="eq-rank-tbody"></tbody>
@@ -500,24 +502,24 @@
       </div>
 
       <!-- Ventana de datos (BI-04, últimos 90 días) -->
-      <div id="ops-window-banner" class="rep-summary-banner" style="display:none;margin:16px 20px 0">
+      <div id="ops-window-banner" class="rep-summary-banner banner-inset" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <span id="ops-window-text"></span>
       </div>
 
       <!-- Pantalla de entrada: países (3x3) a la izquierda, Team Leaders a la derecha -->
-      <div id="ops-picker" style="display:flex;align-items:stretch;gap:26px;padding:20px;overflow-x:auto">
-        <div id="ops-picker-countries" style="display:grid;grid-template-columns:repeat(3,132px);grid-auto-rows:100px;gap:12px;flex-shrink:0"></div>
-        <div style="width:1px;background:var(--border);flex-shrink:0"></div>
-        <div style="flex:1;min-width:280px">
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:10px">Team Leaders</div>
-          <div id="ops-picker-tls" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px"></div>
+      <div id="ops-picker" class="ops-picker">
+        <div id="ops-picker-countries" class="ops-picker-countries"></div>
+        <div class="ops-picker-sep"></div>
+        <div class="ops-picker-tlcol">
+          <div class="ops-picker-heading">Team Leaders</div>
+          <div id="ops-picker-tls" class="ops-picker-tls"></div>
         </div>
       </div>
 
       <!-- Tabla matriz por Team Leader -->
       <div id="ops-tl-detail" style="display:none">
-        <div style="padding:14px 20px 0">
+        <div class="back-row">
           <button class="btn btn-ghost btn-sm" onclick="opsShowPicker()">← Volver</button>
         </div>
         <div class="ops-tbl-wrap">
@@ -530,16 +532,16 @@
             <tbody id="ops-tbody"></tbody>
           </table>
         </div>
-        <div style="padding:8px 20px;background:var(--main-bg);border-top:1px solid var(--border);font-size:11px;color:var(--text-light)">
+        <div class="tbl-foot">
           Mostrando <strong id="ops-showing">0</strong> de <strong id="ops-total">0</strong> operadores
         </div>
       </div>
 
       <!-- Tabla plana por País -->
       <div id="ops-country-detail" style="display:none">
-        <div style="padding:14px 20px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="back-row">
           <button class="btn btn-ghost btn-sm" onclick="opsShowPicker()">← Volver</button>
-          <span id="ops-country-title" style="font-size:14px;font-weight:700;display:flex;align-items:center"></span>
+          <span id="ops-country-title" class="ops-country-title"></span>
           <span class="muted-11">(<span id="ops-country-count">0</span> operadores)</span>
         </div>
         <div class="gd-filters">
@@ -613,7 +615,7 @@
         </div>
       </div>
 
-      <div class="gd-state" style="padding:12px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left;margin-top:16px">
+      <div class="gd-state gd-state--inline mt-16">
         <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Esta sección se actualiza subiendo el Excel aquí mismo, varias veces al día — cada carga guarda automáticamente el estado anterior para poder comparar "desde la última actualización" y armar la evolución de abajo.</small>
       </div>
@@ -660,7 +662,7 @@
           <div id="ot-top-ops-progress" class="progress-track" style="display:none">
             <div id="ot-top-ops-progress-fill" class="progress-fill"></div>
           </div>
-          <div id="ot-top-ops-slide" style="height:380px;overflow:hidden"><div class="gd-state pad-30"><p>Cargando…</p></div></div>
+          <div id="ot-top-ops-slide" class="ot-slide"><div class="gd-state pad-30"><p>Cargando…</p></div></div>
           <div id="ot-top-ops-dots" class="dots-row"></div>
         </div>
       </div>
@@ -668,20 +670,20 @@
 
     <!-- 4 cajas: mayor cambio desde la última actualización -->
     <div class="row cols-4 mb-22">
-      <div class="panel" style="border-top:3px solid #16a34a;background:var(--green-soft)">
-        <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:#16a34a">📈 Más ventas desde la última actualización</span></div>
+      <div class="panel ot-hl ot-hl--approve">
+        <div class="panel-head"><span class="panel-title">📈 Más ventas desde la última actualización</span></div>
         <div class="panel-body" id="ot-hl-approve"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
-      <div class="panel" style="border-top:3px solid #dc2626;background:var(--red-soft)">
-        <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:#dc2626">📉 Más Rejects desde la última actualización</span></div>
+      <div class="panel ot-hl ot-hl--reject">
+        <div class="panel-head"><span class="panel-title">📉 Más Rejects desde la última actualización</span></div>
         <div class="panel-body" id="ot-hl-reject"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
-      <div class="panel" style="border-top:3px solid var(--amber);background:var(--amber-soft)">
-        <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:var(--amber)">🗑 Más Trash desde la última actualización</span></div>
+      <div class="panel ot-hl ot-hl--trash">
+        <div class="panel-head"><span class="panel-title">🗑 Más Trash desde la última actualización</span></div>
         <div class="panel-body" id="ot-hl-trash"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
-      <div class="panel" style="border-top:3px solid #64748b;background:rgba(100,116,139,.08)">
-        <div class="panel-head"><span class="panel-title" style="font-size:13.5px;font-weight:800;color:#475569">📞 Más Órdenes Únicas desde la última actualización</span></div>
+      <div class="panel ot-hl ot-hl--orders">
+        <div class="panel-head"><span class="panel-title">📞 Más Órdenes Únicas desde la última actualización</span></div>
         <div class="panel-body" id="ot-hl-orders"><div class="gd-state pad-16"><p>Cargando…</p></div></div>
       </div>
     </div>
@@ -691,7 +693,7 @@
       <div class="gd-infobar">
         <div class="gd-infobar-title">
           <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-          Detalle por Operador <span id="ot-detail-count" style="color:var(--nav-muted);font-weight:400">(0)</span>
+          Detalle por Operador <span id="ot-detail-count" class="muted-normal">(0)</span>
         </div>
         <div class="gd-filter-pill ml-auto">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
@@ -726,7 +728,7 @@
     </div>
 
     <!-- Mini menú flotante con los Recalls de un operador (contenido dinámico, se posiciona junto al botón que lo abrió) -->
-    <div id="ot-recalls-popup" style="display:none;position:fixed;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);z-index:200;min-width:360px;max-width:460px;max-height:520px;overflow-y:auto"></div>
+    <div id="ot-recalls-popup" class="floating-menu ot-recalls-popup" style="display:none"></div>
 
     <!-- ── Evolución por operador ── -->
     <div class="panel">
@@ -737,8 +739,8 @@
         </span>
       </div>
       <div class="panel-body">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <select id="ot-hist-operator" onchange="otLoadHistoryChart()" style="background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:12px;padding:8px 12px;outline:none;min-width:220px">
+        <div class="header-row">
+          <select id="ot-hist-operator" class="ot-hist-select" onchange="otLoadHistoryChart()" aria-label="Operador">
             <option value="">Selecciona un operador…</option>
           </select>
           <button class="btn btn-sm btn-primary ot-date-btn" data-filter="today" onclick="otSetHistDateFilter('today')">Hoy</button>
@@ -746,7 +748,7 @@
           <button class="btn btn-sm btn-ghost ot-date-btn" data-filter="7d" onclick="otSetHistDateFilter('7d')">Últimos 7 días</button>
           <button class="btn btn-sm btn-ghost ot-date-btn" data-filter="all" onclick="otSetHistDateFilter('all')">Todo</button>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="header-row mb-16">
           <span class="muted-11">Métrica:</span>
           <button class="btn btn-sm btn-primary ot-metric-btn" data-metric="approve" onclick="otSelectHistoryMetric('approve')">Ventas (Approve)</button>
           <button class="btn btn-sm btn-ghost ot-metric-btn" data-metric="uniqueOrders" onclick="otSelectHistoryMetric('uniqueOrders')">Órdenes Únicas</button>
@@ -758,7 +760,7 @@
           <p>Selecciona un operador para ver su evolución</p>
           <small>Cada carga de Excel queda guardada como un punto en el tiempo</small>
         </div>
-        <div class="chart-wrap" id="ot-hist-chart-wrap" style="height:300px;display:none">
+        <div class="chart-wrap h-300" id="ot-hist-chart-wrap" style="display:none">
           <canvas id="otHistChart"></canvas>
         </div>
       </div>
@@ -907,7 +909,7 @@
     </div>
 
     <!-- Nota para quien no puede actualizar las fuentes 1-3 (el texto lo pone repInitView) -->
-    <div id="rep-tl-note" class="gd-state" style="display:none;padding:16px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left;margin-bottom:22px;background:var(--card-bg);border-radius:var(--radius);border:1px solid var(--border)">
+    <div id="rep-tl-note" class="gd-state gd-state--inline card-box mb-22" style="display:none">
       <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
       <small>Solo un Supervisor puede actualizar este reporte — tú puedes ver la información aquí en cualquier momento.</small>
     </div>
@@ -1008,12 +1010,12 @@
           <input type="file" id="rec-file-input" accept=".xlsx,.xls" style="display:none" onchange="recOnFileSelected(event)"/>
         </div>
       </div>
-      <div id="rec-tl-note" class="gd-state" style="display:none;padding:16px 20px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left">
+      <div id="rec-tl-note" class="gd-state gd-state--inline" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
       </div>
       <!-- Última actualización de la data (grande y resaltada) -->
-      <div id="rec-lastupd-box" style="display:none;align-items:center;gap:14px;margin:16px 20px 20px;padding:12px 20px;background:var(--blue-soft);border:1px solid rgba(37,99,235,.3);border-radius:var(--radius)">
+      <div id="rec-lastupd-box" class="info-banner mb-20" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         <div>
           <div class="eyebrow">Última actualización de la data</div>
@@ -1057,7 +1059,7 @@
       </div>
 
       <!-- Turno: agrupa el horario en 4 bloques — el árbol de abajo muestra solo el turno activo -->
-      <div style="padding:14px 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid var(--border)">
+      <div class="toolbar-row border-b">
         <span class="caps-label">Turno</span>
         <button class="btn btn-sm rec-shift-btn" data-shift="AM" onclick="recSetShift('AM')">AM <span class="rec-shift-count">(0)</span></button>
         <button class="btn btn-sm rec-shift-btn" data-shift="Post-Sale" onclick="recSetShift('Post-Sale')">Post-Sale <span class="rec-shift-count">(0)</span></button>
@@ -1082,21 +1084,21 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
           Limpiar todo
         </button>
-        <div style="position:relative;display:inline-block">
+        <div class="menu-anchor">
           <button class="btn btn-ghost btn-sm" id="rec-copy-ids-btn" onclick="recToggleCopyMenu(event)">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             <span id="rec-copy-ids-label">Copiar IDs</span>
-            <svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px;margin-left:2px"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-chevron-sm"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
           </button>
-          <div id="rec-copy-menu" style="display:none;position:absolute;top:100%;right:0;margin-top:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);min-width:230px;z-index:50;overflow:hidden"></div>
+          <div id="rec-copy-menu" class="dropdown-menu" style="display:none"></div>
         </div>
       </div>
-      <div id="rec-color-actions" style="display:none;padding:10px 20px;background:var(--main-bg);border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap">
+      <div id="rec-color-actions" class="rec-color-actions" style="display:none">
         <span class="muted-11">Acciones masivas:</span>
-        <button class="btn btn-sm" id="rec-del-yellow" style="background:rgba(180,83,9,.10);color:#b45309;border:1px solid rgba(180,83,9,.3)" onclick="recDeleteByStatusColor('yellow')">
+        <button class="btn btn-sm btn-soft-amber" id="rec-del-yellow" onclick="recDeleteByStatusColor('yellow')">
           Eliminar amarillas (0)
         </button>
-        <button class="btn btn-sm" id="rec-del-red" style="background:rgba(220,38,38,.10);color:#dc2626;border:1px solid rgba(220,38,38,.3)" onclick="recDeleteByStatusColor('red')">
+        <button class="btn btn-sm btn-soft-red" id="rec-del-red" onclick="recDeleteByStatusColor('red')">
           Eliminar rojas (0)
         </button>
       </div>
@@ -1146,7 +1148,7 @@
         </div>
       </div>
 
-      <div style="padding:12px 20px 16px;flex-direction:row;gap:10px;justify-content:flex-start;text-align:left" class="gd-state">
+      <div class="gd-state gd-state--inline">
         <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
         <small>Cualquier Team Leader o Supervisor puede pegar los datos y actualizar — después de cada actualización hay un bloqueo de 2 minutos antes de poder volver a actualizar, para evitar choques entre varias personas a la vez. También se actualiza desde Reporte (sección "Operational Coverage").</small>
       </div>
@@ -1162,7 +1164,9 @@
         <svg id="leads-paste-chevron" viewBox="0 0 24 24" fill="currentColor" class="chevron-ico"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
       </div>
       <div class="panel-body" id="leads-paste-body">
-        <textarea id="leads-raw-input" placeholder="Pega aquí el bloque completo copiado del Panel de colas (incluye el encabezado: Country, Name, Number of operators, Capacity, Orders...)" class="paste-area"></textarea>
+        <textarea id="leads-raw-input" placeholder="Pega aquí el bloque completo copiado del Panel de colas (incluye el encabezado: Country, Name, Number of operators, Capacity, Orders...)" class="paste-area" oninput="leadsRenderPreview()"></textarea>
+        <!-- Vista previa: qué se reconoció en lo pegado, ANTES de guardar (y de activar el bloqueo de 2 min) -->
+        <div id="leads-preview" class="leads-preview" role="status" hidden></div>
         <div id="leads-parse-error" class="form-error" style="display:none"></div>
         <div class="actions-row">
           <button class="btn btn-primary" id="leads-update-btn" onclick="leadsSave()">
@@ -1170,7 +1174,7 @@
             Actualizar
           </button>
           <span id="leads-save-status" class="fs12-600"></span>
-          <span id="leads-cooldown-text" style="font-size:11.5px;color:var(--text-light)"></span>
+          <span id="leads-cooldown-text" class="muted-115"></span>
         </div>
       </div>
     </div>
@@ -1181,38 +1185,160 @@
       <p>Aún no hay ninguna actualización guardada</p><small>Pega el bloque de colas copiado del panel y presiona "Actualizar" para que aparezca aquí para todos</small>
     </div>
 
-    <!-- Switch de tipo de campaña — mismo mecanismo que Stats OPs Today -->
+    <!-- Barra: tipo de campaña (mismo criterio que Stats OPs Today) · orden · frescura · imagen -->
     <div class="panel mb-22" id="leads-campaign-switch" style="display:none">
       <div class="toolbar-row">
         <span class="caps-label">Tipo de campaña</span>
         <button class="btn btn-sm btn-primary leads-campaign-btn" data-mode="normal" onclick="leadsSetCampaignMode('normal')">Campaña Normal (Aray, Adcombo)</button>
         <button class="btn btn-sm btn-ghost leads-campaign-btn" data-mode="postsale" onclick="leadsSetCampaignMode('postsale')">Post-Sale</button>
+        <span class="divider-v"></span>
+        <label class="caps-label" for="leads-sort">Orden</label>
+        <select id="leads-sort" class="form-select-sm" onchange="leadsSetSort(this.value)">
+          <option value="urgency">Más urgentes primero</option>
+          <option value="leads">Más leads disponibles</option>
+          <option value="alpha">Alfabético</option>
+        </select>
+        <div class="infobar-actions">
+          <span id="leads-fresh" class="leads-fresh" title="Hace cuánto se pegó la data que estás viendo"></span>
+          <span id="leads-export-status" class="fs12-600" role="status"></span>
+          <button type="button" class="btn btn-ghost btn-sm" id="leads-copy-img-btn" onclick="leadsExportImage('copy')" title="Copia el resumen de campañas como imagen para pegarla en WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Copiar imagen
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="leads-dl-img-btn" onclick="leadsExportImage('download')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Descargar imagen
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Contenido + panel de alertas a la derecha -->
-    <div id="leads-content-wrap" style="display:none;gap:20px;align-items:flex-start">
-      <div style="flex:1;min-width:0">
-        <!-- KPIs globales -->
-        <div class="kpi-grid cols-2 mb-22" id="leads-kpis"></div>
+    <div id="leads-content-wrap" style="display:none">
+      <!-- Resumen de alertas en una línea (el detalle va dentro de cada tarjeta) -->
+      <div id="leads-summary" class="leads-summary mb-22" role="status"></div>
 
-        <!-- Cuadrícula de tarjetas por país -->
-        <div id="leads-country-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px"></div>
-      </div>
+      <!-- KPIs globales -->
+      <div class="kpi-grid cols-4 mb-22" id="leads-kpis"></div>
 
-      <!-- Cuadro de alertas -->
-      <div class="panel" style="width:320px;flex-shrink:0;overflow:hidden">
-        <div class="panel-head">
-          <span class="panel-title">
-            <svg viewBox="0 0 24 24" fill="currentColor" style="color:var(--amber)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-            Alertas
-          </span>
-        </div>
-        <div class="panel-body" id="leads-alerts-body" style="max-height:640px;overflow-y:auto"></div>
-      </div>
+      <!-- Semáforo: una ficha chica por campaña, clic = baja a su tarjeta -->
+      <div id="leads-strip" class="leads-strip mb-22"></div>
+
+      <!-- Tarjetas por campaña (ordenadas según "Orden") -->
+      <div id="leads-country-grid" class="leads-grid"></div>
     </div>
 
   </div><!-- /view-leads -->
+
+  <!-- ══ VIEW: VENTAS POR FUERA — js/views/ventasfuera.js ══
+       4 hojas de Google (una por campaña) leídas en vivo. Solo cuenta filas con ORDEN CREADA marcada,
+       cada ID de orden una vez, y solo de OPs de la distribución actual. Mes actual y anterior. -->
+  <div class="view" id="view-ventasfuera">
+
+    <div class="panel mb-22 clip">
+      <div class="gd-infobar">
+        <div class="gd-infobar-title">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0 0 20 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+          Ventas por Fuera
+          <span class="ol-live"><span class="ol-live-dot"></span>En vivo desde Google Sheets</span>
+        </div>
+        <div class="gd-stat-chip att-warn-chip" id="vf-warn" hidden></div>
+        <div class="ol-actions">
+          <span id="vf-updated" class="ol-updated"></span>
+          <button id="vf-refresh-btn" class="btn btn-primary btn-sm" type="button" onclick="vfLoad()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            Actualizar
+          </button>
+        </div>
+      </div>
+      <div id="vf-error" class="ol-error" role="alert" hidden></div>
+      <div class="toolbar-row eq-toolbar">
+        <span class="caps-label">Mes</span>
+        <div class="eq-seg" role="tablist" aria-label="Mes">
+          <button type="button" class="eq-seg-btn vf-month-btn" data-month="current" role="tab" onclick="vfSetMonth('current')">Mes actual</button>
+          <button type="button" class="eq-seg-btn vf-month-btn" data-month="prev" role="tab" onclick="vfSetMonth('prev')">Mes anterior</button>
+        </div>
+        <span class="muted-11" id="vf-month-note"></span>
+        <div class="infobar-actions">
+          <span id="vf-export-status" class="fs12-600" role="status"></span>
+          <button type="button" class="btn btn-ghost btn-sm" id="vf-copy-img-btn" onclick="vfExportImage('copy')" title="Copia el conteo como imagen para pegarla en WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Copiar imagen
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="vf-dl-img-btn" onclick="vfExportImage('download')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Descargar imagen
+          </button>
+        </div>
+      </div>
+      <p class="ol-note">
+        Cuenta solo las ventas con <strong>ORDEN CREADA</strong> marcada, cada ID de orden una sola vez, y solo de los OPs
+        que están <strong>hoy</strong> en la distribución (Equipos 360). Los links de las hojas se cambian en <strong>Actualización de Data</strong>.
+      </p>
+    </div>
+
+    <div class="gd-state card-box" id="vf-loading">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      <p>Leyendo las 4 hojas de ventas…</p>
+      <small>México · Perú · Paraguay · Uruguay</small>
+    </div>
+
+    <div id="vf-content" hidden>
+      <div class="kpi-grid cols-4 mb-22" id="vf-kpis"></div>
+      <div class="vf-campaigns mb-22" id="vf-campaigns"></div>
+
+      <!-- Por Team Leader -->
+      <div class="panel mb-22">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Por Team Leader
+          </span>
+          <span class="muted-11">clic en un Team Leader para ver solo su equipo</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="vf-table" id="vf-tl-table">
+            <thead id="vf-tl-thead"></thead>
+            <tbody id="vf-tl-tbody"></tbody>
+            <tfoot id="vf-tl-tfoot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Por Operador -->
+      <div class="panel mb-22 clip">
+        <div class="gd-infobar">
+          <div class="gd-infobar-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Por Operador <span id="vf-op-count" class="muted-normal"></span>
+          </div>
+        </div>
+        <div class="gd-filters">
+          <div class="gd-filter-pill" id="vf-pill-tl">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <span class="pill-label" id="vf-pill-tl-label">Team Leader</span>
+            <select id="vf-f-tl" onchange="vfRenderAll()" aria-label="Team Leader"><option value="">Todos</option></select>
+            <span class="pill-clear" onclick="vfClearTl()">✕</span>
+          </div>
+          <div class="gd-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="search" id="vf-search" placeholder="Buscar operador o PEROP1AM…" oninput="vfRenderOps()" aria-label="Buscar operador"/>
+          </div>
+          <label class="eq-check"><input type="checkbox" id="vf-show-zero" onchange="vfRenderOps()"/> Mostrar OPs sin ventas</label>
+        </div>
+        <div class="tbl-wrap">
+          <table class="vf-table" id="vf-op-table">
+            <thead id="vf-op-thead"></thead>
+            <tbody id="vf-op-tbody"></tbody>
+          </table>
+        </div>
+        <div class="gd-state pad-40-20" id="vf-op-empty" hidden>
+          <p>Sin operadores para mostrar</p>
+          <small>Prueba con otro Team Leader, quita la búsqueda o marca "Mostrar OPs sin ventas"</small>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /view-ventasfuera -->
 
   <!-- ══ VIEW: TOP TEAM LEADER ══ -->
   <div class="view" id="view-tl">
@@ -1224,7 +1350,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
           Top Team Leader — Rendimiento Mensual
         </div>
-        <span id="tl-last-update" style="font-size:10px;color:var(--nav-muted)"></span>
+        <span id="tl-last-update" class="infobar-note"></span>
         <div id="tl-save-wrap" class="inline-actions" style="display:none">
           <span id="tl-save-status" class="nav-label-11"></span>
           <button class="btn btn-primary btn-sm" id="tl-save-btn" onclick="tlSaveSnapshot()">
@@ -1235,9 +1361,15 @@
       </div>
       <div class="gd-state gd-state--inline">
         <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-        <small>Esta data se actualiza desde <strong>Actualización de Data</strong> (solo Supervisores). "Guardar avance" registra el estado actual como un nuevo punto en la evolución de abajo — los % y las flechas de cambio se ven siempre, se guarde o no.</small>
+        <small>Esta data se actualiza desde <strong>Actualización de Data</strong> (solo Supervisores). Cada carga guarda sola un punto en la evolución de abajo; "Guardar avance" sirve para registrar uno extra a mano. Las flechas comparan contra el avance guardado anterior.</small>
       </div>
     </div>
+
+    <!-- "Tú estás aquí": solo si la cuenta que entró aparece como Team Leader en el ranking -->
+    <div id="tl-me" class="tl-me mb-22" hidden></div>
+
+    <!-- Podio: top 3 con volumen suficiente -->
+    <div id="tl-podium" class="tl-podium mb-22" hidden></div>
 
     <!-- Ranking -->
     <div class="panel mb-22">
@@ -1246,7 +1378,19 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
           Ranking por % Approve (Approve ÷ Unique Orders)
         </span>
+        <div class="panel-actions tl-export-actions">
+          <span id="tl-export-status" class="fs12-600" role="status"></span>
+          <button type="button" class="btn btn-ghost btn-sm" id="tl-copy-img-btn" onclick="tlExportImage('copy')" title="Copia el podio y el ranking como imagen para pegarla en WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Copiar imagen
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="tl-dl-img-btn" onclick="tlExportImage('download')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Descargar imagen
+          </button>
+        </div>
       </div>
+      <p class="tl-legend" id="tl-legend" hidden></p>
       <div class="tbl-wrap">
         <table id="tl-table" style="display:none">
           <thead id="tl-thead"></thead>
@@ -1287,7 +1431,7 @@
           <tbody id="tl-banned-tbody"></tbody>
         </table>
       </div>
-      <div class="gd-state" id="tl-banned-empty" style="padding:30px 20px">
+      <div class="gd-state pad-30-20" id="tl-banned-empty">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <p>No hay Team Leaders baneados</p>
         <small>Usa el botón "Banear" en la fila de un Team Leader en la tabla de arriba</small>
@@ -1307,12 +1451,12 @@
         <div class="header-row">
           <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="today" onclick="tlSetDateFilter('today')">Hoy</button>
           <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="yesterday" onclick="tlSetDateFilter('yesterday')">Ayer</button>
-          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="7d" onclick="tlSetDateFilter('7d')">Últimos 7 días</button>
-          <button class="btn btn-sm btn-primary tl-date-btn" data-filter="all" onclick="tlSetDateFilter('all')">Todo</button>
+          <button class="btn btn-sm btn-primary tl-date-btn" data-filter="7d" onclick="tlSetDateFilter('7d')">Últimos 7 días</button>
+          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="all" onclick="tlSetDateFilter('all')">Todo</button>
           <input type="date" id="tl-date-input" onchange="tlSetDateFilter(this.value)"
             class="form-select-sm"/>
         </div>
-        <div style="font-size:11px;color:var(--text-light);margin-bottom:6px">Elige uno o más Team Leaders para comparar:</div>
+        <div class="muted-11 mb-6">Elige uno o más Team Leaders para comparar:</div>
         <div id="tl-chart-toggles" class="chips-row"></div>
         <div id="tl-chart-empty" class="gd-state pad-40-20">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
@@ -1329,14 +1473,14 @@
 
   <!-- ══ VIEW: ACTUALIZACIÓN DE DATA (solo Supervisores) ══ -->
   <div class="view" id="view-actualizacion">
-    <div class="panel" style="overflow:hidden">
+    <div class="panel clip">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
           <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
           Centro de Carga de Datos
         </div>
       </div>
-      <div class="rep-summary-banner" style="margin:16px 20px 0">
+      <div class="rep-summary-banner banner-inset">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
         <span>Guarda aquí el link de la fuente de cada sección y sube el Excel correspondiente cuando tengas información nueva — todo desde un solo lugar.</span>
       </div>
@@ -1351,7 +1495,7 @@
             </tr>
           </thead>
           <tbody id="data-update-tbody">
-            <tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:24px">Cargando…</td></tr>
+            <tr><td colspan="4" class="td-empty">Cargando…</td></tr>
           </tbody>
         </table>
       </div>
@@ -1362,22 +1506,22 @@
   <div class="view" id="view-accounts">
 
     <!-- Portón de reautenticación — hay que confirmar tu propia contraseña para entrar aquí -->
-    <div class="panel" id="acct-gate" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 20px;text-align:center">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width:34px;height:34px;color:var(--nav-accent)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+    <div class="panel acct-gate" id="acct-gate">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
       <div>
-        <div style="font-size:15px;font-weight:700;color:var(--text-dark)">Confirma tu contraseña para continuar</div>
-        <small style="color:var(--text-light)">Por seguridad, la gestión de cuentas y permisos pide reingresar tu contraseña</small>
+        <div class="acct-gate-title">Confirma tu contraseña para continuar</div>
+        <small class="acct-gate-sub">Por seguridad, la gestión de cuentas y permisos pide reingresar tu contraseña</small>
       </div>
-      <input type="password" id="acct-gate-pass" placeholder="Tu contraseña" onkeydown="if(event.key==='Enter') acctUnlock()"
-        style="width:100%;max-width:260px;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:14px;padding:10px 14px;outline:none;text-align:center"/>
-      <div id="acct-gate-error" style="color:var(--red);font-size:12px;min-height:16px"></div>
+      <input type="password" id="acct-gate-pass" class="acct-gate-input" placeholder="Tu contraseña" aria-label="Tu contraseña"
+        autocomplete="current-password" onkeydown="if(event.key==='Enter') acctUnlock()"/>
+      <div id="acct-gate-error" class="acct-gate-error" role="alert"></div>
       <button class="btn btn-primary" onclick="acctUnlock()">Continuar</button>
     </div>
 
     <!-- Contenido real, oculto hasta pasar el portón -->
     <div id="acct-content" style="display:none">
 
-      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <div class="acct-new-row">
         <button class="btn btn-primary btn-sm" onclick="acctStartCreate()">
           <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
           Nueva cuenta
@@ -1391,7 +1535,7 @@
           <button class="btn btn-ghost btn-sm" onclick="acctCloseForm()">✕ Cerrar</button>
         </div>
         <div class="panel-body">
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px">
+          <div class="acct-form-grid">
             <div>
               <label class="field-label">Nombre completo</label>
               <input type="text" id="acct-f-nombre" class="form-input"/>
@@ -1416,13 +1560,13 @@
               </select>
             </div>
           </div>
-          <div id="acct-f-pass-wrap" style="margin-bottom:14px">
-            <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-mid);cursor:pointer;margin-bottom:8px">
+          <div id="acct-f-pass-wrap" class="mb-14">
+            <label class="check-label mb-8">
               <input type="checkbox" id="acct-f-haspass" onchange="acctTogglePassField()"/> Asignar contraseña a esta cuenta
             </label>
-            <input type="password" id="acct-f-pass" placeholder="Contraseña" style="display:none;width:100%;max-width:280px;background:var(--main-bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dark);font-family:inherit;font-size:13px;padding:8px 12px;outline:none"/>
+            <input type="password" id="acct-f-pass" class="form-input mw-280" placeholder="Contraseña" aria-label="Contraseña" autocomplete="new-password" style="display:none"/>
           </div>
-          <div id="acct-form-error" style="display:none;color:var(--red);font-size:12px;margin-bottom:10px"></div>
+          <div id="acct-form-error" class="form-msg-error" role="alert" style="display:none"></div>
           <button class="btn btn-primary" id="acct-form-submit" onclick="acctSubmitForm()">Guardar cuenta</button>
         </div>
       </div>
@@ -1509,7 +1653,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
           Configurar Sidebar
         </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap">
+        <div class="infobar-actions">
           <button class="btn btn-ghost btn-sm" onclick="sidebarConfigDiscard()">Descartar cambios</button>
           <button class="btn btn-sm" onclick="sidebarAddGroup()">+ Grupo</button>
           <button class="btn btn-primary btn-sm" id="sbcfg-save-btn" onclick="sidebarConfigSave()">Guardar para todos</button>
@@ -1521,9 +1665,9 @@
       </div>
     </div>
 
-    <div id="sbcfg-status" style="font-size:12px;font-weight:600;margin-bottom:14px"></div>
+    <div id="sbcfg-status" class="fs12-600 mb-14" role="status"></div>
 
-    <div id="sbcfg-groups" style="display:flex;flex-direction:column;gap:16px"></div>
+    <div id="sbcfg-groups" class="stack-16"></div>
   </div><!-- /view-sidebarconfig -->
 
   </div><!-- /content -->
@@ -1544,7 +1688,7 @@
 </aside>
 <!-- Menú flotante Change/View (uno solo, compartido por toda la app — se posiciona junto
      al botón que lo abre, sin importar en qué sección/vista estés). -->
-<div id="rec-link-menu" style="display:none;position:fixed;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);z-index:200;overflow:hidden;min-width:130px"></div>
+<div id="rec-link-menu" class="floating-menu rec-link-menu" style="display:none"></div>
 
 </body>
 </html>
