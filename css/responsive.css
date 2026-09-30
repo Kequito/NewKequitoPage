@@ -1,0 +1,154 @@
+/* Ajustes para pantallas medianas y chicas. Va al final para que sus reglas ganen. */
+
+/* ─── Responsive ─── */
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .row-2 { grid-template-columns: minmax(0,1fr); }
+  .row-3 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .row.cols-3, .row.cols-4, .kpi-grid.cols-3, .kpi-grid.cols-4 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  /* Inicio: bloques a lo ancho e indicadores de a 2 */
+  .dash-grid > .dash-w { grid-column: span 12; }
+  .dash-kpis { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
+
+@media (max-width: 720px) {
+  :root { --nav-width: 0px; }
+
+  /* Sidebar como panel deslizable (lo abre el botón ☰, ver sidebarToggleMobile en core/sidebar.js) */
+  .sidebar {
+    width: min(280px, 85vw);
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+  }
+  .sidebar.open { transform: none; box-shadow: var(--shadow-md); }
+  .sidebar-backdrop.open { display: block; }
+  body.sidebar-open { overflow: hidden; }
+  .topbar-menu-btn { display: flex; }
+
+  /* Topbar compacto: sin nombre del usuario ni texto "Salir", solo íconos */
+  .topbar { padding: 0 14px; }
+  .topbar-left h1 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-subtitle { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-right { gap: 8px; }
+  .topbar-user-info { padding: 4px; }
+  .topbar-user-text, .topbar-logout-label { display: none; }
+  .topbar-logout { padding: 0 11px; }
+  .content { padding: 16px 14px; }
+
+  /* Panel de avisos: ocupa el ancho de la pantalla, debajo del topbar */
+  .notif-wrap { position: static; }
+  .notif-panel { position: fixed; top: 62px; left: 12px; right: 12px; width: auto; }
+
+  .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .row-3 { grid-template-columns: minmax(0,1fr); }
+  /* Filas de paneles: una sola columna. Los KPI (números cortos) se quedan en 2. */
+  .row.cols-2, .row.cols-3, .row.cols-4 { grid-template-columns: minmax(0,1fr); }
+
+  /* iPhone hace zoom al tocar un campo con letra menor a 16px: con 16px no se mueve la pantalla */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]), select, textarea { font-size: 16px; }
+
+  /* Paneles y barras: los títulos y botones bajan de línea en vez de apretarse */
+  .panel-head { flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
+  .panel-body { padding: 14px; }
+  .gd-infobar { padding: 12px 14px; }
+  .gd-filters, .toolbar-row { padding: 12px 14px; }
+  .inline-actions { margin-left: 0; flex-wrap: wrap; }
+  .info-banner, .banner-inset { margin-left: 14px; margin-right: 14px; }
+  .kpi-card { padding: 13px 14px; }
+  .kpi-value { font-size: 24px; }
+
+  /* Búsquedas: ocupan el ancho disponible (antes medían 160px fijos) */
+  .gd-search-wrap { flex: 1 1 180px; }
+  .gd-search-wrap input { width: 100%; min-width: 0; }
+  .gd-search-wrap.ml-auto { margin-left: 0; }
+
+  /* Menús flotantes: nunca más anchos que la pantalla */
+  .ot-recalls-popup { min-width: 0; width: calc(100vw - 16px); }
+  .dropdown-menu { max-width: calc(100vw - 32px); }
+
+  /* Approve Stats: países arriba (3 por fila) y Team Leaders abajo */
+  .ops-picker { flex-direction: column; gap: 18px; padding: 14px; }
+  .ops-picker-countries { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 84px; }
+  .ops-picker-sep { width: auto; height: 1px; }
+  .ops-picker-tls { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .ops-pick-card { padding: 14px 6px; }
+  .ops-identity-cell { min-width: 140px; white-space: normal; }
+  .ops-code-inline { display: block; margin-left: 0; }
+
+  /* Leads: semáforo en 2 columnas y tarjetas más compactas */
+  .leads-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .leads-chip { padding: 9px 10px; }
+  .leads-chip-num { font-size: 20px; }
+  .leads-stats { gap: 6px; padding: 10px 12px; }
+  .leads-stat { padding: 8px; }
+  .leads-stat-val { font-size: 17px; }
+  .leads-issues { padding: 10px 12px 0; }
+  .leads-queues { padding: 0 8px 6px; }
+  .leads-q { grid-template-columns: minmax(70px, 1.3fr) 38px minmax(30px, 1fr) 36px 48px; gap: 6px; font-size: 12px; }
+  .leads-card-foot { padding: 10px 12px 12px; }
+  #leads-campaign-switch .infobar-actions { margin-left: 0; width: 100%; }
+
+  /* Recalls: encabezados del árbol que bajan de línea */
+  .rec-tl-header, .rec-op-header { flex-wrap: wrap; gap: 8px; padding-left: 14px; padding-right: 14px; }
+  .rec-tl-body { padding: 8px; }
+
+  /* Gestión de Cuentas */
+  .acct-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .acct-gate { padding: 28px 14px; }
+
+  /* Inicio: todo en una columna; indicadores de a 2 */
+  .dash-hero { grid-template-columns: 1fr; padding: 16px; }
+  .dash-hello { font-size: 21px; }
+  .dash-hero-side { justify-content: space-between; }
+  .dash-shortcuts { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+  .dash-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .dash-kpi { padding: 12px 12px 12px 14px; gap: 6px; }
+  .dash-kpi-value { font-size: 24px; }
+  .dash-kpi-label { font-size: 10px; letter-spacing: .5px; }
+  .dash-kpi-sub { font-size: 11px; }
+  .dash-spark { display: none; }
+  .dash-grid { gap: 14px; }
+  .dash-grid > .dash-w { grid-column: span 12; }
+  .dash-alert { padding: 11px 14px; flex-wrap: wrap; }
+  .dash-alert .btn { margin-left: 19px; }
+  .dash-bar-row { grid-template-columns: 92px 1fr 50px; }
+  .dash-bar-delta { display: none; }
+  .dash-tabs { padding: 10px 14px 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .dash-table th:nth-child(3), .dash-table td:nth-child(3) { display: none; }   /* Team Leader: no cabe en celular */
+  .dash-team { grid-template-columns: minmax(0, 1fr); }
+  .dash-pais-row { grid-template-columns: 96px 1fr 54px; }
+
+  /* Ventas por Fuera: campañas de a 2 */
+  .vf-campaigns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .vf-camp { padding: 10px 12px; }
+  .vf-camp-num { font-size: 21px; }
+  .vf-table th, .vf-table td { padding: 8px; }
+
+  /* Top Team Leader: "Tú estás aquí" apilado y podio más compacto */
+  .tl-me { flex-wrap: wrap; padding: 14px; gap: 12px; }
+  .tl-me-stats { align-items: flex-start; text-align: left; width: 100%; }
+  .tl-me-moves { justify-content: flex-start; }
+  .tl-podium { gap: 8px; }
+  .tl-pod { padding: 12px 6px 0; gap: 4px; }
+  .tl-pod .eq-avatar-lg { width: 40px; height: 40px; font-size: 14px; }
+  .tl-pod-medal { font-size: 22px; }
+  .tl-pod-name { font-size: 12px; }
+  .tl-pod-pct { font-size: 18px; }
+  .tl-pod-sub { display: none; }
+  .tl-pod-base { margin: 6px -6px 0; }
+  .tl-export-actions { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .kpi-grid.cols-2, .kpi-grid.cols-3, .kpi-grid.cols-4 { grid-template-columns: minmax(0,1fr); }
+  /* Leads: números cortos, caben de a 2 y así el semáforo queda a la vista sin tanto scroll */
+  #leads-kpis.kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+  #leads-kpis .kpi-value { font-size: 21px; }
+  #leads-kpis .kpi-sub { font-size: 10.5px; }
+}
+
+/* Pantallas táctiles: botones chicos un poco más altos para no errarle con el dedo */
+@media (pointer: coarse) {
+  .btn-sm { min-height: 34px; }
+  .eq-seg-btn, .eq-fchip, .rep-toggle-chip { min-height: 34px; }
+}
