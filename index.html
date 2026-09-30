@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,9 +7,9 @@
   <title>Gestión Center</title>
 
   <!-- Ícono de la pestaña: audífono del logo sobre el rojo de la marca (favicon.svg; PNG de respaldo) -->
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2026.09.29a"/>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2026.09.29a"/>
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026.09.29a"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2026.09.30a"/>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2026.09.30a"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2026.09.30a"/>
   <!-- Color de la barra del navegador en celular (mismo fondo que el sidebar) -->
   <meta name="theme-color" content="#1b1d1f"/>
 
@@ -20,18 +19,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 
   <!-- ?v=... evita que el navegador use CSS/JS viejos de caché. Al publicar cambios,
-       sube la versión en TODAS las líneas (buscar y reemplazar "?v=2026.09.29a"). -->
+       sube la versión en TODAS las líneas (buscar y reemplazar "?v=2026.09.30a"). -->
 
   <!-- Estilos -->
-  <link rel="stylesheet" href="css/base.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/layout.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/components.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/login.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/views.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/equipos.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/modal.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/utilities.css?v=2026.09.29a"/>
-  <link rel="stylesheet" href="css/responsive.css?v=2026.09.29a"/>
+  <link rel="stylesheet" href="css/base.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/layout.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/components.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/login.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/views.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/equipos.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/modal.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/utilities.css?v=2026.09.30a"/>
+  <link rel="stylesheet" href="css/responsive.css?v=2026.09.30a"/>
 
   <!-- Librerías -->
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -41,31 +40,31 @@
   <!-- App — scripts clásicos (comparten scope global, los onclick del HTML los llaman directo).
        Con "defer" se ejecutan EN ESTE ORDEN al terminar de parsear el HTML: el orden importa
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo). -->
-  <script defer src="js/core/dom.js?v=2026.09.29a"></script>
-  <script defer src="js/core/modal.js?v=2026.09.29a"></script>
-  <script defer src="js/core/supabase.js?v=2026.09.29a"></script>
-  <script defer src="js/core/sheets.js?v=2026.09.29a"></script>
-  <script defer src="js/core/attendance.js?v=2026.09.29a"></script>
-  <script defer src="js/core/errors.js?v=2026.09.29a"></script>
-  <script defer src="js/core/permissions.js?v=2026.09.29a"></script>
-  <script defer src="js/core/session.js?v=2026.09.29a"></script>
-  <script defer src="js/core/charts.js?v=2026.09.29a"></script>
-  <script defer src="js/core/nav.js?v=2026.09.29a"></script>
-  <script defer src="js/core/sidebar.js?v=2026.09.29a"></script>
-  <script defer src="js/core/autorefresh.js?v=2026.09.29a"></script>
-  <script defer src="js/views/goodday.js?v=2026.09.29a"></script>
-  <script defer src="js/views/ops.js?v=2026.09.29a"></script>
-  <script defer src="js/views/opstoday.js?v=2026.09.29a"></script>
-  <script defer src="js/views/opslive.js?v=2026.09.29a"></script>
-  <script defer src="js/views/reportes.js?v=2026.09.29a"></script>
-  <script defer src="js/views/recalls.js?v=2026.09.29a"></script>
-  <script defer src="js/views/dashboard.js?v=2026.09.29a"></script>
-  <script defer src="js/views/leads.js?v=2026.09.29a"></script>
-  <script defer src="js/views/tl.js?v=2026.09.29a"></script>
-  <script defer src="js/views/actualizacion.js?v=2026.09.29a"></script>
-  <script defer src="js/views/accounts.js?v=2026.09.29a"></script>
-  <script defer src="js/core/notifications.js?v=2026.09.29a"></script>
-  <script defer src="js/main.js?v=2026.09.29a"></script>
+  <script defer src="js/core/dom.js?v=2026.09.30a"></script>
+  <script defer src="js/core/modal.js?v=2026.09.30a"></script>
+  <script defer src="js/core/supabase.js?v=2026.09.30a"></script>
+  <script defer src="js/core/sheets.js?v=2026.09.30a"></script>
+  <script defer src="js/core/attendance.js?v=2026.09.30a"></script>
+  <script defer src="js/core/errors.js?v=2026.09.30a"></script>
+  <script defer src="js/core/permissions.js?v=2026.09.30a"></script>
+  <script defer src="js/core/session.js?v=2026.09.30a"></script>
+  <script defer src="js/core/charts.js?v=2026.09.30a"></script>
+  <script defer src="js/core/nav.js?v=2026.09.30a"></script>
+  <script defer src="js/core/sidebar.js?v=2026.09.30a"></script>
+  <script defer src="js/core/autorefresh.js?v=2026.09.30a"></script>
+  <script defer src="js/views/goodday.js?v=2026.09.30a"></script>
+  <script defer src="js/views/ops.js?v=2026.09.30a"></script>
+  <script defer src="js/views/opstoday.js?v=2026.09.30a"></script>
+  <script defer src="js/views/opslive.js?v=2026.09.30a"></script>
+  <script defer src="js/views/reportes.js?v=2026.09.30a"></script>
+  <script defer src="js/views/recalls.js?v=2026.09.30a"></script>
+  <script defer src="js/views/dashboard.js?v=2026.09.30a"></script>
+  <script defer src="js/views/leads.js?v=2026.09.30a"></script>
+  <script defer src="js/views/tl.js?v=2026.09.30a"></script>
+  <script defer src="js/views/actualizacion.js?v=2026.09.30a"></script>
+  <script defer src="js/views/accounts.js?v=2026.09.30a"></script>
+  <script defer src="js/core/notifications.js?v=2026.09.30a"></script>
+  <script defer src="js/main.js?v=2026.09.30a"></script>
 </head>
 <body>
 
