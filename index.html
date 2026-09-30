@@ -1286,6 +1286,22 @@
       <div class="kpi-grid cols-4 mb-22" id="vf-kpis"></div>
       <div class="vf-campaigns mb-22" id="vf-campaigns"></div>
 
+      <!-- Calendario: ventas de cada día del mes elegido (respeta el filtro de Team Leader) -->
+      <div class="panel mb-22">
+        <div class="panel-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+            Ventas por día <span id="vf-cal-scope" class="muted-normal"></span>
+          </span>
+          <div class="vf-cal-filter" id="vf-cal-filter" role="tablist" aria-label="Campaña del calendario"></div>
+        </div>
+        <div class="panel-body">
+          <div class="vf-cal" id="vf-cal"></div>
+          <div class="vf-cal-summary" id="vf-cal-summary"></div>
+          <div class="vf-cal-detail" id="vf-cal-detail" hidden></div>
+        </div>
+      </div>
+
       <!-- Por Team Leader -->
       <div class="panel mb-22">
         <div class="panel-head">
