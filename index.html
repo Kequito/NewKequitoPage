@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -33,13 +34,13 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.09.30b';
+    window.APP_VERSION = '2026.09.30c';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
       var js = [
         'core/dom', 'core/modal', 'core/supabase', 'core/sheets', 'core/attendance', 'core/errors',
-        'core/permissions', 'core/session', 'core/charts', 'core/nav', 'core/sidebar', 'core/autorefresh',
+        'core/permissions', 'core/session', 'core/myaccount', 'core/charts', 'core/nav', 'core/sidebar', 'core/autorefresh',
         'views/goodday', 'views/ops', 'views/opstoday', 'views/opslive', 'views/reportes', 'views/recalls',
         'views/dashboard', 'views/leads', 'views/ventasfuera', 'views/tl', 'views/actualizacion', 'views/accounts',
         'core/notifications', 'main'
@@ -121,7 +122,7 @@
       <div class="login-pass-user"  id="pass-nombre"></div>
       <div class="login-pass-perop" id="pass-perop"></div>
       <input class="login-pass-input" type="password" id="pass-input"
-        placeholder="Contraseña"
+        placeholder="Contraseña o clave temporal" autocomplete="current-password"
         onkeydown="if(event.key==='Enter') submitPassword()"/>
       <div class="login-pass-error" id="pass-error"></div>
       <button class="login-btn login-btn-primary" onclick="submitPassword()">
@@ -155,7 +156,7 @@
   <div id="sidebar-nav-container" class="sidebar-nav"></div>
 
   <div class="sidebar-bottom">
-    <div class="user-chip">
+    <div class="user-chip" role="button" tabindex="0" title="Mi cuenta" onclick="myAccountOpen()" onkeydown="if(event.key==='Enter')myAccountOpen()">
       <!-- Se llena en enterDashboard() con el usuario real -->
       <div class="user-avatar"></div>
       <div class="user-info">
@@ -193,15 +194,16 @@
           <div class="notif-list" id="notif-list"></div>
         </div>
       </div>
-      <div class="topbar-user-info">
-        <div class="topbar-user-avatar" id="topbar-avatar">
+      <!-- Clic = "Mi cuenta": código, estado de la contraseña y cambiarla (js/core/myaccount.js) -->
+      <button type="button" class="topbar-user-info" onclick="myAccountOpen()" title="Mi cuenta — cambiar mi contraseña" aria-label="Mi cuenta">
+        <span class="topbar-user-avatar" id="topbar-avatar">
           <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        </div>
-        <div class="topbar-user-text">
+        </span>
+        <span class="topbar-user-text">
           <span class="topbar-user-name"  id="topbar-username">—</span>
           <span class="topbar-user-cargo" id="topbar-usercargo">—</span>
-        </div>
-      </div>
+        </span>
+      </button>
       <button type="button" class="btn btn-ghost topbar-logout" onclick="logoutUser()" title="Cerrar sesión" aria-label="Cerrar sesión">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
         <span class="topbar-logout-label">Salir</span>
@@ -1578,9 +1580,9 @@
           </div>
           <div id="acct-f-pass-wrap" class="mb-14">
             <label class="check-label mb-8">
-              <input type="checkbox" id="acct-f-haspass" onchange="acctTogglePassField()"/> Asignar contraseña a esta cuenta
+              <input type="checkbox" id="acct-f-haspass"/> Generar una clave temporal al crearla
             </label>
-            <input type="password" id="acct-f-pass" class="form-input mw-280" placeholder="Contraseña" aria-label="Contraseña" autocomplete="new-password" style="display:none"/>
+            <small class="acct-f-pass-hint">Se muestra una sola vez para que se la pases por privado. Al entrar con ella, la persona crea su propia contraseña. Obligatorio para Supervisores.</small>
           </div>
           <div id="acct-form-error" class="form-msg-error" role="alert" style="display:none"></div>
           <button class="btn btn-primary" id="acct-form-submit" onclick="acctSubmitForm()">Guardar cuenta</button>
@@ -1603,7 +1605,7 @@
             </select>
             <div class="gd-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="search" id="acct-search" placeholder="Buscar cuenta o PEROP1AM…" oninput="renderAcctTable()" aria-label="Buscar cuenta"/>
+              <input type="search" id="acct-search" placeholder="Buscar cuenta, código o PEROP1AM…" oninput="renderAcctTable()" aria-label="Buscar cuenta"/>
             </div>
           </div>
         </div>
@@ -1611,6 +1613,7 @@
           <table>
             <thead>
               <tr>
+                <th>Código</th>
                 <th>Nombre</th>
                 <th>PEROP1AM</th>
                 <th>Cargo</th>
