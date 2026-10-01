@@ -34,7 +34,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.09.30g';
+    window.APP_VERSION = '2026.09.30k';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -954,7 +954,7 @@
       </div>
     </div>
 
-    <!-- Timeline chart -->
+    <!-- Evolución del % Approve (js/views/reportes.js): varias series a la vez + volumen, resumen y mapa por hora -->
     <div class="panel mb-22">
       <div class="panel-head">
         <span class="panel-title">
@@ -968,10 +968,11 @@
           <button class="btn btn-sm btn-primary rep-date-btn" data-filter="today" onclick="repSetDateFilter('today')">Hoy</button>
           <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="yesterday" onclick="repSetDateFilter('yesterday')">Ayer</button>
           <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="7d" onclick="repSetDateFilter('7d')">Últimos 7 días</button>
-          <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="all" onclick="repSetDateFilter('all')">Todo</button>
-          <input type="date" id="rep-date-input" onchange="repSetDateFilter(this.value)"
-            class="form-select-sm"/>
+          <!-- El texto de los meses (ej. "Setiembre (en curso)") lo pone repSyncMonthButtons() -->
+          <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="month" onclick="repSetDateFilter('month')">Mes actual</button>
+          <button class="btn btn-sm btn-ghost rep-date-btn" data-filter="prevmonth" onclick="repSetDateFilter('prevmonth')">Mes anterior</button>
         </div>
+        <div class="muted-11 mb-6">Elige uno o más para comparar (las barras grises de fondo son la cantidad de leads):</div>
         <div id="rep-chart-toggles" class="chips-row"></div>
         <div id="rep-chart-empty" class="gd-state pad-40-20">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
@@ -981,30 +982,38 @@
         <div class="chart-wrap h-340" style="display:none" id="rep-chart-wrap">
           <canvas id="repChart"></canvas>
         </div>
+        <!-- Resumen del periodo de cada serie elegida -->
+        <div id="rep-period-summary" class="rep-period" hidden></div>
+        <!-- Mapa de calor: país × hora del día -->
+        <div id="rep-heat-wrap" class="rep-heat-wrap" hidden>
+          <div class="rep-heat-head">
+            <span class="rep-heat-title">🕒 Approve por hora del día</span>
+            <span id="rep-heat-note" class="muted-11"></span>
+          </div>
+          <div class="tbl-wrap"><table class="rep-heat" id="rep-heat"></table></div>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <!-- ══ VIEW: GESTIÓN DE RECALLS ══ -->
+  <!-- ══ VIEW: GESTIÓN DE RECALLS — js/views/recalls.js (+ supabase/12_recalls.sql) ══ -->
   <div class="view" id="view-recalls">
 
-    <!-- Upload bar -->
+    <!-- Encabezado: subir Excel + última carga -->
     <div class="panel mb-22">
       <div class="gd-infobar">
         <div class="gd-infobar-title">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 12h1.5v3.5h3V12H15l-3-3-3 3zm-4 6v-3H3v3c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-3h-2v3H5zM5 4h14v3H5z"/></svg>
           Gestión de Recalls — Reasignación de Órdenes
         </div>
-        <div class="gd-stat-chip">Órdenes actuales: <span id="rec-count">—</span></div>
-        <div class="gd-stat-chip">Alertas pendientes: <span id="rec-alert-count">—</span></div>
         <div id="rec-upload-wrap" class="inline-actions" style="display:none">
           <span id="rec-upload-status" class="nav-label-11"></span>
           <a id="rec-data-link-btn" class="btn btn-ghost btn-sm cursor-pointer m-0 no-underline" href="#" target="_blank" rel="noopener" onclick="return recOpenDataLink(event)" title="Abrir la fuente de datos en una pestaña nueva">
             <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM5 5h5V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-5h-2v5H5V5z"/></svg>
             Data
           </a>
-          <button id="rec-data-edit-btn" class="btn btn-ghost btn-sm cursor-pointer m-0" type="button" style="display:none" onclick="recEditDataLink()" title="Cambiar el link de Data (solo Supervisor)">✎</button>
+          <button id="rec-data-edit-btn" class="btn btn-ghost btn-sm cursor-pointer m-0" type="button" style="display:none" onclick="recEditDataLink()" title="Cambiar el link de Data">✎</button>
           <label class="btn btn-primary btn-sm cursor-pointer m-0" for="rec-file-input">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Subir Excel
@@ -1014,9 +1023,8 @@
       </div>
       <div id="rec-tl-note" class="gd-state gd-state--inline" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-        <small>Solo un Supervisor puede subir el Excel — tú puedes ver la información aquí en cualquier momento.</small>
+        <small>El Excel lo suben las cuentas con permiso para hacerlo (Team Leaders y Supervisores). Tú puedes ver la información aquí en cualquier momento.</small>
       </div>
-      <!-- Última actualización de la data (grande y resaltada) -->
       <div id="rec-lastupd-box" class="info-banner mb-20" style="display:none">
         <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         <div>
@@ -1027,40 +1035,41 @@
       </div>
     </div>
 
-    <!-- Comparar Status (solo Supervisor) -->
-    <div class="panel mb-22" id="rec-status-paste-panel" style="display:none">
-      <div class="panel-head cursor-pointer" onclick="recToggleStatusPaste()">
-        <span class="panel-title">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v3h10V5h2v14z"/></svg>
-          Comparar Status (pegar datos)
-        </span>
-        <svg id="rec-status-paste-chevron" viewBox="0 0 24 24" fill="currentColor" class="chevron-ico"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+    <!-- Indicadores (clic = filtrar) -->
+    <div class="dash-kpis mb-22" id="rec-kpis"></div>
+
+    <!-- Herramientas: una abierta a la vez -->
+    <div class="panel mb-22 clip">
+      <div class="toolbar-row rec-tools-bar">
+        <span class="caps-label">Herramientas</span>
+        <div class="eq-seg" id="rec-tools-seg"></div>
+        <button id="rec-delete-reviewed-btn" class="gd-clear-all ml-auto" style="display:none" onclick="recDeleteReviewedAlerts()" title="Borra del historial las reasignaciones que ya se marcaron como revisadas">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          Eliminar revisadas <span id="rec-reviewed-n">(0)</span>
+        </button>
       </div>
-      <div class="panel-body" id="rec-status-paste-body">
+      <div id="rec-tool-history" class="rec-tool" hidden></div>
+      <div id="rec-tool-load" class="rec-tool" hidden></div>
+      <div id="rec-tool-excluded" class="rec-tool" hidden></div>
+      <div id="rec-tool-status" class="rec-tool" hidden>
+        <p class="rec-tool-help">Pega una exportación con las columnas <strong>#</strong> (Id in CC) y <strong>Status</strong>: las órdenes se pintan
+          <span class="rec-swatch rec-swatch--yellow"></span> amarillo (No answer) o <span class="rec-swatch rec-swatch--red"></span> rojo (Approved, Reject o Trash). El color se mantiene aunque se suba un Excel nuevo.</p>
         <textarea id="rec-status-raw-input" placeholder="Pega aquí el bloque completo (con encabezado, incluyendo las columnas # y Status)" class="paste-area"></textarea>
         <div id="rec-status-parse-error" class="form-error" style="display:none"></div>
         <div class="actions-row">
           <button class="btn btn-primary" onclick="recCompareStatus()">Comparar y marcar</button>
           <span id="rec-status-compare-status" class="fs12-600"></span>
         </div>
+        <div id="rec-color-actions" class="rec-color-actions" style="display:none">
+          <span class="muted-11">Acciones masivas (se excluyen de futuras cargas; se pueden restaurar en "Excluidas"):</span>
+          <button class="btn btn-sm btn-soft-amber" id="rec-del-yellow" onclick="recDeleteByStatusColor('yellow')">Eliminar amarillas (0)</button>
+          <button class="btn btn-sm btn-soft-red" id="rec-del-red" onclick="recDeleteByStatusColor('red')">Eliminar rojas (0)</button>
+        </div>
       </div>
     </div>
 
-    <!-- Filtros: Turno + Country + búsqueda + acciones masivas -->
+    <!-- Turno, alcance y filtros -->
     <div class="panel mb-22 clip">
-      <div class="gd-infobar">
-        <div class="gd-infobar-title">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-          Órdenes y Reasignaciones
-        </div>
-        <div class="gd-stat-chip">Mostrando: <span id="rec-showing">0</span> / <span id="rec-total">0</span></div>
-        <button id="rec-delete-reviewed-btn" class="gd-clear-all ml-auto" style="display:none" onclick="recDeleteReviewedAlerts()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          Eliminar revisadas <span id="rec-reviewed-n">(0)</span>
-        </button>
-      </div>
-
-      <!-- Turno: agrupa el horario en 4 bloques — el árbol de abajo muestra solo el turno activo -->
       <div class="toolbar-row border-b">
         <span class="caps-label">Turno</span>
         <button class="btn btn-sm rec-shift-btn" data-shift="AM" onclick="recSetShift('AM')">AM <span class="rec-shift-count">(0)</span></button>
@@ -1069,45 +1078,47 @@
         <button class="btn btn-sm rec-shift-btn" data-shift="Nocturno" onclick="recSetShift('Nocturno')">Nocturno <span class="rec-shift-count">(0)</span></button>
         <span class="divider-v"></span>
         <button class="btn btn-sm btn-ghost" id="rec-only-reassigned-btn" onclick="recToggleOnlyReassigned()">
-          🔴 Ver solo órdenes reasignadas <span id="rec-only-reassigned-count">(0)</span>
+          🔴 Solo reasignadas <span id="rec-only-reassigned-count">(0)</span>
         </button>
-        <span class="divider-v"></span>
         <button class="btn btn-sm btn-ghost" id="rec-global-reassigned-btn" onclick="recToggleGlobalReassignedView()" title="Ignora el turno activo y muestra de una vez todas las órdenes reasignadas pendientes de revisión, de todos los turnos">
-          🌎 Ver TODAS las reasignadas (todos los turnos) <span id="rec-global-reassigned-count">(0)</span>
+          🌎 Todas las reasignadas (todos los turnos) <span id="rec-global-reassigned-count">(0)</span>
         </button>
       </div>
 
-      <div class="gd-filters">
-        <div class="gd-search-wrap ml-auto">
+      <div class="gd-filters rec-filters">
+        <div class="eq-seg" id="rec-scope-seg" hidden></div>
+        <div class="gd-search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="text" id="rec-search" placeholder="Buscar Id in CC, comentario..." oninput="applyRecFilters()"/>
+          <input type="text" id="rec-search" placeholder="Buscar Id in CC, operador, comentario…" oninput="applyRecFilters()"/>
         </div>
-        <button class="gd-clear-all" onclick="clearRecFilters()" id="rec-clear-btn" style="display:none">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          Limpiar todo
-        </button>
+        <select id="rec-f-tl" class="form-select-sm" onchange="applyRecFilters()" aria-label="Team Leader"><option value="">Team Leader: todos</option></select>
+        <select id="rec-f-country" class="form-select-sm" onchange="applyRecFilters()" aria-label="País"><option value="">País: todos</option></select>
+        <select id="rec-f-substatus" class="form-select-sm" onchange="applyRecFilters()" aria-label="Substatus"><option value="">Substatus: todos</option></select>
+        <select id="rec-f-color" class="form-select-sm" onchange="applyRecFilters()" aria-label="Color de status">
+          <option value="">Color: todos</option>
+          <option value="yellow">🟡 Amarillas</option>
+          <option value="red">🔴 Rojas</option>
+          <option value="none">Sin color</option>
+        </select>
+        <button class="gd-clear-all" onclick="clearRecFilters()" id="rec-clear-btn" style="display:none">✕ Limpiar</button>
+        <span class="rec-showing ml-auto">Mostrando <strong id="rec-showing">0</strong> de <strong id="rec-total">0</strong></span>
+      </div>
+      <div class="toolbar-row rec-tree-tools">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="recExpandAll(true)">⊞ Abrir todo</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="recExpandAll(false)">⊟ Cerrar todo</button>
         <div class="menu-anchor">
           <button class="btn btn-ghost btn-sm" id="rec-copy-ids-btn" onclick="recToggleCopyMenu(event)">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-            <span id="rec-copy-ids-label">Copiar IDs</span>
+            <span id="rec-copy-ids-label">Copiar IDs visibles</span>
             <svg viewBox="0 0 24 24" fill="currentColor" class="ico-chevron-sm"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
           </button>
           <div id="rec-copy-menu" class="dropdown-menu" style="display:none"></div>
         </div>
-      </div>
-      <div id="rec-color-actions" class="rec-color-actions" style="display:none">
-        <span class="muted-11">Acciones masivas:</span>
-        <button class="btn btn-sm btn-soft-amber" id="rec-del-yellow" onclick="recDeleteByStatusColor('yellow')">
-          Eliminar amarillas (0)
-        </button>
-        <button class="btn btn-sm btn-soft-red" id="rec-del-red" onclick="recDeleteByStatusColor('red')">
-          Eliminar rojas (0)
-        </button>
+        <span class="muted-11 ml-auto">📋 en cada Team Leader u Operador copia un mensaje listo con sus IDs</span>
       </div>
     </div>
 
-    <!-- Árbol: Team Leader > Operador > Recalls. Las órdenes reasignadas a otro operador
-         (antes en una tabla de alertas aparte) ahora salen con borde rojo dentro de la misma fila. -->
+    <!-- Árbol: Team Leader > Operador > Órdenes (las reasignadas pendientes con borde rojo) -->
     <div id="rec-loading" class="gd-state">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
       <p>Cargando datos desde Supabase…</p>
@@ -1470,9 +1481,9 @@
           <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="today" onclick="tlSetDateFilter('today')">Hoy</button>
           <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="yesterday" onclick="tlSetDateFilter('yesterday')">Ayer</button>
           <button class="btn btn-sm btn-primary tl-date-btn" data-filter="7d" onclick="tlSetDateFilter('7d')">Últimos 7 días</button>
-          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="all" onclick="tlSetDateFilter('all')">Todo</button>
-          <input type="date" id="tl-date-input" onchange="tlSetDateFilter(this.value)"
-            class="form-select-sm"/>
+          <!-- El texto de los meses (ej. "Septiembre (en curso)") lo pone tlSyncMonthButtons() -->
+          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="month" onclick="tlSetDateFilter('month')">Mes actual</button>
+          <button class="btn btn-sm btn-ghost tl-date-btn" data-filter="prevmonth" onclick="tlSetDateFilter('prevmonth')">Mes anterior</button>
         </div>
         <div class="muted-11 mb-6">Elige uno o más Team Leaders para comparar:</div>
         <div id="tl-chart-toggles" class="chips-row"></div>
