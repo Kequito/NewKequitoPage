@@ -34,13 +34,13 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.09.30d';
+    window.APP_VERSION = '2026.09.30g';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
       var js = [
         'core/dom', 'core/modal', 'core/supabase', 'core/sheets', 'core/attendance', 'core/errors',
-        'core/permissions', 'core/session', 'core/myaccount', 'core/charts', 'core/nav', 'core/sidebar', 'core/autorefresh',
+        'core/permissions', 'core/session', 'core/myaccount', 'core/charts', 'core/nav', 'core/sidebar', 'core/autorefresh', 'core/tracking',
         'views/goodday', 'views/ops', 'views/opstoday', 'views/opslive', 'views/reportes', 'views/recalls',
         'views/dashboard', 'views/leads', 'views/ventasfuera', 'views/tl', 'views/actualizacion', 'views/accounts',
         'core/notifications', 'main'
@@ -1536,127 +1536,107 @@
       <button class="btn btn-primary" onclick="acctUnlock()">Continuar</button>
     </div>
 
-    <!-- Contenido real, oculto hasta pasar el portón -->
+    <!-- Contenido real, oculto hasta pasar el portón (se arma en js/views/accounts.js) -->
     <div id="acct-content" style="display:none">
 
-      <div class="acct-new-row">
-        <button class="btn btn-primary btn-sm" onclick="acctStartCreate()">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-          Nueva cuenta
-        </button>
-      </div>
-
-      <!-- Formulario crear/editar -->
-      <div class="panel mb-22" id="acct-form-panel" style="display:none">
-        <div class="panel-head">
-          <span class="panel-title" id="acct-form-title">Nueva cuenta</span>
-          <button class="btn btn-ghost btn-sm" onclick="acctCloseForm()">✕ Cerrar</button>
+      <!-- Encabezado: título + nueva cuenta -->
+      <div class="panel mb-22 clip">
+        <div class="gd-infobar">
+          <div class="gd-infobar-title">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-16"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Gestión de Cuentas
+            <span class="eq-title-sub">Cuentas · contraseñas · permisos</span>
+          </div>
+          <div class="infobar-actions">
+            <button type="button" class="btn btn-ghost btn-sm" onclick="acctLoadList()" title="Volver a leer las cuentas">↻ Actualizar</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="acctStartCreate()">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="ico-14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+              Nueva cuenta
+            </button>
+          </div>
         </div>
-        <div class="panel-body">
-          <div class="acct-form-grid">
-            <div>
-              <label class="field-label">Nombre completo</label>
-              <input type="text" id="acct-f-nombre" class="form-input"/>
-            </div>
-            <div>
-              <label class="field-label">PEROP1AM</label>
-              <input type="text" id="acct-f-perop" class="form-input"/>
-            </div>
-            <div>
-              <label class="field-label">Cargo</label>
-              <select id="acct-f-cargo" class="form-input">
-                <option value="Operador">Operador</option>
-                <option value="Team Leader">Team Leader</option>
-                <option value="Supervisor">Supervisor</option>
-              </select>
-            </div>
-            <div>
-              <label class="field-label">Género</label>
-              <select id="acct-f-genero" class="form-input">
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-              </select>
-            </div>
+        <div class="toolbar-row eq-toolbar">
+          <div class="eq-seg" role="tablist" aria-label="Apartado">
+            <button type="button" class="eq-seg-btn acct-tab-btn" data-tab="cuentas" role="tab" onclick="acctSetTab('cuentas')">👥 Cuentas</button>
+            <button type="button" class="eq-seg-btn acct-tab-btn" data-tab="permisos" role="tab" onclick="acctSetTab('permisos')">🛡 Permisos por cargo</button>
           </div>
-          <div id="acct-f-pass-wrap" class="mb-14">
-            <label class="check-label mb-8">
-              <input type="checkbox" id="acct-f-haspass"/> Generar una clave temporal al crearla
-            </label>
-            <small class="acct-f-pass-hint">Se muestra una sola vez para que se la pases por privado. Al entrar con ella, la persona crea su propia contraseña. Obligatorio para Supervisores.</small>
-          </div>
-          <div id="acct-form-error" class="form-msg-error" role="alert" style="display:none"></div>
-          <button class="btn btn-primary" id="acct-form-submit" onclick="acctSubmitForm()">Guardar cuenta</button>
         </div>
       </div>
 
-      <!-- Tabla de cuentas -->
-      <div class="panel mb-22">
-        <div class="panel-head">
-          <span class="panel-title">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-            Cuentas registradas <span id="acct-count" class="muted-normal"></span>
-          </span>
-          <div class="acct-toolbar">
-            <select id="acct-f-filter-cargo" class="form-select-sm" onchange="renderAcctTable()" aria-label="Filtrar por cargo">
-              <option value="">Todos los cargos</option>
-              <option value="Supervisor">Supervisor</option>
-              <option value="Team Leader">Team Leader</option>
-              <option value="Operador">Operador</option>
-            </select>
+      <!-- ── Apartado: Cuentas ── -->
+      <div id="acct-tab-cuentas">
+        <!-- Indicadores (clic = filtrar) -->
+        <div class="dash-kpis acct-kpis mb-22" id="acct-kpis"></div>
+
+        <!-- Pendientes: claves temporales sin cambiar y cuentas sin contraseña -->
+        <div id="acct-attention" class="acct-attention mb-22" role="status" hidden></div>
+
+        <div class="panel mb-22 clip">
+          <div class="gd-filters acct-filters">
             <div class="gd-search-wrap">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="search" id="acct-search" placeholder="Buscar cuenta, código o PEROP1AM…" oninput="renderAcctTable()" aria-label="Buscar cuenta"/>
+              <input type="search" id="acct-search" placeholder="Buscar nombre, código o PEROP1AM…" oninput="renderAcctTable()" aria-label="Buscar cuenta"/>
             </div>
+            <div class="eq-seg" id="acct-cargo-seg" role="tablist" aria-label="Cargo"></div>
+            <select id="acct-f-pass" class="form-select-sm" onchange="acctSetPassFilter(this.value)" aria-label="Filtrar por contraseña">
+              <option value="">Contraseña: todas</option>
+              <option value="propia">✓ Propia</option>
+              <option value="temporal">⏳ Temporal (pendiente)</option>
+              <option value="sin">— Sin contraseña</option>
+              <option value="custom">🛡 Con permisos personalizados</option>
+            </select>
+            <button type="button" class="gd-clear-all" id="acct-clear-btn" onclick="acctClearFilters()" hidden>✕ Limpiar</button>
+            <span class="acct-count ml-auto" id="acct-count"></span>
           </div>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>PEROP1AM</th>
-                <th>Cargo</th>
-                <th>Contraseña</th>
-                <th>Permisos</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="acct-tbody"></tbody>
-          </table>
+          <div class="tbl-wrap">
+            <table class="acct-table">
+              <thead>
+                <tr>
+                  <th>Cuenta</th>
+                  <th>Cargo</th>
+                  <th>Contraseña</th>
+                  <th>Permisos</th>
+                  <th class="acct-th-actions">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="acct-tbody"></tbody>
+            </table>
+          </div>
+          <div class="gd-state pad-40-20" id="acct-empty" hidden>
+            <p>Ninguna cuenta coincide con los filtros</p>
+            <small>Prueba con otra búsqueda o usa "Limpiar"</small>
+          </div>
+          <div class="eq-tbl-foot">Clic en una cuenta para ver su ficha completa</div>
         </div>
       </div>
 
-      <!-- Permisos por cargo — editables (js/views/accounts.js + supabase/03_permisos.sql) -->
-      <div class="panel">
-        <div class="panel-head">
-          <span class="panel-title">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-            Permisos por cargo
-          </span>
-          <div class="acct-toolbar">
-            <span id="perm-role-status" class="perm-status"></span>
-            <button class="btn btn-ghost btn-sm" type="button" id="perm-role-discard" onclick="permRoleDiscard()" disabled>Descartar</button>
-            <button class="btn btn-primary btn-sm" type="button" id="perm-role-save" onclick="permRoleSave()" disabled>Guardar cambios</button>
+      <!-- ── Apartado: Permisos por cargo (js/views/accounts.js + supabase/03_permisos.sql) ── -->
+      <div id="acct-tab-permisos" hidden>
+        <div class="panel">
+          <div class="panel-head">
+            <span class="panel-title">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+              Permisos por cargo
+            </span>
+            <div class="acct-toolbar">
+              <span id="perm-role-status" class="perm-status"></span>
+              <button class="btn btn-ghost btn-sm" type="button" id="perm-role-discard" onclick="permRoleDiscard()" disabled>Descartar</button>
+              <button class="btn btn-primary btn-sm" type="button" id="perm-role-save" onclick="permRoleSave()" disabled>Guardar cambios</button>
+            </div>
           </div>
-        </div>
-        <p class="perm-help">
-          Marca qué puede hacer cada cargo. Las excepciones de una cuenta puntual se editan con <strong>🛡 Permisos</strong> en la tabla de arriba y tienen prioridad sobre el cargo.
-          Los permisos con <span class="perm-lock">🔒</span> son sensibles: <strong>solo funcionan en cuentas con contraseña</strong>.
-        </p>
-        <div id="perm-role-warn" class="ol-error" role="alert" hidden></div>
-        <div class="tbl-wrap">
-          <table class="perm-matrix">
-            <thead>
-              <tr>
-                <th>Permiso</th>
-                <th class="text-center">Supervisor</th>
-                <th class="text-center">Team Leader</th>
-                <th class="text-center">Operador</th>
-              </tr>
-            </thead>
-            <tbody id="perm-role-tbody"></tbody>
-          </table>
+          <p class="perm-help">
+            Marca qué puede hacer cada cargo. Las excepciones de una cuenta puntual se editan desde su ficha (<strong>🛡 Permisos</strong>) y tienen prioridad sobre el cargo.
+            Los permisos con <span class="perm-lock">🔒</span> son sensibles: <strong>solo funcionan en cuentas con contraseña</strong>. Las casillas que cambiaste y no guardaste se resaltan en ámbar.
+          </p>
+          <div id="perm-role-warn" class="ol-error" role="alert" hidden></div>
+          <div class="tbl-wrap">
+            <table class="perm-matrix">
+              <thead>
+                <tr id="perm-role-head"></tr>
+              </thead>
+              <tbody id="perm-role-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
