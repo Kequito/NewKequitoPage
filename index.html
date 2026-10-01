@@ -34,7 +34,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.09.30k';
+    window.APP_VERSION = '2026.10.01b';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -341,10 +341,10 @@
           <button type="button" class="eq-seg-btn eq-view-btn" data-view="rank" role="tab" onclick="eqSetView('rank')">🏆 Ranking de calidad</button>
         </div>
         <div class="eq-period ml-auto">
-          <span class="caps-label">Errores de los</span>
+          <span class="caps-label">Errores</span>
           <div class="eq-seg" aria-label="Periodo de errores">
-            <button type="button" class="eq-seg-btn eq-period-btn" data-period="7d" onclick="eqSetPeriod('7d')">7 días</button>
-            <button type="button" class="eq-seg-btn eq-period-btn" data-period="30d" onclick="eqSetPeriod('30d')">30 días</button>
+            <button type="button" class="eq-seg-btn eq-period-btn" data-period="cur" onclick="eqSetPeriod('cur')">Mes actual</button>
+            <button type="button" class="eq-seg-btn eq-period-btn" data-period="prev" onclick="eqSetPeriod('prev')">Mes anterior</button>
             <button type="button" class="eq-seg-btn eq-period-btn" data-period="all" onclick="eqSetPeriod('all')">Todo</button>
           </div>
         </div>
@@ -463,7 +463,7 @@
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3H5v-2h14v2z"/></svg>
             Ranking de calidad por Team Leader
           </span>
-          <span class="muted-11">Errores de los <span id="eq-rank-period"></span> · menos errores por OP = mejor puesto</span>
+          <span class="muted-11">Errores de <span id="eq-rank-period"></span> · menos errores por OP = mejor puesto</span>
         </div>
         <p class="eq-rank-help">El puesto se calcula con el <strong>promedio de errores por OP</strong> (errores del equipo ÷ OPs que tiene hoy en la distribución), así un equipo grande no queda castigado solo por ser grande. Si hay empate, gana el de mejor Approve.</p>
         <div class="tbl-wrap">
@@ -1690,6 +1690,7 @@
     <button type="button" class="btn btn-ghost btn-sm" id="eq-drawer-back" onclick="eqDrawerBack()" hidden>← Volver</button>
     <span class="eq-drawer-title" id="eq-drawer-title">Ficha</span>
     <span class="eq-drawer-status" id="eq-drawer-status" role="status"></span>
+    <button type="button" class="btn btn-ghost btn-sm eq-wide-btn" id="eq-drawer-wide" onclick="eqToggleDrawerWide()" title="Ver la ficha casi a pantalla completa">⤢ Ampliar</button>
     <button type="button" class="btn btn-ghost btn-sm" onclick="eqCopyFeedback()" title="Copia un resumen en texto para mandarlo por WhatsApp">📋 Copiar resumen</button>
     <button type="button" class="btn btn-primary btn-sm" onclick="eqDownloadFeedback()" title="Descarga la ficha como imagen">⬇ Imagen</button>
     <button type="button" class="icon-btn eq-drawer-close" id="eq-drawer-close" onclick="eqCloseDrawer()" aria-label="Cerrar ficha">✕</button>
