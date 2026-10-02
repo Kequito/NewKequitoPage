@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1074,8 +1073,9 @@
       </div>
     </div>
 
-    <!-- Turno, alcance y filtros -->
-    <div class="panel mb-22 clip">
+    <!-- Turno, alcance y filtros. SIN "clip": el menú "Copiar IDs visibles" se despliega hacia abajo
+         y sale del panel; con overflow:hidden quedaba recortado (se veía un cuadro vacío). -->
+    <div class="panel mb-22">
       <div class="toolbar-row border-b">
         <span class="caps-label">Turno</span>
         <button class="btn btn-sm rec-shift-btn" data-shift="AM" onclick="recSetShift('AM')">AM <span class="rec-shift-count">(0)</span></button>
