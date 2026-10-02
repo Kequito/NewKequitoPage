@@ -34,7 +34,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.01e';
+    window.APP_VERSION = '2026.10.01g';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -223,25 +223,25 @@
        sección de donde sale su información (dashWidgets en el JS). Todo se arma desde el JS. -->
   <div class="view active" id="view-dashboard">
 
-    <!-- Bienvenida: saludo, fecha, estado general y accesos rápidos -->
+    <!-- Bienvenida: saludo, fecha y estado general (sin accesos rápidos: ya están en el menú) -->
     <section class="dash-hero mb-22">
       <div class="dash-hero-main">
         <h2 class="dash-hello" id="dash-hello">Hola 👋</h2>
         <div class="dash-date" id="dash-date"></div>
+        <!-- Solo Team Leaders: su equipo y sus puestos (dashRenderPosition) -->
+        <div class="dash-team-line" id="dash-team-line" hidden></div>
         <div class="dash-status" id="dash-status" role="status"></div>
       </div>
-      <div class="dash-hero-side">
-        <span class="dash-refreshed" id="dash-refreshed"></span>
-        <button type="button" class="gd-refresh-btn" id="dash-refresh-btn" onclick="loadDashboard(true)">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-          Actualizar
-        </button>
-      </div>
-      <nav class="dash-shortcuts" id="dash-shortcuts" aria-label="Accesos rápidos"></nav>
     </section>
 
     <!-- Indicadores clave (cada uno lleva a su sección) -->
     <div class="dash-kpis mb-22" id="dash-kpis"></div>
+
+    <!-- Tu posición: solo para quien es Team Leader en la distribución -->
+    <section class="dash-pos mb-22" id="dash-pos" hidden>
+      <div class="dash-pos-bar"><span class="dash-pos-label">📍 Tu posición</span><span class="muted-11" id="dash-pos-sub"></span></div>
+      <div class="dash-pos-grid" id="dash-pos-grid"></div>
+    </section>
 
     <div class="dash-grid">
       <!-- Requiere atención: todo lo urgente de la página, con su botón para resolverlo -->
