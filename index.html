@@ -33,7 +33,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.01g';
+    window.APP_VERSION = '2026.10.02a';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -1073,9 +1073,8 @@
       </div>
     </div>
 
-    <!-- Turno, alcance y filtros. SIN "clip": el menú "Copiar IDs visibles" se despliega hacia abajo
-         y sale del panel; con overflow:hidden quedaba recortado (se veía un cuadro vacío). -->
-    <div class="panel mb-22">
+    <!-- Turno, alcance y filtros -->
+    <div class="panel mb-22 clip">
       <div class="toolbar-row border-b">
         <span class="caps-label">Turno</span>
         <button class="btn btn-sm rec-shift-btn" data-shift="AM" onclick="recSetShift('AM')">AM <span class="rec-shift-count">(0)</span></button>
@@ -1112,14 +1111,12 @@
       <div class="toolbar-row rec-tree-tools">
         <button type="button" class="btn btn-ghost btn-sm" onclick="recExpandAll(true)">⊞ Abrir todo</button>
         <button type="button" class="btn btn-ghost btn-sm" onclick="recExpandAll(false)">⊟ Cerrar todo</button>
-        <div class="menu-anchor">
-          <button class="btn btn-ghost btn-sm" id="rec-copy-ids-btn" onclick="recToggleCopyMenu(event)">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-            <span id="rec-copy-ids-label">Copiar IDs visibles</span>
-            <svg viewBox="0 0 24 24" fill="currentColor" class="ico-chevron-sm"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
-          </button>
-          <div id="rec-copy-menu" class="dropdown-menu" style="display:none"></div>
-        </div>
+        <!-- El menú de este botón (#rec-copy-menu) está al final del <body>: dentro del panel quedaba recortado -->
+        <button class="btn btn-ghost btn-sm" id="rec-copy-ids-btn" onclick="recToggleCopyMenu(event)" aria-haspopup="true" aria-controls="rec-copy-menu">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          <span id="rec-copy-ids-label">Copiar IDs visibles</span>
+          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-chevron-sm"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </button>
         <span class="muted-11 ml-auto">📋 en cada Team Leader u Operador copia un mensaje listo con sus IDs</span>
       </div>
     </div>
@@ -1751,6 +1748,8 @@
 <!-- Menú flotante Change/View (uno solo, compartido por toda la app — se posiciona junto
      al botón que lo abre, sin importar en qué sección/vista estés). -->
 <div id="rec-link-menu" class="floating-menu rec-link-menu" style="display:none"></div>
+<!-- Menú de "Copiar IDs visibles" (Recalls): flotante, fuera de los paneles para que no lo recorten -->
+<div id="rec-copy-menu" class="floating-menu rec-copy-menu" style="display:none"></div>
 
 </body>
 </html>
