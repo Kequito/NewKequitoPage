@@ -34,12 +34,12 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.01d';
+    window.APP_VERSION = '2026.10.01e';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
       var js = [
-        'core/net', 'core/dom', 'core/modal', 'core/supabase', 'core/sheets', 'core/attendance', 'core/errors',
+        'core/net', 'core/dom', 'core/export', 'core/modal', 'core/supabase', 'core/sheets', 'core/attendance', 'core/errors',
         'core/permissions', 'core/session', 'core/myaccount', 'core/charts', 'core/nav', 'core/sidebar', 'core/autorefresh', 'core/tracking',
         'views/goodday', 'views/ops', 'views/opstoday', 'views/opslive', 'views/reportes', 'views/recalls',
         'views/dashboard', 'views/leads', 'views/ventasfuera', 'views/tl', 'views/actualizacion', 'views/accounts', 'views/registro',
@@ -945,7 +945,7 @@
         <button type="button" class="btn btn-sm btn-ghost rep-mode-btn" data-mode="count" onclick="repSetValueMode('count')">Cantidades</button>
         <div class="rep-report-actions ml-auto">
           <span id="rep-export-status" class="fs12-600"></span>
-          <button type="button" class="btn btn-ghost btn-sm" id="rep-copy-img-btn" onclick="repExportImage('copy')" title="Copia la tabla como imagen para pegarla en WhatsApp">
+          <button type="button" class="btn btn-ghost btn-sm" id="rep-copy-img-btn" onclick="repExportImage('copy')" title="Copia la tabla como imagen, lista para pegar">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             Copiar imagen
           </button>
@@ -1220,7 +1220,7 @@
         <div class="infobar-actions">
           <span id="leads-fresh" class="leads-fresh" title="Hace cuánto se pegó la data que estás viendo"></span>
           <span id="leads-export-status" class="fs12-600" role="status"></span>
-          <button type="button" class="btn btn-ghost btn-sm" id="leads-copy-img-btn" onclick="leadsExportImage('copy')" title="Copia el resumen de campañas como imagen para pegarla en WhatsApp">
+          <button type="button" class="btn btn-ghost btn-sm" id="leads-copy-img-btn" onclick="leadsExportImage('copy')" title="Copia el resumen de campañas como imagen, lista para pegar">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             Copiar imagen
           </button>
@@ -1279,7 +1279,7 @@
         <span class="muted-11" id="vf-month-note"></span>
         <div class="infobar-actions">
           <span id="vf-export-status" class="fs12-600" role="status"></span>
-          <button type="button" class="btn btn-ghost btn-sm" id="vf-copy-img-btn" onclick="vfExportImage('copy')" title="Copia el conteo como imagen para pegarla en WhatsApp">
+          <button type="button" class="btn btn-ghost btn-sm" id="vf-copy-img-btn" onclick="vfExportImage('copy')" title="Copia el calendario y el conteo como imagen, lista para pegar">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             Copiar imagen
           </button>
@@ -1415,7 +1415,7 @@
         </span>
         <div class="panel-actions tl-export-actions">
           <span id="tl-export-status" class="fs12-600" role="status"></span>
-          <button type="button" class="btn btn-ghost btn-sm" id="tl-copy-img-btn" onclick="tlExportImage('copy')" title="Copia el podio y el ranking como imagen para pegarla en WhatsApp">
+          <button type="button" class="btn btn-ghost btn-sm" id="tl-copy-img-btn" onclick="tlExportImage('copy')" title="Copia el podio y el ranking como imagen, lista para pegar">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             Copiar imagen
           </button>
@@ -1741,8 +1741,9 @@
     <span class="eq-drawer-title" id="eq-drawer-title">Ficha</span>
     <span class="eq-drawer-status" id="eq-drawer-status" role="status"></span>
     <button type="button" class="btn btn-ghost btn-sm eq-wide-btn" id="eq-drawer-wide" onclick="eqToggleDrawerWide()" title="Ver la ficha casi a pantalla completa">⤢ Ampliar</button>
-    <button type="button" class="btn btn-ghost btn-sm" onclick="eqCopyFeedback()" title="Copia un resumen en texto para mandarlo por WhatsApp">📋 Copiar resumen</button>
-    <button type="button" class="btn btn-primary btn-sm" onclick="eqDownloadFeedback()" title="Descarga la ficha como imagen">⬇ Imagen</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="eq-copy-text-btn" onclick="eqCopyFeedback()" title="Copia un resumen en texto, listo para pegar">📋 Copiar resumen</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="eq-copy-img-btn" onclick="eqExportFeedback('copy')" title="Copia la ficha como imagen, lista para pegar">Copiar imagen</button>
+    <button type="button" class="btn btn-primary btn-sm" id="eq-dl-img-btn" onclick="eqExportFeedback('download')" title="Descarga la ficha como imagen">Descargar imagen</button>
     <button type="button" class="icon-btn eq-drawer-close" id="eq-drawer-close" onclick="eqCloseDrawer()" aria-label="Cerrar ficha">✕</button>
   </div>
   <div class="eq-drawer-body" id="eq-drawer-body"></div>
