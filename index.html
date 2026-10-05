@@ -34,7 +34,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.04a';
+    window.APP_VERSION = '2026.10.04b';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -1154,21 +1154,6 @@
           <button id="leads-data-edit-btn" class="btn btn-ghost btn-sm cursor-pointer m-0" type="button" style="display:none" onclick="leadsEditDataLink()" title="Cambiar el link de Data">✎</button>
         </div>
       </div>
-
-      <!-- Última actualización de la data -->
-      <div id="leads-lastupd-box" class="info-banner" style="display:none">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-28"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        <div>
-          <div class="eyebrow">Última actualización de la data</div>
-          <div id="leads-lastupd-name" class="stat-value">—</div>
-          <div id="leads-lastupd-time" class="text-mid-600">—</div>
-        </div>
-      </div>
-
-      <div class="gd-state gd-state--inline">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="ico-18"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
-        <small>Las cuentas con permiso pueden pegar los datos y actualizar — después de cada actualización hay un bloqueo de 2 minutos antes de poder volver a actualizar, para evitar choques entre varias personas a la vez. También se actualiza desde Reporte (sección "Operational Coverage").</small>
-      </div>
     </div>
 
     <!-- Paste box -->
@@ -1216,7 +1201,7 @@
           <option value="alpha">Alfabético</option>
         </select>
         <div class="infobar-actions">
-          <span id="leads-fresh" class="leads-fresh" title="Hace cuánto se pegó la data que estás viendo"></span>
+          <span id="leads-fresh" class="leads-fresh" title="Hace cuánto se pegó la data que estás viendo y quién la pegó"></span>
           <span id="leads-export-status" class="fs12-600" role="status"></span>
           <button type="button" class="btn btn-ghost btn-sm" id="leads-copy-img-btn" onclick="leadsExportImage('copy')" title="Copia el resumen de campañas como imagen, lista para pegar">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
@@ -1231,13 +1216,10 @@
     </div>
 
     <div id="leads-content-wrap" style="display:none">
-      <!-- Resumen de alertas en una línea (el detalle va dentro de cada tarjeta) -->
-      <div id="leads-summary" class="leads-summary mb-22" role="status"></div>
-
       <!-- KPIs globales -->
-      <div class="kpi-grid cols-4 mb-22" id="leads-kpis"></div>
+      <div class="kpi-grid cols-3 mb-22" id="leads-kpis"></div>
 
-      <!-- Semáforo: una ficha chica por campaña, clic = baja a su tarjeta -->
+      <!-- Semáforo: una ficha chica por campaña (el estado de cada una se ve aquí), clic = baja a su tarjeta -->
       <div id="leads-strip" class="leads-strip mb-22"></div>
 
       <!-- Tarjetas por campaña (ordenadas según "Orden") -->
