@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -33,7 +34,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.02a';
+    window.APP_VERSION = '2026.10.04a';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -1276,7 +1277,7 @@
         <span class="muted-11" id="vf-month-note"></span>
         <div class="infobar-actions">
           <span id="vf-export-status" class="fs12-600" role="status"></span>
-          <button type="button" class="btn btn-ghost btn-sm" id="vf-copy-img-btn" onclick="vfExportImage('copy')" title="Copia el calendario y el conteo como imagen, lista para pegar">
+          <button type="button" class="btn btn-ghost btn-sm" id="vf-copy-img-btn" onclick="vfExportImage('copy')" title="Copia el conteo por campaña, Team Leader y OP como imagen, lista para pegar">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             Copiar imagen
           </button>
@@ -1287,8 +1288,9 @@
         </div>
       </div>
       <p class="ol-note">
-        Cuenta solo las ventas con <strong>ORDEN CREADA</strong> marcada, cada ID de orden una sola vez, y solo de los OPs
-        que están <strong>hoy</strong> en la distribución (Equipos 360). Los links de las hojas se cambian en <strong>Actualización de Data</strong>.
+        Las ventas cuentan solo con <strong>ORDEN CREADA</strong> marcada, cada ID de orden una sola vez, y solo de los OPs
+        que están <strong>hoy</strong> en la distribución (Equipos 360). Los <strong>pendientes</strong> cuentan TODO lo registrado
+        (de cualquier OP) en la jornada de hoy y las 3 anteriores. Los links de las hojas se cambian en <strong>Actualización de Data</strong>.
       </p>
     </div>
 
@@ -1299,24 +1301,39 @@
     </div>
 
     <div id="vf-content" hidden>
-      <div class="kpi-grid cols-4 mb-22" id="vf-kpis"></div>
-      <div class="vf-campaigns mb-22" id="vf-campaigns"></div>
-
-      <!-- Calendario: ventas de cada día del mes elegido (respeta el filtro de Team Leader) -->
-      <div class="panel mb-22">
+      <!-- Pendientes: órdenes registradas en las hojas que todavía no se crearon o no se mandaron a Trash,
+           por jornada y turno (js/views/ventasfuera.js → VF_SHIFTS / vfRenderTasks) -->
+      <div class="panel mb-22 vfp" id="vfp-panel">
         <div class="panel-head">
           <span class="panel-title">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
-            Ventas por día <span id="vf-cal-scope" class="muted-normal"></span>
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12.5 8H11v6l4.75 2.85.75-1.23-4-2.37V8zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a9 9 0 0 0 0-18zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            Pendientes de crear y de Trash
           </span>
-          <div class="vf-cal-filter" id="vf-cal-filter" role="tablist" aria-label="Campaña del calendario"></div>
+          <div class="infobar-actions">
+            <span id="vfp-copy-status" class="fs12-600" role="status"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="vfp-copy-btn" onclick="vfTaskCopy()" title="Copia el resumen de lo que falta (con los IDs) como texto">📋 Copiar pendientes</button>
+          </div>
         </div>
         <div class="panel-body">
-          <div class="vf-cal" id="vf-cal"></div>
-          <div class="vf-cal-summary" id="vf-cal-summary"></div>
-          <div class="vf-cal-detail" id="vf-cal-detail" hidden></div>
+          <div class="vfp-alerts" id="vfp-alerts"></div>
+          <div class="vfp-toolbar">
+            <span class="caps-label">Jornada</span>
+            <div class="vf-cal-filter" id="vfp-jornadas" role="tablist" aria-label="Jornada"></div>
+          </div>
+          <div class="vfp-shifts" id="vfp-shifts"></div>
+          <div class="tbl-wrap">
+            <table class="vf-table vfp-table" id="vfp-table">
+              <thead id="vfp-thead"></thead>
+              <tbody id="vfp-tbody"></tbody>
+              <tfoot id="vfp-tfoot"></tfoot>
+            </table>
+          </div>
+          <div class="vfp-list" id="vfp-list"></div>
         </div>
       </div>
+
+      <div class="kpi-grid cols-4 mb-22" id="vf-kpis"></div>
+      <div class="vf-campaigns mb-22" id="vf-campaigns"></div>
 
       <!-- Por Team Leader -->
       <div class="panel mb-22">
