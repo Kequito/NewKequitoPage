@@ -262,7 +262,11 @@ table.eq-team-table { width: 100%; table-layout: auto; }
 .eq-fchip-new:not(.active) { border-color: var(--blue); color: var(--blue); }
 .eq-newbox { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--blue-soft); border: 1px solid rgba(76,141,255,.45); font-size: 13px; }
 .eq-newbox .btn { margin-left: auto; }
-.eq-newdlg { display: flex; flex-direction: column; gap: 14px; max-height: 65vh; overflow-y: auto; padding-right: 4px; }
+/* Sin scroll propio: el que hace scroll es el cuerpo del diálogo (.ui-modal-body). Con dos scrolls anidados,
+   la columna flex aplastaba cada grupo para que todos entraran y se cortaban las filas. */
+.eq-newdlg { display: flex; flex-direction: column; gap: 14px; }
+.eq-newdlg > * { flex-shrink: 0; }
+.ui-modal--wide:has(.eq-newdlg) .ui-modal-body { max-height: min(74vh, 820px); }
 .eq-newdlg-sum { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; }
 .eq-newgroup { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
 .eq-newgroup-head { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 12px; background: var(--card-bg-2); font-size: 12.5px; }
