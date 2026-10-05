@@ -34,7 +34,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.04b';
+    window.APP_VERSION = '2026.10.04e';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -345,6 +345,7 @@
           <button type="button" class="eq-seg-btn eq-view-btn" data-view="tl" role="tab" onclick="eqSetView('tl')">👥 Por Team Leader</button>
           <button type="button" class="eq-seg-btn eq-view-btn" data-view="ops" role="tab" onclick="eqSetView('ops')">🧑‍💻 Todos los OPs</button>
           <button type="button" class="eq-seg-btn eq-view-btn" data-view="rank" role="tab" onclick="eqSetView('rank')">🏆 Ranking de calidad</button>
+          <button type="button" class="eq-seg-btn eq-view-btn" data-view="bono" role="tab" onclick="eqSetView('bono')">💸 Bono</button>
         </div>
         <div class="eq-period ml-auto">
           <span class="caps-label">Errores</span>
@@ -359,19 +360,6 @@
 
     <!-- Indicadores -->
     <div class="eq-kpis mb-22" id="eq-kpis"></div>
-
-    <!-- Alertas automáticas de calidad (últimos 7 días) -->
-    <div class="panel mb-22 eq-alerts-panel" id="eq-alerts-panel" hidden>
-      <div class="panel-head">
-        <span class="panel-title">
-          <svg viewBox="0 0 24 24" fill="currentColor" class="ico-amber"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-          Alertas de calidad <span id="eq-alerts-count" class="muted-normal"></span>
-        </span>
-        <span class="muted-11">Errores repetidos o en aumento · últimos 7 días</span>
-      </div>
-      <div class="eq-alerts-list" id="eq-alerts-list"></div>
-      <button type="button" class="btn btn-ghost btn-sm eq-alerts-more" id="eq-alerts-more" onclick="eqToggleAlerts()" hidden></button>
-    </div>
 
     <div class="gd-state card-box" id="eq-loading" hidden>
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
@@ -484,6 +472,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Vista 4: descuento del Bono de Check y Approve (errores de Verificación del mes) — la arma eqRenderBono -->
+    <div id="eq-view-bono" hidden></div>
 
   </div><!-- /view-goodday -->
 
@@ -1190,24 +1181,29 @@
     <!-- Barra: tipo de campaña (mismo criterio que Stats OPs Today) · orden · frescura · imagen -->
     <div class="panel mb-22" id="leads-campaign-switch" style="display:none">
       <div class="toolbar-row">
+        <div class="eq-seg" role="tablist" aria-label="Vista">
+          <button type="button" class="eq-seg-btn leads-view-btn active" data-view="now" role="tab" aria-selected="true" onclick="leadsSetView('now')">📍 Ahora</button>
+          <button type="button" class="eq-seg-btn leads-view-btn" data-view="hist" role="tab" aria-selected="false" onclick="leadsSetView('hist')">📈 Historial</button>
+        </div>
+        <span class="divider-v"></span>
         <span class="caps-label">Tipo de campaña</span>
         <button class="btn btn-sm btn-primary leads-campaign-btn" data-mode="normal" onclick="leadsSetCampaignMode('normal')">Campaña Normal (Aray, Adcombo)</button>
         <button class="btn btn-sm btn-ghost leads-campaign-btn" data-mode="postsale" onclick="leadsSetCampaignMode('postsale')">Post-Sale</button>
-        <span class="divider-v"></span>
-        <label class="caps-label" for="leads-sort">Orden</label>
-        <select id="leads-sort" class="form-select-sm" onchange="leadsSetSort(this.value)">
+        <span class="divider-v leads-now-only"></span>
+        <label class="caps-label leads-now-only" for="leads-sort">Orden</label>
+        <select id="leads-sort" class="form-select-sm leads-now-only" onchange="leadsSetSort(this.value)">
           <option value="urgency">Más urgentes primero</option>
           <option value="leads">Más leads disponibles</option>
           <option value="alpha">Alfabético</option>
         </select>
         <div class="infobar-actions">
           <span id="leads-fresh" class="leads-fresh" title="Hace cuánto se pegó la data que estás viendo y quién la pegó"></span>
-          <span id="leads-export-status" class="fs12-600" role="status"></span>
-          <button type="button" class="btn btn-ghost btn-sm" id="leads-copy-img-btn" onclick="leadsExportImage('copy')" title="Copia el resumen de campañas como imagen, lista para pegar">
+          <span id="leads-export-status" class="fs12-600 leads-now-only" role="status"></span>
+          <button type="button" class="btn btn-ghost btn-sm leads-now-only" id="leads-copy-img-btn" onclick="leadsExportImage('copy')" title="Copia el resumen de campañas como imagen, lista para pegar">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
             Copiar imagen
           </button>
-          <button type="button" class="btn btn-primary btn-sm" id="leads-dl-img-btn" onclick="leadsExportImage('download')">
+          <button type="button" class="btn btn-primary btn-sm leads-now-only" id="leads-dl-img-btn" onclick="leadsExportImage('download')">
             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
             Descargar imagen
           </button>
@@ -1219,11 +1215,60 @@
       <!-- KPIs globales -->
       <div class="kpi-grid cols-3 mb-22" id="leads-kpis"></div>
 
-      <!-- Semáforo: una ficha chica por campaña (el estado de cada una se ve aquí), clic = baja a su tarjeta -->
-      <div id="leads-strip" class="leads-strip mb-22"></div>
-
       <!-- Tarjetas por campaña (ordenadas según "Orden") -->
       <div id="leads-country-grid" class="leads-grid"></div>
+    </div>
+
+    <!-- Historial: cómo cambiaron los leads a lo largo de un día, armado con los pegados guardados
+         en dt_leads_campana (cada pegado = un punto). js/views/leads.js → leadsHist* -->
+    <div id="leads-hist" hidden>
+      <div class="panel mb-22">
+        <div class="panel-head lh-head">
+          <span class="panel-title">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+            <span id="lh-title">Leads a lo largo del día</span>
+          </span>
+          <div class="vf-cal-filter" id="lh-days" role="tablist" aria-label="Día"></div>
+        </div>
+        <div class="panel-body">
+          <div class="lh-bar">
+            <div class="eq-seg" role="tablist" aria-label="Qué mostrar">
+              <button type="button" class="eq-seg-btn lh-metric-btn active" data-metric="leads" onclick="leadsHistSetMetric('leads')">Leads disponibles</button>
+              <button type="button" class="eq-seg-btn lh-metric-btn" data-metric="ops" onclick="leadsHistSetMetric('ops')">OPs conectados</button>
+            </div>
+            <div class="eq-seg" role="tablist" aria-label="Escala">
+              <button type="button" class="eq-seg-btn lh-scale-btn active" data-scale="linear" onclick="leadsHistSetScale('linear')" title="Cada línea a su tamaño real">Escala normal</button>
+              <button type="button" class="eq-seg-btn lh-scale-btn" data-scale="log" onclick="leadsHistSetScale('log')" title="Escala logarítmica: las campañas chicas no quedan aplastadas por las grandes (0, 3, 10, 100, 1000…)">Ampliar las chicas</button>
+            </div>
+            <span id="lh-info" class="muted-11"></span>
+          </div>
+          <div class="lh-chips" id="lh-chips"></div>
+          <div class="lh-chart-wrap" id="lh-chart-wrap"><canvas id="lh-chart"></canvas></div>
+          <div class="gd-state pad-40-20" id="lh-empty" hidden></div>
+        </div>
+      </div>
+
+      <div class="lh-grid">
+        <div class="panel mb-22">
+          <div class="panel-head">
+            <span class="panel-title">⏱️ Tiempo en rojo por campaña</span>
+            <span class="muted-11">sin leads = todas las colas con menos de 3 · sin OPs = nadie conectado</span>
+          </div>
+          <div class="tbl-wrap">
+            <table class="vf-table lh-table">
+              <thead><tr><th>Campaña</th><th>Sin leads</th><th>Sin OPs</th><th class="num">Mínimo</th><th class="num">Máximo</th><th class="num">Último</th></tr></thead>
+              <tbody id="lh-red-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel mb-22">
+          <div class="panel-head">
+            <span class="panel-title">📌 Momentos clave</span>
+            <span class="muted-11" id="lh-events-count"></span>
+          </div>
+          <div class="panel-body lh-events" id="lh-events"></div>
+        </div>
+      </div>
     </div>
 
   </div><!-- /view-leads -->
