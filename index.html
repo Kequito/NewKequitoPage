@@ -33,7 +33,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.05a';
+    window.APP_VERSION = '2026.10.08a';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -345,6 +345,7 @@
           <button type="button" class="eq-seg-btn eq-view-btn" data-view="ops" role="tab" onclick="eqSetView('ops')">🧑‍💻 Todos los OPs</button>
           <button type="button" class="eq-seg-btn eq-view-btn" data-view="rank" role="tab" onclick="eqSetView('rank')">🏆 Ranking de calidad</button>
           <button type="button" class="eq-seg-btn eq-view-btn" data-view="bono" role="tab" onclick="eqSetView('bono')">💸 Bono</button>
+          <button type="button" class="eq-seg-btn eq-view-btn" data-view="dia" role="tab" onclick="eqSetView('dia')">📅 Por día</button>
         </div>
         <div class="eq-period ml-auto">
           <span class="caps-label">Errores</span>
@@ -474,6 +475,9 @@
 
     <!-- Vista 4: descuento del Bono de Check y Approve (errores de Verificación del mes) — la arma eqRenderBono -->
     <div id="eq-view-bono" hidden></div>
+
+    <!-- Vista 5: errores por día / por mes, tabla de calor por TL u OP, con turno y hoja — la arma eqRenderDia -->
+    <div id="eq-view-dia" hidden></div>
 
   </div><!-- /view-goodday -->
 
