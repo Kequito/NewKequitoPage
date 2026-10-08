@@ -72,9 +72,19 @@ function errFindHeader(table) {
   return -1;
 }
 
+/* Igual que errNorm, pero sin palabras de relleno ni signos: "TIPO DEL FALLO" = "TIPO DE FALLO" = "Tipo fallo:".
+   Así un cambio chico en el encabezado de la hoja no deja la hoja entera sin leer. */
+function errLoose(s) {
+  return errNorm(s).replace(/[^A-Z0-9Ñ ]/g, ' ').replace(/\b(DE|DEL|LA|EL|LOS|LAS|AL)\b/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+/* Columna por nombre: primero el nombre exacto; si no está, el parecido (errLoose) */
 function errCol(header, ...names) {
   const wanted = names.map(errNorm);
-  return header.findIndex(h => wanted.includes(errNorm(h)));
+  const exact = header.findIndex(h => wanted.includes(errNorm(h)));
+  if (exact >= 0) return exact;
+  const loose = names.map(errLoose);
+  return header.findIndex(h => loose.includes(errLoose(h)));
 }
 
 /* Columna de fecha cuando el encabezado viene roto (ej. "#VALUE!"): la que más valores con forma de fecha tenga */
@@ -112,7 +122,10 @@ function errParseTable(src, table) {
       type: errCol(header, 'OBSERVACION'), detail: -1, extra: -1, flag: errCol(header, 'CON ERROR/SIN ERROR'),
     });
   }
-  if (C.type < 0) throw new Error(`La hoja "${src.full}" no tiene la columna del tipo de error. ¿Cambió el formato?`);
+  if (C.type < 0) {
+    const expected = { gestion: 'TIPO DE FALLO', tipificacion: 'SUBSTATUS', verificacion: 'OBSERVACION' }[src.key];
+    throw new Error(`La hoja "${src.full}" no tiene la columna «${expected}» (tipo de error). ¿Le cambiaron el nombre al encabezado?`);
+  }
 
   const get = (r, i) => (i >= 0 ? String(r[i] ?? '').trim() : '');
   const records = [];
