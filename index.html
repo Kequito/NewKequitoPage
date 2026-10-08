@@ -33,7 +33,7 @@
        (actualizacion.js usa funciones de goodday/ops/tl al cargar, y main.js arranca todo).
        Los scripts son clásicos: comparten scope global y los onclick del HTML los llaman directo. -->
   <script>
-    window.APP_VERSION = '2026.10.08a';
+    window.APP_VERSION = '2026.10.08b';
     (function () {
       var v = '?v=' + encodeURIComponent(window.APP_VERSION);
       var css = ['base', 'layout', 'components', 'login', 'views', 'equipos', 'modal', 'utilities', 'responsive'];
@@ -231,6 +231,8 @@
         <div class="dash-team-line" id="dash-team-line" hidden></div>
         <div class="dash-status" id="dash-status" role="status"></div>
       </div>
+      <!-- Extensión de órdenes: link a la carpeta de Drive para descargarla (dashRenderExt; lo cambia solo un Supervisor) -->
+      <aside class="dash-ext" id="dash-ext" aria-label="Extensión de órdenes" hidden></aside>
     </section>
 
     <!-- Indicadores clave (cada uno lleva a su sección) -->
