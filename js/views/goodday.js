@@ -897,6 +897,25 @@ function eqErrListHTML(records, showOp = false) {
     ${filtered.length > shown.length ? `<button type="button" class="btn btn-ghost btn-sm eq-more-btn" onclick="eqShowMoreErrors()">Ver ${Math.min(25, filtered.length - shown.length)} más (${filtered.length - shown.length} restantes)</button>` : ''}`;
 }
 
+/* Textos de un error, en todos los lugares donde se listan (fichas, calendario, Por día, Errores nuevos):
+   · detail = DETALLE DEL FALLO (Gestión) o el comentario del asesor (Tipificación)
+   · extra  = EXPLICACIÓN DEL FALLO (Gestión): suele ser larga → si pasa de unas líneas, va desplegable con un adelanto */
+const EQ_EXTRA_SHORT = 180;
+function eqErrTextHTML(r) {
+  const detail = r.detail
+    ? `<div class="eq-err-detail">${r.source === 'tipificacion' ? '<span class="eq-err-lbl">Comentario del asesor:</span> ' : ''}${escapeHtml(r.detail)}</div>` : '';
+  if (!r.extra) return detail;
+  const text = r.extra.trim();
+  if (text.length <= EQ_EXTRA_SHORT && text.split('\n').length <= 3) {
+    return `${detail}<div class="eq-err-extra"><span class="eq-err-lbl">Explicación:</span> ${escapeHtml(text)}</div>`;
+  }
+  const preview = text.replace(/\s+/g, ' ').slice(0, 110);
+  return `${detail}<details class="eq-err-xdet">
+    <summary><span class="eq-err-lbl">📝 Explicación</span> <span class="eq-err-xprev">${escapeHtml(preview)}…</span><span class="eq-err-xmore">ver completa</span></summary>
+    <div class="eq-err-extra">${escapeHtml(text)}</div>
+  </details>`;
+}
+
 /* Una fila de error. opByNum (Map num → OP) = mostrar quién lo cometió */
 function eqErrRowHTML(r, opByNum = null) {
   const linkable = r.orderId && /^\d{6,}$/.test(r.orderId) && r.source !== 'verificacion';
@@ -906,8 +925,7 @@ function eqErrRowHTML(r, opByNum = null) {
     <div class="eq-err-main">
       ${opByNum ? eqErrOpLine(r, opByNum.get(r.num)) : ''}
       <div class="eq-err-type">${errSourceBadge(r.source)} ${escapeHtml(r.type)}</div>
-      ${r.detail ? `<div class="eq-err-detail">${escapeHtml(r.detail)}</div>` : ''}
-      ${r.extra ? `<div class="eq-err-extra">${escapeHtml(r.extra)}</div>` : ''}
+      ${eqErrTextHTML(r)}
     </div>
     <div class="eq-err-order">${r.orderId ? (linkable
       ? `<button type="button" class="btn btn-ghost btn-sm rec-link-trigger" onclick="recOpenLinkMenu(event,${jsArg(r.orderId)})" title="Abrir la orden (Change / View)">#${escapeHtml(r.orderId)} ▾</button>`
@@ -1525,7 +1543,7 @@ function eqNewDialogHTML() {
         ${o ? `<button type="button" class="eq-err-op" onclick="eqNewDlgOpenOP(${jsArg(o.key)})" title="Ver ficha de ${escapeHtml(o.asesor)}">${eqAvatar(o.asesor)}<span class="eq-err-op-name">${escapeHtml(o.asesor)}</span><span class="eq-err-op-perop">${escapeHtml(o.perop)}</span></button>`
             : `<span class="eq-err-op"><span class="eq-err-op-name">${escapeHtml(r.perop || '—')}</span></span>`}
         <div class="eq-err-type">${errSourceBadge(r.source)} ${escapeHtml(r.type)}</div>
-        ${r.detail ? `<div class="eq-err-detail">${escapeHtml(r.detail)}</div>` : ''}
+        ${eqErrTextHTML(r)}
         ${jump}
       </div>
       <div class="eq-newrow-side">
