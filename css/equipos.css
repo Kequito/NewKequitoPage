@@ -180,6 +180,16 @@ table.eq-dtable thead th { cursor: default; }
 .eq-err-detail { font-size: 12px; color: var(--text-mid); margin-top: 3px; white-space: pre-line; }
 .eq-err-extra { font-size: 11.5px; color: var(--text-light); margin-top: 3px; white-space: pre-line; }
 .eq-err-order .btn { padding: 3px 8px; font-size: 11px; }
+/* Explicación del fallo (Gestión): desplegable con adelanto cuando es larga */
+.eq-err-lbl { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: var(--text-light); }
+.eq-err-xdet { margin-top: 6px; border-left: 2px solid var(--border); padding-left: 9px; }
+.eq-err-xdet summary { list-style: none; cursor: pointer; font-size: 11.5px; color: var(--text-light); line-height: 1.45; }
+.eq-err-xdet summary::-webkit-details-marker { display: none; }
+.eq-err-xprev { color: var(--text-mid); }
+.eq-err-xmore { margin-left: 6px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+.eq-err-xdet summary:hover .eq-err-xmore { text-decoration: underline; }
+.eq-err-xdet[open] .eq-err-xprev, .eq-err-xdet[open] .eq-err-xmore { display: none; }
+.eq-err-xdet .eq-err-extra { margin-top: 5px; color: var(--text-mid); line-height: 1.5; }
 /* Lista del equipo: quién cometió cada error */
 .eq-err-op { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; margin: 0 0 5px; padding: 2px 8px 2px 2px; border: 1px solid var(--border); border-radius: 99px; background: var(--card-bg-2, rgba(255,255,255,.03)); color: var(--text); font: inherit; text-align: left; }
 button.eq-err-op { cursor: pointer; transition: border-color .15s, background .15s; }
